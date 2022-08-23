@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Search API
+  title: Entities Links API
   version: v1.0
   description: Entity Links API
 
