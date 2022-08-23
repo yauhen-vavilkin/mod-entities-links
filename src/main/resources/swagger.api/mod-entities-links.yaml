@@ -1,0 +1,15 @@
+openapi: 3.0.0
+info:
+  title: Search API
+  version: v1.0
+  description: Entity Links API
+
+servers:
+  - url: https://localhost:8081
+
+paths:
+  /stub:
+    get:
+      responses:
+        "200":
+          description: stub

@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: mod-entity-links
+  datasource:
+    continue-on-error: true
+    password: ${DB_PASSWORD:folio_admin}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_DATABASE:okapi_modules}
+    username: ${DB_USERNAME:folio_admin},
+  jackson:
+    default-property-inclusion: non_null
+    deserialization:
+      fail-on-unknown-properties: false
+      accept-single-value-as-array: true
+  liquibase:
+    change-log: classpath:changelog/changelog-master.xml
+
+folio:
+  environment: ${ENV:folio}
+  tenant:
+    validation:
+      enabled: true
+  logging:
+    request:
+      enabled: true
+    feign:
+      enabled: false
+
+management.endpoints.web:
+  base-path: /admin
+  exposure.include: info,health,liquibase,threaddump,heapdump
+server.port: 8081
