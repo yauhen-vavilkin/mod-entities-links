@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.7.0</version>
+    <version>2.7.3</version>
     <relativePath /> <!-- lookup parent from repository -->
   </parent>
 
@@ -20,6 +20,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <mod-entities-links.yaml.file>${project.basedir}/src/main/resources/swagger.api/mod-entities-links.yaml</mod-entities-links.yaml.file>
+    <sonar.exclusions>
+      src/main/java/org/folio/entlinks/EntityLinksApplication.java,
+      src/main/java/org/folio/entlinks/model/**
+    </sonar.exclusions>
 
     <folio-spring-base.version>4.1.0</folio-spring-base.version>
     <mapstruct.version>1.5.2.Final</mapstruct.version>
@@ -29,6 +33,7 @@
 
     <openapi-generator.version>5.4.0</openapi-generator.version>
     <copy-rename-maven-plugin.version>1.0.1</copy-rename-maven-plugin.version>
+    <hibernate-types.version>2.18.0</hibernate-types.version>
   </properties>
 
   <dependencies>
@@ -54,6 +59,11 @@
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-jdk8</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.vladmihalcea</groupId>
+      <artifactId>hibernate-types-55</artifactId>
+      <version>${hibernate-types.version}</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -232,7 +242,7 @@
               <supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
               <generateModelDocumentation>true</generateModelDocumentation>
               <importMappings>
-                <importMapping>error=org.folio.tenant.domain.dto.Error</importMapping>
+                <importMapping>error=org.folio.tenant.domain.dto.Errors</importMapping>
               </importMappings>
               <configOptions>
                 <useTags>true</useTags>

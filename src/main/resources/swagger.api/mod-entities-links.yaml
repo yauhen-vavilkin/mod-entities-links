@@ -8,8 +8,111 @@ servers:
   - url: https://localhost:8081
 
 paths:
-  /stub:
-    get:
+  /links/instances/{instanceId}:
+    put:
+      description: Update links collection related to Instance
+      operationId: updateInstanceLinks
+      tags:
+        - instance-links
+      parameters:
+        - name: instanceId
+          in: path
+          required: true
+          description: UUID of the Instance that is related to the MARC record
+          schema:
+            $ref: "#/components/schemas/uuid"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/instanceLinkDtoCollection"
+        required: true
       responses:
-        "200":
-          description: stub
+        "202":
+          description: The links were updated
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '422':
+          $ref: '#/components/responses/unprocessableEntityResponse'
+
+components:
+  schemas:
+    instanceLinkDtoCollection:
+      type: object
+      title: Collection of instance links
+      description: Collection of instance links
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/instanceLinkDto'
+        totalRecords:
+          type: integer
+          readOnly: true
+          description: Total amount of notes
+      required:
+        - links
+
+    instanceLinkDto:
+      type: object
+      title: Collection of instance links
+      description: Collection of instance links
+      properties:
+        id:
+          type: integer
+          description: Unique generated identifier for the link
+        authorityId:
+          $ref: '#/components/schemas/uuid'
+          description: ID of the Authority record
+        authorityNaturalId:
+          type: string
+          description: Natural ID of the Authority record
+        instanceId:
+          $ref: '#/components/schemas/uuid'
+          description: ID of the Instance record
+        bibRecordTag:
+          type: string
+          pattern: '^[0-9]{3}$'
+        bibRecordSubfields:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            type: string
+      required:
+        - authorityId
+        - authorityNaturalId
+        - instanceId
+        - bibRecordTag
+        - bibRecordSubfields
+
+    uuid:
+      type: string
+      format: uuid
+
+    errorResponse:
+      type: object
+      example:
+        Error:
+          value:
+            errors:
+              - message: may not be null
+                type: 1
+                code: -1
+                parameters:
+                  - key: moduleTo
+                    value: null
+
+  responses:
+    badRequestResponse:
+      description: Validation errors.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+    unprocessableEntityResponse:
+      description: Validation error for the request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorResponse'

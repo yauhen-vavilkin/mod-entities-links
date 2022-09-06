@@ -4,4 +4,60 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
+  <changeSet id="MODELINKS-2@@create-instance-link-table" author="Pavlo_Smahin">
+    <preConditions>
+      <not>
+        <tableExists tableName="instance_link"/>
+      </not>
+    </preConditions>
+
+    <comment>Create instance_link table</comment>
+
+    <createTable tableName="instance_link">
+        <column autoIncrement="true" name="id" type="BIGINT">
+            <constraints nullable="false" primaryKey="true" primaryKeyName="pk_instance_link"/>
+        </column>
+        <column name="authority_id" type="UUID">
+            <constraints nullable="false"/>
+        </column>
+        <column name="authority_natural_id" type="VARCHAR(100)">
+            <constraints nullable="false"/>
+        </column>
+        <column name="instance_id" type="UUID">
+            <constraints nullable="false"/>
+        </column>
+        <column name="bib_record_tag" type="VARCHAR(3)"/>
+        <column name="bib_record_subfields" type="char[]"/>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODELINKS-2@@create-instancelink-authorityid-index" author="Pavlo_Smahin">
+    <preConditions>
+      <not>
+        <indexExists indexName="idx_instancelink_authority_id" tableName="instance_link"/>
+      </not>
+    </preConditions>
+
+    <comment>Create B-tree index for authority_id in instance_link</comment>
+
+    <createIndex tableName="instance_link" indexName="idx_instancelink_authority_id">
+      <column name="authority_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="MODELINKS-2@@create-instancelink-instanceid-index" author="Pavlo_Smahin">
+    <preConditions>
+      <not>
+        <indexExists indexName="idx_instancelink_instance_id" tableName="instance_link"/>
+      </not>
+    </preConditions>
+
+    <comment>Create B-tree index for instance_id in instance_link</comment>
+
+    <createIndex tableName="instance_link" indexName="idx_instancelink_instance_id">
+      <column name="instance_id"/>
+    </createIndex>
+  </changeSet>
+
+
 </databaseChangeLog>
