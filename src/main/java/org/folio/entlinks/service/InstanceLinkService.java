@@ -23,6 +23,11 @@ public class InstanceLinkService {
   private final InstanceLinkRepository repository;
   private final InstanceLinkMapper mapper;
 
+  public InstanceLinkDtoCollection getInstanceLinks(UUID instanceId) {
+    var links = repository.findByInstanceId(instanceId);
+    return mapper.convert(links);
+  }
+
   @Transactional
   public void updateInstanceLinks(UUID instanceId, @NotNull InstanceLinkDtoCollection instanceLinkCollection) {
     var links = instanceLinkCollection.getLinks();

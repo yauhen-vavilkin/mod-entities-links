@@ -15,6 +15,12 @@ public class InstanceLinksController implements InstanceLinksApi {
   private final InstanceLinkService instanceLinkService;
 
   @Override
+  public ResponseEntity<InstanceLinkDtoCollection> getInstanceLinks(UUID instanceId) {
+    var links = instanceLinkService.getInstanceLinks(instanceId);
+    return ResponseEntity.ok(links);
+  }
+
+  @Override
   public ResponseEntity<Void> updateInstanceLinks(UUID instanceId, InstanceLinkDtoCollection instanceLinkCollection) {
     instanceLinkService.updateInstanceLinks(instanceId, instanceLinkCollection);
     return ResponseEntity.noContent().build();

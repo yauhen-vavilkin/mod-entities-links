@@ -34,6 +34,31 @@ paths:
           $ref: '#/components/responses/badRequestResponse'
         '422':
           $ref: '#/components/responses/unprocessableEntityResponse'
+        '500':
+          $ref: '#/components/responses/serverErrorResponse'
+    get:
+      description: Get links collection related to Instance
+      operationId: getInstanceLinks
+      tags:
+        - instance-links
+      parameters:
+        - name: instanceId
+          in: path
+          required: true
+          description: UUID of the Instance that is related to the MARC record
+          schema:
+            $ref: "#/components/schemas/uuid"
+      responses:
+        "200":
+          description: The links collection related to Instance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/instanceLinkDtoCollection"
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/serverErrorResponse'
 
 components:
   schemas:
@@ -112,6 +137,12 @@ components:
             $ref: "#/components/schemas/errorResponse"
     unprocessableEntityResponse:
       description: Validation error for the request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorResponse'
+    serverErrorResponse:
+      description: Internal server error.
       content:
         application/json:
           schema:

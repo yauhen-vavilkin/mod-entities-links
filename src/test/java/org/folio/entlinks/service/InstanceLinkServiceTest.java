@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.from;
 import static org.folio.support.TestUtils.links;
 import static org.folio.support.TestUtils.linksDto;
 import static org.folio.support.TestUtils.linksDtoCollection;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
@@ -19,6 +20,7 @@ import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.model.converter.InstanceLinkMapperImpl;
 import org.folio.entlinks.model.entity.InstanceLink;
 import org.folio.entlinks.repository.InstanceLinkRepository;
+import org.folio.qm.domain.dto.InstanceLinkDto;
 import org.folio.support.TestUtils.Link;
 import org.folio.support.types.UnitTest;
 import org.junit.jupiter.api.Assertions;
@@ -41,6 +43,39 @@ class InstanceLinkServiceTest {
   @BeforeEach
   void setUp() throws Exception {
     service = new InstanceLinkService(repository, new InstanceLinkMapperImpl());
+  }
+
+  @Test
+  void getInstanceLinks_positive_foundWhenExist() {
+    var instanceId = randomUUID();
+    var existedLinks = links(instanceId,
+        Link.of(0, 0),
+        Link.of(1, 1),
+        Link.of(2, 3),
+        Link.of(3, 2)
+    );
+
+    when(repository.findByInstanceId(any(UUID.class))).thenReturn(existedLinks);
+
+    var result = service.getInstanceLinks(instanceId);
+
+    assertThat(result.getLinks())
+        .hasSize(existedLinks.size())
+        .extracting(InstanceLinkDto::getBibRecordTag)
+        .containsOnly(Link.TAGS[0], Link.TAGS[1], Link.TAGS[2], Link.TAGS[3]);
+  }
+
+  @Test
+  void getInstanceLinks_positive_nothingFound() {
+    var instanceId = randomUUID();
+    var existedLinks = Collections.<InstanceLink>emptyList();
+
+    when(repository.findByInstanceId(any(UUID.class))).thenReturn(existedLinks);
+
+    var result = service.getInstanceLinks(instanceId);
+
+    assertThat(result.getLinks()).isEmpty();
+    assertEquals(0, result.getTotalRecords());
   }
 
   @Test
