@@ -63,7 +63,11 @@
     {
       "permissionName": "instance-authority-links.instances.all",
       "displayName": "Entities Links - all instance-authority links permissions",
-      "description": "Entire set of permissions needed to use instance-links operations"
+      "description": "Entire set of permissions needed to use instance-links operations",
+      "subPermissions": [
+        "instance-authority-links.instances.collection.get",
+        "instance-authority-links.instances.collection.put"
+      ]
     }
   ],
   "launchDescriptor": {
