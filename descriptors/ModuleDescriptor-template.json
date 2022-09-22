@@ -12,7 +12,7 @@
           ],
           "pathPattern": "/links/instances/{instanceId}",
           "permissionsRequired": [
-            "instance-authority-links.collection.get"
+            "instance-authority-links.instances.collection.get"
           ]
         },
         {
@@ -21,7 +21,7 @@
           ],
           "pathPattern": "/links/instances/{instanceId}",
           "permissionsRequired": [
-            "instance-authority-links.collection.put"
+            "instance-authority-links.instances.collection.put"
           ]
         }
       ]
