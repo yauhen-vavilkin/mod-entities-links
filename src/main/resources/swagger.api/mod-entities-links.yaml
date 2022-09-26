@@ -60,6 +60,30 @@ paths:
         '500':
           $ref: '#/components/responses/serverErrorResponse'
 
+  /links/authorities/bulk/count:
+    post:
+      description: Retrieve number of links by authority IDs
+      operationId: countLinksByAuthorityIds
+      tags:
+        - instance-links
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/uuidCollection"
+        required: true
+      responses:
+        "200":
+          description: The links collection related to Instance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/linksCountDtoCollection"
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/serverErrorResponse'
+
 components:
   schemas:
     instanceLinkDtoCollection:
@@ -110,6 +134,43 @@ components:
         - instanceId
         - bibRecordTag
         - bibRecordSubfields
+
+    uuidCollection:
+      type: object
+      title: Collection of UUIDs
+      description: Collection of UUIDs
+      properties:
+        ids:
+          type: array
+          items:
+            $ref: '#/components/schemas/uuid'
+      required:
+        - ids
+
+    linksCountDtoCollection:
+      type: object
+      title: Collection of links count map for authorities
+      description: Collection of links count map for authorities
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/linksCountDto'
+      required:
+        - links
+
+    linksCountDto:
+      type: object
+      title: Total links count map for one authority
+      description: Total links count map for one authority
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+          description: Authority ID
+        totalLinks:
+          type: integer
+          format: int64
+          description: Number of titles linked to the authority
 
     uuid:
       type: string

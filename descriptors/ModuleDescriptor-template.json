@@ -23,6 +23,15 @@
           "permissionsRequired": [
             "instance-authority-links.instances.collection.put"
           ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/links/authorities/bulk/count",
+          "permissionsRequired": [
+            "instance-authority-links.authorities.bulk.post"
+          ]
         }
       ]
     },
@@ -61,12 +70,18 @@
       "description": "Update instance-authority links collection"
     },
     {
+      "permissionName": "instance-authority-links.authorities.bulk.post",
+      "displayName": "Entities Links - count instance-authority links for each authority",
+      "description": "Count instance-authority links for each authority"
+    },
+    {
       "permissionName": "instance-authority-links.instances.all",
       "displayName": "Entities Links - all instance-authority links permissions",
       "description": "Entire set of permissions needed to use instance-links operations",
       "subPermissions": [
         "instance-authority-links.instances.collection.get",
-        "instance-authority-links.instances.collection.put"
+        "instance-authority-links.instances.collection.put",
+        "instance-authority-links.authorities.bulk.post"
       ]
     }
   ],

@@ -1,5 +1,6 @@
 package org.folio.entlinks.service;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -11,6 +12,9 @@ import org.folio.entlinks.model.entity.InstanceLink;
 import org.folio.entlinks.repository.InstanceLinkRepository;
 import org.folio.qm.domain.dto.InstanceLinkDto;
 import org.folio.qm.domain.dto.InstanceLinkDtoCollection;
+import org.folio.qm.domain.dto.LinksCountDto;
+import org.folio.qm.domain.dto.LinksCountDtoCollection;
+import org.folio.qm.domain.dto.UuidCollection;
 import org.folio.tenant.domain.dto.Parameter;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -39,6 +43,28 @@ public class InstanceLinkService {
     var linksToCreate = subtract(incomingLinks, existedLinks);
     repository.deleteAllInBatch(linksToDelete);
     repository.saveAll(linksToCreate);
+  }
+
+  public LinksCountDtoCollection countLinksByAuthorityIds(UuidCollection authorityIdCollection) {
+    var ids = authorityIdCollection.getIds();
+    var linkCountMap = repository.countLinksByAuthorityIds(ids)
+        .stream().map(mapper::convert).toList();
+
+    linkCountMap = fillInMissingIdsWithZeros(linkCountMap, ids);
+
+    return new LinksCountDtoCollection().links(linkCountMap);
+  }
+
+  private List<LinksCountDto> fillInMissingIdsWithZeros(List<LinksCountDto> linksCountMap, List<UUID> ids) {
+    var foundIds = linksCountMap.stream().map(LinksCountDto::getId).toList();
+    var notFoundIds = ids.stream().filter(uuid -> foundIds.stream().noneMatch(uuid::equals)).toList();
+
+    if (!notFoundIds.isEmpty()) {
+      var tempList = new ArrayList<>(linksCountMap);
+      notFoundIds.forEach(uuid -> tempList.add(new LinksCountDto().id(uuid).totalLinks(0L)));
+      linksCountMap = tempList;
+    }
+    return linksCountMap;
   }
 
   private List<InstanceLink> subtract(Collection<InstanceLink> source, Collection<InstanceLink> target) {

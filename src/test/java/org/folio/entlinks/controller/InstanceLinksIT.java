@@ -2,6 +2,7 @@ package org.folio.entlinks.controller;
 
 import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
+import static org.folio.support.TestUtils.Link.TAGS;
 import static org.folio.support.TestUtils.linksDto;
 import static org.folio.support.TestUtils.linksDtoCollection;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -22,6 +23,7 @@ import lombok.SneakyThrows;
 import org.folio.entlinks.model.type.ErrorCode;
 import org.folio.qm.domain.dto.InstanceLinkDto;
 import org.folio.qm.domain.dto.InstanceLinkDtoCollection;
+import org.folio.qm.domain.dto.UuidCollection;
 import org.folio.support.TestUtils.Link;
 import org.folio.support.base.IntegrationTestBase;
 import org.folio.support.types.IntegrationTest;
@@ -38,6 +40,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 class InstanceLinksIT extends IntegrationTestBase {
 
   private static final String INSTANCE_LINKS_ENDPOINT_PATH = "/links/instances/{id}";
+  private static final String AUTHORITY_LINKS_COUNT_ENDPOINT_PATH = "/links/authorities/bulk/count";
 
   public static Stream<Arguments> requiredFieldMissingProvider() {
     return Stream.of(
@@ -286,6 +289,57 @@ class InstanceLinksIT extends IntegrationTestBase {
       .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())))
       .andExpect(errorMessageMatch(containsString("must not be null")))
       .andExpect(errorParameterMatch(is("links[0]." + missingField)));
+  }
+
+  @Test
+  @SneakyThrows
+  void countNumberOfTitles_positive_whenInstanceLinksExist() {
+    var instanceId = randomUUID();
+    var authorityId = randomUUID();
+    var links = linksDtoCollection(linksDto(instanceId,
+        new Link(authorityId, TAGS[0]),
+        new Link(authorityId, TAGS[1]),
+        new Link(authorityId, TAGS[2])
+    ));
+    doPut(INSTANCE_LINKS_ENDPOINT_PATH, links, instanceId);
+
+    var requestBody = new UuidCollection().ids(List.of(authorityId));
+    doPost(AUTHORITY_LINKS_COUNT_ENDPOINT_PATH, requestBody)
+        .andExpect(status().isOk())
+        .andExpect(linksMatch(hasSize(1)))
+        .andExpect(jsonPath("$.links.[0].id", is(authorityId.toString())))
+        .andExpect(jsonPath("$.links.[0].totalLinks", is(3)));
+  }
+
+  @Test
+  @SneakyThrows
+  void countNumberOfTitles_positive_whenInstanceLinksNotExistThenReturnZeroCount() {
+    var requestBody = new UuidCollection().ids(List.of(randomUUID(), randomUUID()));
+    doPost(AUTHORITY_LINKS_COUNT_ENDPOINT_PATH, requestBody)
+        .andExpect(status().isOk())
+        .andExpect(linksMatch(hasSize(2)))
+        .andExpect(jsonPath("$.links.[0].totalLinks", is(0)))
+        .andExpect(jsonPath("$.links.[1].totalLinks", is(0)));
+  }
+
+  @Test
+  @SneakyThrows
+  void countNumberOfTitles_positive_whenRequestBodyIsEmptyThenReturnEmptyList() {
+    var requestBody = new UuidCollection().ids(List.of());
+    doPost(AUTHORITY_LINKS_COUNT_ENDPOINT_PATH, requestBody)
+        .andExpect(status().isOk())
+        .andExpect(linksMatch(hasSize(0)));
+  }
+
+  @Test
+  @SneakyThrows
+  void countNumberOfTitles_negative_whenRequestBodyInvalidThenThrowsValidationException() {
+    var requestBody = List.of("not uuid collection object");
+    tryPost(AUTHORITY_LINKS_COUNT_ENDPOINT_PATH, requestBody)
+        .andExpect(status().isBadRequest())
+        .andExpect(errorTotalMatch(1))
+        .andExpect(errorTypeMatch(is("HttpMessageNotReadableException")))
+        .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())));
   }
 
   private ResultMatcher errorParameterMatch(Matcher<String> errorMessageMatcher) {
