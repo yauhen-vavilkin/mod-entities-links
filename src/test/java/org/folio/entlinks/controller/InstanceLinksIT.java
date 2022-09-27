@@ -166,6 +166,28 @@ class InstanceLinksIT extends IntegrationTestBase {
 
   @Test
   @SneakyThrows
+  void updateInstanceLinks_positive_updateExistedLinks() {
+    var instanceId = randomUUID();
+    var existedLinks = linksDtoCollection(linksDto(instanceId,
+      Link.of(0, 0, "12345", List.of("a", "b")),
+      Link.of(1, 1, "7890", List.of("c"))
+    ));
+    doPut(INSTANCE_LINKS_ENDPOINT_PATH, existedLinks, instanceId);
+
+    var incomingLinks = linksDtoCollection(linksDto(instanceId,
+      Link.of(0, 0, "12345-updated", List.of("x")),
+      Link.of(1, 1, "7890-updated", List.of("c"))
+    ));
+    doPut(INSTANCE_LINKS_ENDPOINT_PATH, incomingLinks, instanceId);
+
+    doGet(INSTANCE_LINKS_ENDPOINT_PATH, instanceId)
+      .andExpect(linksMatch(hasSize(2)))
+      .andExpect(linksMatch(incomingLinks))
+      .andExpect(totalRecordsMatch(2));
+  }
+
+  @Test
+  @SneakyThrows
   void updateInstanceLinks_positive_deleteAndSaveLinks_whenHaveDifference() {
     var instanceId = randomUUID();
     var existedLinks = linksDtoCollection(linksDto(instanceId,
@@ -297,18 +319,18 @@ class InstanceLinksIT extends IntegrationTestBase {
     var instanceId = randomUUID();
     var authorityId = randomUUID();
     var links = linksDtoCollection(linksDto(instanceId,
-        new Link(authorityId, TAGS[0]),
-        new Link(authorityId, TAGS[1]),
-        new Link(authorityId, TAGS[2])
+      new Link(authorityId, TAGS[0]),
+      new Link(authorityId, TAGS[1]),
+      new Link(authorityId, TAGS[2])
     ));
     doPut(INSTANCE_LINKS_ENDPOINT_PATH, links, instanceId);
 
     var requestBody = new UuidCollection().ids(List.of(authorityId));
     doPost(AUTHORITY_LINKS_COUNT_ENDPOINT_PATH, requestBody)
-        .andExpect(status().isOk())
-        .andExpect(linksMatch(hasSize(1)))
-        .andExpect(jsonPath("$.links.[0].id", is(authorityId.toString())))
-        .andExpect(jsonPath("$.links.[0].totalLinks", is(3)));
+      .andExpect(status().isOk())
+      .andExpect(linksMatch(hasSize(1)))
+      .andExpect(jsonPath("$.links.[0].id", is(authorityId.toString())))
+      .andExpect(jsonPath("$.links.[0].totalLinks", is(3)));
   }
 
   @Test
@@ -316,10 +338,10 @@ class InstanceLinksIT extends IntegrationTestBase {
   void countNumberOfTitles_positive_whenInstanceLinksNotExistThenReturnZeroCount() {
     var requestBody = new UuidCollection().ids(List.of(randomUUID(), randomUUID()));
     doPost(AUTHORITY_LINKS_COUNT_ENDPOINT_PATH, requestBody)
-        .andExpect(status().isOk())
-        .andExpect(linksMatch(hasSize(2)))
-        .andExpect(jsonPath("$.links.[0].totalLinks", is(0)))
-        .andExpect(jsonPath("$.links.[1].totalLinks", is(0)));
+      .andExpect(status().isOk())
+      .andExpect(linksMatch(hasSize(2)))
+      .andExpect(jsonPath("$.links.[0].totalLinks", is(0)))
+      .andExpect(jsonPath("$.links.[1].totalLinks", is(0)));
   }
 
   @Test
@@ -327,8 +349,8 @@ class InstanceLinksIT extends IntegrationTestBase {
   void countNumberOfTitles_positive_whenRequestBodyIsEmptyThenReturnEmptyList() {
     var requestBody = new UuidCollection().ids(List.of());
     doPost(AUTHORITY_LINKS_COUNT_ENDPOINT_PATH, requestBody)
-        .andExpect(status().isOk())
-        .andExpect(linksMatch(hasSize(0)));
+      .andExpect(status().isOk())
+      .andExpect(linksMatch(hasSize(0)));
   }
 
   @Test
@@ -336,10 +358,10 @@ class InstanceLinksIT extends IntegrationTestBase {
   void countNumberOfTitles_negative_whenRequestBodyInvalidThenThrowsValidationException() {
     var requestBody = List.of("not uuid collection object");
     tryPost(AUTHORITY_LINKS_COUNT_ENDPOINT_PATH, requestBody)
-        .andExpect(status().isBadRequest())
-        .andExpect(errorTotalMatch(1))
-        .andExpect(errorTypeMatch(is("HttpMessageNotReadableException")))
-        .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())));
+      .andExpect(status().isBadRequest())
+      .andExpect(errorTotalMatch(1))
+      .andExpect(errorTypeMatch(is("HttpMessageNotReadableException")))
+      .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())));
   }
 
   private ResultMatcher errorParameterMatch(Matcher<String> errorMessageMatcher) {

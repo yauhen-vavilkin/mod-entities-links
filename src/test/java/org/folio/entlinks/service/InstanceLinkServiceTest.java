@@ -191,9 +191,9 @@ class InstanceLinkServiceTest {
     verify(repository).saveAll(saveCaptor.capture());
     verify(repository).deleteAllInBatch(deleteCaptor.capture());
 
-    assertThat(saveCaptor.getValue()).hasSize(2)
+    assertThat(saveCaptor.getValue()).hasSize(4)
       .extracting(InstanceLink::getBibRecordTag)
-      .containsOnly(Link.TAGS[2], Link.TAGS[3]);
+      .containsOnly(Link.TAGS[0], Link.TAGS[1], Link.TAGS[2], Link.TAGS[3]);
 
     assertThat(deleteCaptor.getValue()).isEmpty();
   }
@@ -225,9 +225,9 @@ class InstanceLinkServiceTest {
     verify(repository).saveAll(saveCaptor.capture());
     verify(repository).deleteAllInBatch(deleteCaptor.capture());
 
-    assertThat(saveCaptor.getValue()).hasSize(2)
+    assertThat(saveCaptor.getValue()).hasSize(4)
       .extracting(InstanceLink::getBibRecordTag)
-      .containsOnly(Link.TAGS[2], Link.TAGS[3]);
+      .containsOnly(Link.TAGS[0], Link.TAGS[1], Link.TAGS[2], Link.TAGS[3]);
 
     assertThat(deleteCaptor.getValue()).hasSize(2)
       .extracting(InstanceLink::getBibRecordTag)

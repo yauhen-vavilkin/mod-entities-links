@@ -40,19 +40,29 @@ public class InstanceLinkService {
     var existedLinks = repository.findByInstanceId(instanceId);
 
     var linksToDelete = subtract(existedLinks, incomingLinks);
-    var linksToCreate = subtract(incomingLinks, existedLinks);
+    var linksToSave = getLinksToSave(incomingLinks, existedLinks, linksToDelete);
     repository.deleteAllInBatch(linksToDelete);
-    repository.saveAll(linksToCreate);
+    repository.saveAll(linksToSave);
   }
 
   public LinksCountDtoCollection countLinksByAuthorityIds(UuidCollection authorityIdCollection) {
     var ids = authorityIdCollection.getIds();
     var linkCountMap = repository.countLinksByAuthorityIds(ids)
-        .stream().map(mapper::convert).toList();
+      .stream().map(mapper::convert).toList();
 
     linkCountMap = fillInMissingIdsWithZeros(linkCountMap, ids);
 
     return new LinksCountDtoCollection().links(linkCountMap);
+  }
+
+  private List<InstanceLink> getLinksToSave(List<InstanceLink> incomingLinks, List<InstanceLink> existedLinks,
+                                            List<InstanceLink> linksToDelete) {
+    var linksToCreate = subtract(incomingLinks, existedLinks);
+    var linksToUpdate = subtract(existedLinks, linksToDelete);
+    updateLinksData(incomingLinks, linksToUpdate);
+    var linksToSave = new ArrayList<>(linksToCreate);
+    linksToSave.addAll(linksToUpdate);
+    return linksToSave;
   }
 
   private List<LinksCountDto> fillInMissingIdsWithZeros(List<LinksCountDto> linksCountMap, List<UUID> ids) {
@@ -65,6 +75,15 @@ public class InstanceLinkService {
       linksCountMap = tempList;
     }
     return linksCountMap;
+  }
+
+  private void updateLinksData(List<InstanceLink> incomingLinks, List<InstanceLink> linksToUpdate) {
+    linksToUpdate
+      .forEach(link -> incomingLinks.stream().filter(l -> l.isSameLink(link)).findFirst()
+        .ifPresent(l -> {
+          link.setAuthorityNaturalId(l.getAuthorityNaturalId());
+          link.setBibRecordSubfields(l.getBibRecordSubfields());
+        }));
   }
 
   private List<InstanceLink> subtract(Collection<InstanceLink> source, Collection<InstanceLink> target) {

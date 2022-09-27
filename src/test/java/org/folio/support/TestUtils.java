@@ -29,7 +29,6 @@ public class TestUtils {
     return Arrays.stream(links).map(link -> link.toDto(instanceId)).toList();
   }
 
-
   public static InstanceLinkDtoCollection linksDtoCollection(List<InstanceLinkDto> links) {
     return new InstanceLinkDtoCollection().links(links).totalRecords(links.size());
   }
@@ -38,21 +37,29 @@ public class TestUtils {
     return Arrays.stream(links).map(link -> link.toEntity(instanceId)).toList();
   }
 
-  public record Link(UUID authorityId, String tag) {
+  public record Link(UUID authorityId, String tag, String naturalId, List<String> subfields) {
 
     public static final UUID[] AUTH_IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID(), randomUUID()};
     public static final String[] TAGS = new String[] {"100", "101", "700", "710"};
 
+    public Link(UUID authorityId, String tag) {
+      this(authorityId, tag, authorityId.toString(), List.of("a", "b"));
+    }
+
     public static Link of(int authIdNum, int tagNum) {
       return new Link(AUTH_IDS[authIdNum], TAGS[tagNum]);
+    }
+
+    public static Link of(int authIdNum, int tagNum, String naturalId, List<String> subfields) {
+      return new Link(AUTH_IDS[authIdNum], TAGS[tagNum], naturalId, subfields);
     }
 
     public InstanceLinkDto toDto(UUID instanceId) {
       return new InstanceLinkDto()
         .instanceId(instanceId)
         .authorityId(authorityId)
-        .authorityNaturalId(authorityId.toString())
-        .bibRecordSubfields(List.of("a", "b"))
+        .authorityNaturalId(naturalId)
+        .bibRecordSubfields(subfields)
         .bibRecordTag(tag);
     }
 
@@ -60,9 +67,9 @@ public class TestUtils {
       return InstanceLink.builder()
         .instanceId(instanceId)
         .authorityId(authorityId)
-        .authorityNaturalId(authorityId.toString())
+        .authorityNaturalId(naturalId)
+        .bibRecordSubfields(subfields)
         .bibRecordTag(tag)
-        .bibRecordSubfields(List.of("a", "b"))
         .build();
     }
   }
