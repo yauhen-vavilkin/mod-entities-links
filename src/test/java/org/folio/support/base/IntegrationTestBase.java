@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import lombok.SneakyThrows;
 import org.folio.spring.integration.XOkapiHeaders;
+import org.folio.support.extension.EnableKafka;
 import org.folio.support.extension.EnablePostgres;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.junit.jupiter.api.BeforeAll;
@@ -22,6 +23,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+@EnableKafka
 @EnablePostgres
 @SpringBootTest
 @ActiveProfiles("test")

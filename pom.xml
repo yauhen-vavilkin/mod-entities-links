@@ -25,11 +25,12 @@
       src/main/java/org/folio/entlinks/model/**
     </sonar.exclusions>
 
-    <folio-spring-base.version>4.1.0</folio-spring-base.version>
+    <folio-spring-base.version>5.1.0-SNAPSHOT</folio-spring-base.version>
+    <folio-service-tools-spring-dev.version>2.0.0-SNAPSHOT</folio-service-tools-spring-dev.version>
     <mapstruct.version>1.5.2.Final</mapstruct.version>
     <lombok.mapstruct-binding.version>0.2.0</lombok.mapstruct-binding.version>
 
-    <testcontainers.version>1.17.3</testcontainers.version>
+    <testcontainers.version>1.17.4</testcontainers.version>
 
     <openapi-generator.version>5.4.0</openapi-generator.version>
     <copy-rename-maven-plugin.version>1.0.1</copy-rename-maven-plugin.version>
@@ -41,6 +42,11 @@
       <groupId>org.folio</groupId>
       <artifactId>folio-spring-base</artifactId>
       <version>${folio-spring-base.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>folio-service-tools-spring-dev</artifactId>
+      <version>${folio-service-tools-spring-dev.version}</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -127,6 +133,12 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>postgresql</artifactId>
+      <version>${testcontainers.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>kafka</artifactId>
       <version>${testcontainers.version}</version>
       <scope>test</scope>
     </dependency>

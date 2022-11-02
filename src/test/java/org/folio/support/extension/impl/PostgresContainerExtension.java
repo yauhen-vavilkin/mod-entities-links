@@ -20,10 +20,10 @@ public class PostgresContainerExtension implements BeforeAllCallback, AfterAllCa
   private static final String DATABASE_USERNAME = "folio_admin";
   private static final String DATABASE_PASSWORD = "password";
 
-  private static final PostgreSQLContainer<?> CONTAINER = new PostgreSQLContainer<>(DOCKER_IMAGE)
-    .withDatabaseName(DATABASE_NAME)
-    .withUsername(DATABASE_USERNAME)
-    .withPassword(DATABASE_PASSWORD);
+  private static final PostgreSQLContainer<?> CONTAINER =
+    new PostgreSQLContainer<>(DOCKER_IMAGE).withDatabaseName(DATABASE_NAME)
+      .withUsername(DATABASE_USERNAME)
+      .withPassword(DATABASE_PASSWORD);
 
   @Override
   public void beforeAll(ExtensionContext context) {

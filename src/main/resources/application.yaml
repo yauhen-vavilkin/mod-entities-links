@@ -1,10 +1,10 @@
 spring:
   application:
-    name: mod-entity-links
+    name: mod-entities-links
   datasource:
     continue-on-error: true
-    password: ${DB_PASSWORD:folio_admin}
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_DATABASE:okapi_modules}
+    password: ${DB_PASSWORD:folio_admin}
     username: ${DB_USERNAME:folio_admin}
   liquibase:
     change-log: classpath:db/changelog/changelog-master.xml
@@ -17,9 +17,25 @@ spring:
     deserialization:
       fail-on-unknown-properties: false
       accept-single-value-as-array: true
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST:kafka}:${KAFKA_PORT:9092}
+    consumer:
+      max-poll-records: ${KAFKA_CONSUMER_MAX_POLL_RECORDS:200}
+    security:
+      protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
+    ssl:
+      key-store-password: ${KAFKA_SSL_KEYSTORE_PASSWORD:}
+      key-store-location: ${KAFKA_SSL_KEYSTORE_LOCATION:}
+      trust-store-password: ${KAFKA_SSL_TRUSTSTORE_PASSWORD:}
+      trust-store-location: ${KAFKA_SSL_TRUSTSTORE_LOCATION:}
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        retries: 5
 
 folio:
-  environment: ${ENV:folio}
   tenant:
     validation:
       enabled: true
@@ -28,6 +44,14 @@ folio:
       enabled: true
     feign:
       enabled: false
+
+application:
+  environment: ${ENV:folio}
+  kafka:
+    topics:
+      - name: links.instance-authority
+        numPartitions: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS:10}
+        replicationFactor: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_REPLICATION_FACTOR:}
 
 management.endpoints.web:
   base-path: /admin

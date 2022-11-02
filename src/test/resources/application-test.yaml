@@ -1,11 +1,9 @@
 spring:
   application:
-    name: mod-entity-links
+    name: mod-entities-links
   datasource:
-    continue-on-error: true
-    password: ${DB_PASSWORD:folio_admin}
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_DATABASE:okapi_modules}
-    username: ${DB_USERNAME:folio_admin}
+    username: folio_admin
+    password: folio_admin
   liquibase:
     change-log: classpath:db/changelog/changelog-master.xml
   jpa:
@@ -19,7 +17,6 @@ spring:
       accept-single-value-as-array: true
 
 folio:
-  environment: ${ENV:folio}
   tenant:
     validation:
       enabled: true
@@ -29,7 +26,12 @@ folio:
     feign:
       enabled: false
 
-management.endpoints.web:
-  base-path: /admin
-  exposure.include: info,health,liquibase,threaddump,heapdump
+application:
+  environment: ${ENV:folio}
+  kafka:
+    topics:
+      - name: links.instance-authority
+        numPartitions: 1
+        replicationFactor:
+
 server.port: 8081

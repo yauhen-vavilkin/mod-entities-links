@@ -2,10 +2,34 @@
 
 ## Table of contents
 
-- [API](#api)
-  * [instance-links API](#instance-links-api)
-    + [Retrieve links](#retrieve-instance-links)
-    + [Modify links](#modify-instance-links)
+<!-- TOC -->
+  * [Deploying the module](#deploying-the-module)
+    * [Environment variables](#environment-variables)
+  * [API](#api)
+    * [instance-links API](#instance-links-api)
+<!-- TOC -->
+
+## Deploying the module
+### Environment variables
+
+| Name                                              | Default value | Description                                                                                                                                                                           |
+|:--------------------------------------------------|:--------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ENV                                               | folio         | The logical name of the deployment, must be unique across all environments using the same shared Kafka/Elasticsearch clusters, `a-z (any case)`, `0-9`, `-`, `_` symbols only allowed |
+| DB_HOST                                           | localhost     | Postgres hostname                                                                                                                                                                     |
+| DB_PORT                                           | 5432          | Postgres port                                                                                                                                                                         |
+| DB_USERNAME                                       | folio_admin   | Postgres username                                                                                                                                                                     |
+| DB_PASSWORD                                       | folio_admin   | Postgres username password                                                                                                                                                            |
+| DB_DATABASE                                       | okapi_modules | Postgres database name                                                                                                                                                                |
+| KAFKA_HOST                                        | kafka         | Kafka broker hostname                                                                                                                                                                 |
+| KAFKA_PORT                                        | 9092          | Kafka broker port                                                                                                                                                                     |
+| KAFKA_SECURITY_PROTOCOL                           | PLAINTEXT     | Kafka security protocol used to communicate with brokers (SSL or PLAINTEXT)                                                                                                           |
+| KAFKA_SSL_KEYSTORE_LOCATION                       | -             | The location of the Kafka key store file. This is optional for client and can be used for two-way authentication for client.                                                          |
+| KAFKA_SSL_KEYSTORE_PASSWORD                       | -             | The store password for the Kafka key store file. This is optional for client and only needed if 'ssl.keystore.location' is configured.                                                |
+| KAFKA_SSL_TRUSTSTORE_LOCATION                     | -             | The location of the Kafka trust store file.                                                                                                                                           |
+| KAFKA_SSL_TRUSTSTORE_PASSWORD                     | -             | The password for the Kafka trust store file. If a password is not set, trust store file configured will still be used, but integrity checking is disabled.                            |
+| KAFKA_CONSUMER_MAX_POLL_RECORDS                   | 200           | Maximum number of records returned in a single call to poll().                                                                                                                        |
+| KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS         | 10            | Amount of partitions for `links.instance-authority` topic.                                                                                                                            |
+| KAFKA_INSTANCE_AUTHORITY_TOPIC_REPLICATION_FACTOR | -             | Replication factor for `links.instance-authority` topic.                                                                                                                              |
 
 ## API
 
