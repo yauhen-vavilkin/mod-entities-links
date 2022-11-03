@@ -25,8 +25,8 @@ import org.folio.entlinks.repository.InstanceLinkRepository;
 import org.folio.qm.domain.dto.InstanceLinkDto;
 import org.folio.qm.domain.dto.LinksCountDto;
 import org.folio.qm.domain.dto.UuidCollection;
+import org.folio.spring.test.type.UnitTest;
 import org.folio.support.TestUtils.Link;
-import org.folio.support.types.UnitTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,7 +45,7 @@ class InstanceLinkServiceTest {
   private InstanceLinkService service;
 
   @BeforeEach
-  void setUp() throws Exception {
+  void setUp() {
     service = new InstanceLinkService(repository, new InstanceLinkMapperImpl());
   }
 
@@ -53,10 +53,10 @@ class InstanceLinkServiceTest {
   void getInstanceLinks_positive_foundWhenExist() {
     var instanceId = randomUUID();
     var existedLinks = links(instanceId,
-        Link.of(0, 0),
-        Link.of(1, 1),
-        Link.of(2, 3),
-        Link.of(3, 2)
+      Link.of(0, 0),
+      Link.of(1, 1),
+      Link.of(2, 3),
+      Link.of(3, 2)
     );
 
     when(repository.findByInstanceId(any(UUID.class))).thenReturn(existedLinks);
@@ -64,9 +64,9 @@ class InstanceLinkServiceTest {
     var result = service.getInstanceLinks(instanceId);
 
     assertThat(result.getLinks())
-        .hasSize(existedLinks.size())
-        .extracting(InstanceLinkDto::getBibRecordTag)
-        .containsOnly(Link.TAGS[0], Link.TAGS[1], Link.TAGS[2], Link.TAGS[3]);
+      .hasSize(existedLinks.size())
+      .extracting(InstanceLinkDto::getBibRecordTag)
+      .containsOnly(Link.TAGS[0], Link.TAGS[1], Link.TAGS[2], Link.TAGS[3]);
   }
 
   @Test
@@ -259,8 +259,8 @@ class InstanceLinkServiceTest {
     var authorityId2 = randomUUID();
     var authorityId3 = randomUUID();
     var resultSet = List.of(
-        linkCountView(authorityId1, 10),
-        linkCountView(authorityId2, 15));
+      linkCountView(authorityId1, 10),
+      linkCountView(authorityId2, 15));
     when(repository.countLinksByAuthorityIds(anyList())).thenReturn(resultSet);
 
     var requestBody = new UuidCollection().ids(List.of(authorityId1, authorityId2, authorityId3));
@@ -268,9 +268,9 @@ class InstanceLinkServiceTest {
 
     assertThat(result.getLinks()).hasSize(3);
     assertThat(result.getLinks()).contains(
-        new LinksCountDto().id(authorityId1).totalLinks(10L),
-        new LinksCountDto().id(authorityId2).totalLinks(15L),
-        new LinksCountDto().id(authorityId3).totalLinks(0L));
+      new LinksCountDto().id(authorityId1).totalLinks(10L),
+      new LinksCountDto().id(authorityId2).totalLinks(15L),
+      new LinksCountDto().id(authorityId3).totalLinks(0L));
   }
 
   private ArgumentCaptor<List<InstanceLink>> linksCaptor() {
@@ -278,7 +278,7 @@ class InstanceLinkServiceTest {
     return ArgumentCaptor.forClass(listClass);
   }
 
-  private LinkCountView linkCountView(UUID id, long totalLinks){
+  private LinkCountView linkCountView(UUID id, long totalLinks) {
     return new LinkCountView() {
       @Override
       public UUID getId() {

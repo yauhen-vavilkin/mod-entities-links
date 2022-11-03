@@ -9,21 +9,26 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
 import lombok.SneakyThrows;
 import org.folio.spring.integration.XOkapiHeaders;
-import org.folio.support.extension.EnableKafka;
-import org.folio.support.extension.EnablePostgres;
+import org.folio.spring.test.extension.EnableKafka;
+import org.folio.spring.test.extension.EnableOkapi;
+import org.folio.spring.test.extension.EnablePostgres;
+import org.folio.spring.test.extension.impl.OkapiConfiguration;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 @EnableKafka
+@EnableOkapi
 @EnablePostgres
 @SpringBootTest
 @ActiveProfiles("test")
@@ -31,10 +36,15 @@ import org.springframework.test.web.servlet.ResultActions;
 public class IntegrationTestBase {
 
   protected static MockMvc mockMvc;
+  protected static OkapiConfiguration okapi;
+  protected static KafkaTemplate<String, Object> kafkaTemplate;
 
   @BeforeAll
-  static void setUp(@Autowired MockMvc mockMvc) {
+  static void setUp(@Autowired MockMvc mockMvc,
+                    @Autowired KafkaTemplate<String, Object> kafkaTemplate) {
+    System.setProperty("env", "folio-test");
     IntegrationTestBase.mockMvc = mockMvc;
+    IntegrationTestBase.kafkaTemplate = kafkaTemplate;
     setUpTenant();
   }
 
@@ -49,8 +59,13 @@ public class IntegrationTestBase {
     httpHeaders.setContentType(APPLICATION_JSON);
     httpHeaders.add(XOkapiHeaders.TENANT, TENANT_ID);
     httpHeaders.add(XOkapiHeaders.USER_ID, USER_ID);
+    httpHeaders.add(XOkapiHeaders.URL, okapi.getOkapiUrl());
 
     return httpHeaders;
+  }
+
+  protected static WireMockServer getWireMock() {
+    return okapi.wireMockServer();
   }
 
   @SneakyThrows

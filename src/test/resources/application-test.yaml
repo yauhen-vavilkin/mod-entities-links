@@ -1,15 +1,17 @@
 spring:
   application:
     name: mod-entities-links
-  datasource:
-    username: folio_admin
-    password: folio_admin
+  main:
+    banner-mode: off
   liquibase:
     change-log: classpath:db/changelog/changelog-master.xml
   jpa:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQL10Dialect
+  kafka:
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   jackson:
     default-property-inclusion: non_null
     deserialization:
@@ -17,6 +19,17 @@ spring:
       accept-single-value-as-array: true
 
 folio:
+  environment: folio-test
+  system-user:
+    username: mod-entities-links
+    password: mod-entities-links
+    lastname: System
+    permissionsFilePath: permissions/test-permissions.csv
+  kafka:
+    topics:
+      - name: links.instance-authority
+        numPartitions: 1
+        replicationFactor:
   tenant:
     validation:
       enabled: true
@@ -25,13 +38,5 @@ folio:
       enabled: true
     feign:
       enabled: false
-
-application:
-  environment: ${ENV:folio}
-  kafka:
-    topics:
-      - name: links.instance-authority
-        numPartitions: 1
-        replicationFactor:
 
 server.port: 8081

@@ -36,6 +36,18 @@ spring:
         retries: 5
 
 folio:
+  environment: ${ENV:folio}
+  okapi-url: ${OKAPI_URL:http://localhost:9130}
+  system-user:
+    username: mod-entities-links
+    password: ${SYSTEM_USER_PASSWORD:mod-entities-links}
+    lastname: System
+    permissionsFilePath: permissions/mod-entities-links-permissions.csv
+  kafka:
+    topics:
+      - name: links.instance-authority
+        numPartitions: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS:10}
+        replicationFactor: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_REPLICATION_FACTOR:}
   tenant:
     validation:
       enabled: true
@@ -43,15 +55,7 @@ folio:
     request:
       enabled: true
     feign:
-      enabled: false
-
-application:
-  environment: ${ENV:folio}
-  kafka:
-    topics:
-      - name: links.instance-authority
-        numPartitions: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS:10}
-        replicationFactor: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_REPLICATION_FACTOR:}
+      enabled: true
 
 management.endpoints.web:
   base-path: /admin

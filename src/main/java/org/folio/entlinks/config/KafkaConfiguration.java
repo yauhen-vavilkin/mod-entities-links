@@ -5,7 +5,6 @@ import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_
 
 import java.util.HashMap;
 import java.util.Map;
-import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
@@ -16,9 +15,8 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
 /**
- * Responsible for configuration of kafka
+ * Responsible for Kafka configuration
  */
-@Log4j2
 @Configuration
 public class KafkaConfiguration {
 
