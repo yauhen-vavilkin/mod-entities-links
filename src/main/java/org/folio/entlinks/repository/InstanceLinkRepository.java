@@ -12,9 +12,10 @@ public interface InstanceLinkRepository extends JpaRepository<InstanceLink, Long
 
   List<InstanceLink> findByInstanceId(UUID instanceId);
 
-  @Query("SELECT il.authorityId AS id, COUNT(id) AS totalLinks"
+  @Query("SELECT il.authorityId AS id,"
+      + " COUNT(DISTINCT il.instanceId) AS totalLinks"
       + " FROM InstanceLink il WHERE il.authorityId IN :ids"
-      + " GROUP BY id")
+      + " GROUP BY id ORDER BY totalLinks DESC")
   List<LinkCountView> countLinksByAuthorityIds(@Param("ids") List<UUID> ids);
 
 }
