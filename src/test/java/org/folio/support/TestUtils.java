@@ -5,6 +5,9 @@ import static java.util.UUID.randomUUID;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.File;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -35,6 +38,11 @@ public class TestUtils {
 
   public static List<InstanceLink> links(UUID instanceId, Link... links) {
     return Arrays.stream(links).map(link -> link.toEntity(instanceId)).toList();
+  }
+
+  @SneakyThrows
+  public static String convertFile(File file) {
+    return new String(Files.readAllBytes(file.toPath()));
   }
 
   public record Link(UUID authorityId, String tag, String naturalId, List<String> subfields) {

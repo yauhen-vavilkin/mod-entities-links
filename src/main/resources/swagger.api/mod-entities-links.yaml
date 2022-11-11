@@ -84,6 +84,28 @@ paths:
         '500':
           $ref: '#/components/responses/serverErrorResponse'
 
+  /linking-rules/instance-authority:
+    get:
+      description: Retrieve instance-authority linking rules
+      operationId: getInstanceAuthorityLinkingRules
+      tags:
+        - linking-rules
+      responses:
+        "200":
+          description: The authority linking rules collection
+          content:
+            application/json:
+              schema:
+                type: array
+                title: Collection of linking rules
+                description: Collection of linking rules
+                items:
+                  $ref: '#/components/schemas/linkingRuleDto'
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/serverErrorResponse'
+
 components:
   schemas:
     instanceLinkDtoCollection:
@@ -172,9 +194,59 @@ components:
           format: int64
           description: Number of titles linked to the authority
 
+    linkingRuleDto:
+      type: object
+      title: Field to filed linking rule
+      description: Field to filed linking rule
+      properties:
+        bibField:
+          type: string
+        authorityField:
+          type: string
+        authoritySubfields:
+          type: array
+          items:
+            $ref: '#/components/schemas/char'
+        subfieldModifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/subfieldModification'
+        validation:
+          $ref: '#/components/schemas/subfieldValidation'
+
+    subfieldModification:
+      type: object
+      title: Subfield modification.
+      description: Subfield modification to link source and target subfields.
+      properties:
+        source:
+          description: Authority subfield.
+          $ref: '#/components/schemas/char'
+        target:
+          description: Instance subfields.
+          $ref: '#/components/schemas/char'
+
+    subfieldValidation:
+      type: object
+      title: Subfield validation.
+      description: Subfield validation before linking.
+      properties:
+        existence:
+          type: array
+          description: Specify if subfield should exist or not.
+          items:
+            type: string
+            additionalProperties:
+              type: boolean
+
     uuid:
       type: string
       format: uuid
+
+    char:
+      type: string
+      minLength: 1
+      maxLength: 1
 
     errorResponse:
       type: object

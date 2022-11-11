@@ -376,26 +376,6 @@ class InstanceLinksIT extends IntegrationTestBase {
       .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())));
   }
 
-  private ResultMatcher errorParameterMatch(Matcher<String> errorMessageMatcher) {
-    return jsonPath("$.errors.[0].parameters.[0].key", errorMessageMatcher);
-  }
-
-  private ResultMatcher errorTypeMatch(Matcher<String> errorMessageMatcher) {
-    return jsonPath("$.errors.[0].type", errorMessageMatcher);
-  }
-
-  private ResultMatcher errorCodeMatch(Matcher<String> errorMessageMatcher) {
-    return jsonPath("$.errors.[0].code", errorMessageMatcher);
-  }
-
-  private ResultMatcher errorMessageMatch(Matcher<String> errorMessageMatcher) {
-    return jsonPath("$.errors.[0].message", errorMessageMatcher);
-  }
-
-  private ResultMatcher errorTotalMatch(int errorTotal) {
-    return jsonPath("$.total_records", is(errorTotal));
-  }
-
   private ResultMatcher totalRecordsMatch(int recordsTotal) {
     return jsonPath("$.totalRecords", is(recordsTotal));
   }

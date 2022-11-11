@@ -54,6 +54,21 @@
       ]
     },
     {
+      "id": "instance-authority-linking-rules",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/linking-rules/instance-authority",
+          "permissionsRequired": [
+            "instance-authority.linking-rules.collection.get"
+          ]
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "2.0",
       "interfaceType": "system",
@@ -102,13 +117,19 @@
       "description": "Count instance-authority links for each authority"
     },
     {
+      "permissionName": "instance-authority.linking-rules.collection.get",
+      "displayName": "Entities Links - get instance-authority linking rules",
+      "description": "Get instance-authority linking rules"
+    },
+    {
       "permissionName": "instance-authority-links.instances.all",
       "displayName": "Entities Links - all instance-authority links permissions",
       "description": "Entire set of permissions needed to use instance-links operations",
       "subPermissions": [
         "instance-authority-links.instances.collection.get",
         "instance-authority-links.instances.collection.put",
-        "instance-authority-links.authorities.bulk.post"
+        "instance-authority-links.authorities.bulk.post",
+        "instance-authority.linking-rules.collection.get"
       ]
     }
   ],
