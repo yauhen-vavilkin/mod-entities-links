@@ -7,6 +7,8 @@
     * [Environment variables](#environment-variables)
   * [API](#api)
     * [instance-links API](#instance-links-api)
+    * [linking-rules API](#linking-rules-api)
+  * [Linking rules](#linking-rules)
 <!-- TOC -->
 
 ## Deploying the module
@@ -99,3 +101,54 @@ Response:
   ]
 }
 ```
+
+### linking-rules API
+The API enables possibility to retrieve default linking rules.
+For more information, see [Linking rules](#linking-rules) topic
+
+| METHOD | URL                                    | Required permissions                              | DESCRIPTION                                        |
+|:-------|:---------------------------------------|:--------------------------------------------------|:---------------------------------------------------|
+| GET    | `/linking-rules/instance-authority`    | `instance-authority.linking-rules.collection.get` | Get Instance to Authority linking rules collection |
+
+#### Examples:
+
+<a name="retrieve-instance-authority-linking-rules"></a>
+##### Retrieve instance to authority linking rules collection:
+`GET /linking-rules/instance-authority`
+
+Response:
+
+```json
+[
+    {
+      "bibField": "240",
+      "authorityField": "100",
+      "authoritySubfields": ["f", "g", "h", "k", "l", "m", "n", "o", "p", "r", "s", "t"],
+      "subfieldModifications": [
+        {
+          "source": "t",
+          "target": "a"
+        }
+      ],
+      "validation": {
+        "existence": [
+          {
+            "t": true
+          }
+        ]
+      }
+    }
+]
+```
+
+## Linking rules
+### Instance to Authority linking rule parameters
+
+* `bibField` - Instance field which would be controlled by authority field
+* `authorityField` - Authority field which would be linked to instance field
+* `authoritySubfields` - Array of authority subfields that can be linked to instance subfields. Should match instance subfields (in exceptions use `subfieldModifications`)
+* `subfieldModifications` - Array of subfield modifications
+  * `source` - Authority subfield, which would be linked to `target`
+  * `target` - Instance subfield, which would be controlled by `source`
+* `validation` - Linking rule validations that should be verified before linking
+  * `existence` - Map <char, boolean>. Validate if subfield exists or not

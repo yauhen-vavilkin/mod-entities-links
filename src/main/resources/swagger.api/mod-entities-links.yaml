@@ -223,7 +223,7 @@ components:
           description: Authority subfield.
           $ref: '#/components/schemas/char'
         target:
-          description: Instance subfields.
+          description: Instance subfield.
           $ref: '#/components/schemas/char'
 
     subfieldValidation:

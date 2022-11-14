@@ -5,7 +5,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.folio.entlinks.LinkingPairType;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.test.type.UnitTest;
 import org.folio.spring.tools.kafka.KafkaAdminService;
@@ -29,8 +28,6 @@ class ExtendedTenantServiceTest {
   private KafkaAdminService kafkaAdminService;
   @Mock
   private PrepareSystemUserService prepareSystemUserService;
-  @Mock
-  private LinkingRulesService rulesService;
 
   @Test
   void initializeTenant_positive() {
@@ -38,14 +35,12 @@ class ExtendedTenantServiceTest {
     doNothing().when(prepareSystemUserService).setupSystemUser();
     doNothing().when(kafkaAdminService).createTopics(TENANT_ID);
     doNothing().when(kafkaAdminService).restartEventListeners();
-    doNothing().when(rulesService).saveDefaultRules(LinkingPairType.INSTANCE_AUTHORITY);
 
     tenantService.afterTenantUpdate(tenantAttributes());
 
     verify(prepareSystemUserService).setupSystemUser();
     verify(kafkaAdminService).createTopics(TENANT_ID);
     verify(kafkaAdminService).restartEventListeners();
-    verify(rulesService).saveDefaultRules(LinkingPairType.INSTANCE_AUTHORITY);
   }
 
   private TenantAttributes tenantAttributes() {

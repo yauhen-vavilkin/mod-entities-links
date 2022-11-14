@@ -33,8 +33,8 @@ public class LinkingRules {
   private String linkingPairType;
 
   @Type(type = "json")
-  @Column(name = "data", columnDefinition = "jsonb", nullable = false)
-  private String data;
+  @Column(name = "jsonb", columnDefinition = "jsonb", nullable = false)
+  private String jsonb;
 
   @Override
   public int hashCode() {
@@ -47,6 +47,6 @@ public class LinkingRules {
     if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) { return false; }
     LinkingRules instanceLink = (LinkingRules) o;
     return Objects.equals(linkingPairType, instanceLink.linkingPairType)
-        && Objects.equals(data, instanceLink.data);
+        && Objects.equals(jsonb, instanceLink.jsonb);
   }
 }

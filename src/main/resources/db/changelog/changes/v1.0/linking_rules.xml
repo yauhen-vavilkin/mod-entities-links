@@ -17,10 +17,23 @@
         <column name="linking_pair_type" type="VARCHAR(20)">
             <constraints nullable="false" primaryKey="true" primaryKeyName="pk_linking_rules"/>
         </column>
-        <column name="data" type="JSONB">
+        <column name="jsonb" type="JSONB">
             <constraints nullable="false"/>
         </column>
     </createTable>
+  </changeSet>
+
+  <changeSet id="MODELINKS-24@@populate-instance-authority-linking-rules" author="Shans_Kaluhin">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <primaryKeyExists primaryKeyName="INSTANCE_AUTHORITY" tableName="linking_rules"/>
+      </not>
+    </preConditions>
+
+    <sqlFile dbms="postgresql"
+             path="populate-instance-authority-linking-rules.sql"
+             relativeToChangelogFile="true"
+             splitStatements="false"/>
   </changeSet>
 
 </databaseChangeLog>
