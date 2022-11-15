@@ -3,35 +3,63 @@
 ## Table of contents
 
 <!-- TOC -->
+* [Entities-Links Documentation](#entities-links-documentation)
+  * [Table of contents](#table-of-contents)
   * [Deploying the module](#deploying-the-module)
     * [Environment variables](#environment-variables)
+  * [Integration](#integration)
+    * [Folio modules communication](#folio-modules-communication)
+    * [Consuming Kafka messages](#consuming-kafka-messages)
   * [API](#api)
     * [instance-links API](#instance-links-api)
     * [linking-rules API](#linking-rules-api)
   * [Linking rules](#linking-rules)
+    * [Instance to Authority linking rule parameters](#instance-to-authority-linking-rule-parameters)
 <!-- TOC -->
 
 ## Deploying the module
 ### Environment variables
 
-| Name                                              | Default value | Description                                                                                                                                                                           |
-|:--------------------------------------------------|:--------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ENV                                               | folio         | The logical name of the deployment, must be unique across all environments using the same shared Kafka/Elasticsearch clusters, `a-z (any case)`, `0-9`, `-`, `_` symbols only allowed |
-| DB_HOST                                           | localhost     | Postgres hostname                                                                                                                                                                     |
-| DB_PORT                                           | 5432          | Postgres port                                                                                                                                                                         |
-| DB_USERNAME                                       | folio_admin   | Postgres username                                                                                                                                                                     |
-| DB_PASSWORD                                       | folio_admin   | Postgres username password                                                                                                                                                            |
-| DB_DATABASE                                       | okapi_modules | Postgres database name                                                                                                                                                                |
-| KAFKA_HOST                                        | kafka         | Kafka broker hostname                                                                                                                                                                 |
-| KAFKA_PORT                                        | 9092          | Kafka broker port                                                                                                                                                                     |
-| KAFKA_SECURITY_PROTOCOL                           | PLAINTEXT     | Kafka security protocol used to communicate with brokers (SSL or PLAINTEXT)                                                                                                           |
-| KAFKA_SSL_KEYSTORE_LOCATION                       | -             | The location of the Kafka key store file. This is optional for client and can be used for two-way authentication for client.                                                          |
-| KAFKA_SSL_KEYSTORE_PASSWORD                       | -             | The store password for the Kafka key store file. This is optional for client and only needed if 'ssl.keystore.location' is configured.                                                |
-| KAFKA_SSL_TRUSTSTORE_LOCATION                     | -             | The location of the Kafka trust store file.                                                                                                                                           |
-| KAFKA_SSL_TRUSTSTORE_PASSWORD                     | -             | The password for the Kafka trust store file. If a password is not set, trust store file configured will still be used, but integrity checking is disabled.                            |
-| KAFKA_CONSUMER_MAX_POLL_RECORDS                   | 200           | Maximum number of records returned in a single call to poll().                                                                                                                        |
-| KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS         | 10            | Amount of partitions for `links.instance-authority` topic.                                                                                                                            |
-| KAFKA_INSTANCE_AUTHORITY_TOPIC_REPLICATION_FACTOR | -             | Replication factor for `links.instance-authority` topic.                                                                                                                              |
+| Name                                              | Default value      | Description                                                                                                                                                                           |
+|:--------------------------------------------------|:-------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ENV                                               | folio              | The logical name of the deployment, must be unique across all environments using the same shared Kafka/Elasticsearch clusters, `a-z (any case)`, `0-9`, `-`, `_` symbols only allowed |
+| DB_HOST                                           | localhost          | Postgres hostname                                                                                                                                                                     |
+| DB_PORT                                           | 5432               | Postgres port                                                                                                                                                                         |
+| DB_USERNAME                                       | folio_admin        | Postgres username                                                                                                                                                                     |
+| DB_PASSWORD                                       | folio_admin        | Postgres username password                                                                                                                                                            |
+| DB_DATABASE                                       | okapi_modules      | Postgres database name                                                                                                                                                                |
+| OKAPI_URL                                         | -                  | Okapi URL                                                                                                                                                                             |
+| SYSTEM_USER_PASSWORD                              | mod-entities-links | Password for system user                                                                                                                                                              |
+| KAFKA_HOST                                        | kafka              | Kafka broker hostname                                                                                                                                                                 |
+| KAFKA_PORT                                        | 9092               | Kafka broker port                                                                                                                                                                     |
+| KAFKA_SECURITY_PROTOCOL                           | PLAINTEXT          | Kafka security protocol used to communicate with brokers (SSL or PLAINTEXT)                                                                                                           |
+| KAFKA_SSL_KEYSTORE_LOCATION                       | -                  | The location of the Kafka key store file. This is optional for client and can be used for two-way authentication for client.                                                          |
+| KAFKA_SSL_KEYSTORE_PASSWORD                       | -                  | The store password for the Kafka key store file. This is optional for client and only needed if 'ssl.keystore.location' is configured.                                                |
+| KAFKA_SSL_TRUSTSTORE_LOCATION                     | -                  | The location of the Kafka trust store file.                                                                                                                                           |
+| KAFKA_SSL_TRUSTSTORE_PASSWORD                     | -                  | The password for the Kafka trust store file. If a password is not set, trust store file configured will still be used, but integrity checking is disabled.                            |
+| KAFKA_CONSUMER_MAX_POLL_RECORDS                   | 200                | Maximum number of records returned in a single call to poll().                                                                                                                        |
+| KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS         | 10                 | Amount of partitions for `links.instance-authority` topic.                                                                                                                            |
+| KAFKA_INSTANCE_AUTHORITY_TOPIC_REPLICATION_FACTOR | -                  | Replication factor for `links.instance-authority` topic.                                                                                                                              |
+| KAFKA_AUTHORITIES_CONSUMER_CONCURRENCY            | -                  | Number of kafka concurrent threads for `inventory.authority` message consuming                                                                                                        |
+| KAFKA_AUTHORITIES_CONSUMER_CONCURRENCY            | -                  | Subscription pattern for `inventory.authority` message consumers.                                                                                                                     |
+
+## Integration
+
+### Folio modules communication
+
+| Module name     | Interface   | Notes                                       |
+|-----------------|-------------|---------------------------------------------|
+| mod-login       | login       | For system user creation and authentication |
+| mod-permissions | permissions | For system user creation                    |
+| mod-users       | users       | For system user creation                    |
+
+
+### Consuming Kafka messages
+
+| Topic name                         | Group ID                                   | Notes                                                     |
+|------------------------------------|--------------------------------------------|-----------------------------------------------------------|
+| {ENV}.[tenant].inventory.authority | {ENV}-mod-entities-links-authorities-group | Filtrating messages that have type UPDATE and DELETE only |
+
 
 ## API
 
@@ -151,4 +179,4 @@ Response:
   * `source` - Authority subfield, which would be linked to `target`
   * `target` - Instance subfield, which would be controlled by `source`
 * `validation` - Linking rule validations that should be verified before linking
-  * `existence` - Map <char, boolean>. Validate if subfield exists or not
+  * `existence` - Map <char, boolean>. Validate if subfield have to exist or not

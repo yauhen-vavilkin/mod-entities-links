@@ -261,6 +261,15 @@ components:
                   - key: moduleTo
                     value: null
 
+    inventoryEvent:
+      $ref: schemas/inventoryEvent.json
+
+    inventoryEventType:
+      $ref: schemas/inventoryEventType.json
+
+    authorityInventoryRecord:
+      $ref: schemas/authorityInventoryRecord.json
+
   responses:
     badRequestResponse:
       description: Validation errors.

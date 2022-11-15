@@ -11,17 +11,17 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring")
 public interface InstanceLinkMapper {
 
-    InstanceLinkDto convert(InstanceLink source);
+  InstanceLinkDto convert(InstanceLink source);
 
-    InstanceLink convert(InstanceLinkDto source);
+  InstanceLink convert(InstanceLinkDto source);
 
-    default InstanceLinkDtoCollection convert(List<InstanceLink> source) {
-      var convertedLinks = source.stream().map(this::convert).toList();
+  default InstanceLinkDtoCollection convert(List<InstanceLink> source) {
+    var convertedLinks = source.stream().map(this::convert).toList();
 
-      return new InstanceLinkDtoCollection()
-          .links(convertedLinks)
-          .totalRecords(source.size());
-    }
+    return new InstanceLinkDtoCollection()
+      .links(convertedLinks)
+      .totalRecords(source.size());
+  }
 
-    LinksCountDto convert(LinkCountView source);
+  LinksCountDto convert(LinkCountView source);
 }

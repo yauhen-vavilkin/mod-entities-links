@@ -4,7 +4,7 @@ import lombok.Getter;
 import org.folio.entlinks.model.type.ErrorCode;
 
 /**
- * Base exception class that is used for all exceptional situations
+ * Base exception class that is used for all exceptional situations.
  */
 @Getter
 public abstract class BaseException extends RuntimeException {

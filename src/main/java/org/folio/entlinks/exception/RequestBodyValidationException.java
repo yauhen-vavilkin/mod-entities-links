@@ -6,7 +6,7 @@ import org.folio.entlinks.model.type.ErrorCode;
 import org.folio.tenant.domain.dto.Parameter;
 
 /**
- * Exception for situations when request body is invalid
+ * Exception for situations when request body is invalid.
  */
 @Getter
 public class RequestBodyValidationException extends BaseException {

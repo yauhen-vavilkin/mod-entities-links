@@ -84,9 +84,9 @@ class InstanceLinkServiceTest {
 
   @Test
   void updateInstanceLinks_positive_saveIncomingLinks_whenAnyExist() {
-    var instanceId = randomUUID();
-    var existedLinks = Collections.<InstanceLink>emptyList();
-    var incomingLinks = linksDtoCollection(linksDto(instanceId, Link.of(0, 0), Link.of(1, 1)));
+    final var instanceId = randomUUID();
+    final var existedLinks = Collections.<InstanceLink>emptyList();
+    final var incomingLinks = linksDtoCollection(linksDto(instanceId, Link.of(0, 0), Link.of(1, 1)));
 
     when(repository.findByInstanceId(any(UUID.class))).thenReturn(existedLinks);
     doNothing().when(repository).deleteAllInBatch(any());
@@ -108,9 +108,9 @@ class InstanceLinkServiceTest {
 
   @Test
   void updateInstanceLinks_positive_deleteAllLinks_whenIncomingIsEmpty() {
-    var instanceId = randomUUID();
-    var existedLinks = links(instanceId, Link.of(0, 0), Link.of(1, 1));
-    var incomingLinks = linksDtoCollection(emptyList());
+    final var instanceId = randomUUID();
+    final var existedLinks = links(instanceId, Link.of(0, 0), Link.of(1, 1));
+    final var incomingLinks = linksDtoCollection(emptyList());
 
     when(repository.findByInstanceId(any(UUID.class))).thenReturn(existedLinks);
     doNothing().when(repository).deleteAllInBatch(any());
@@ -132,14 +132,14 @@ class InstanceLinkServiceTest {
 
   @Test
   void updateInstanceLinks_positive_deleteAllExistedAndSaveAllIncomingLinks() {
-    var instanceId = randomUUID();
-    var existedLinks = links(instanceId,
+    final var instanceId = randomUUID();
+    final var existedLinks = links(instanceId,
       Link.of(0, 0),
       Link.of(1, 1),
       Link.of(2, 2),
       Link.of(3, 3)
     );
-    var incomingLinks = linksDtoCollection(linksDto(instanceId,
+    final var incomingLinks = linksDtoCollection(linksDto(instanceId,
       Link.of(0, 1),
       Link.of(1, 0),
       Link.of(2, 3),
@@ -168,12 +168,12 @@ class InstanceLinkServiceTest {
 
   @Test
   void updateInstanceLinks_positive_saveOnlyNewLinks() {
-    var instanceId = randomUUID();
-    var existedLinks = links(instanceId,
+    final var instanceId = randomUUID();
+    final var existedLinks = links(instanceId,
       Link.of(0, 0),
       Link.of(1, 1)
     );
-    var incomingLinks = linksDtoCollection(linksDto(instanceId,
+    final var incomingLinks = linksDtoCollection(linksDto(instanceId,
       Link.of(0, 0),
       Link.of(1, 1),
       Link.of(2, 2),
@@ -200,14 +200,14 @@ class InstanceLinkServiceTest {
 
   @Test
   void updateInstanceLinks_positive_deleteAndSaveLinks_whenHaveDifference() {
-    var instanceId = randomUUID();
-    var existedLinks = links(instanceId,
+    final var instanceId = randomUUID();
+    final var existedLinks = links(instanceId,
       Link.of(0, 0),
       Link.of(1, 1),
       Link.of(2, 2),
       Link.of(3, 3)
     );
-    var incomingLinks = linksDtoCollection(linksDto(instanceId,
+    final var incomingLinks = linksDtoCollection(linksDto(instanceId,
       Link.of(0, 0),
       Link.of(1, 1),
       Link.of(2, 3),

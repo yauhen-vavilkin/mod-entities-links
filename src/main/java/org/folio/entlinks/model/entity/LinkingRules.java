@@ -1,6 +1,11 @@
 package org.folio.entlinks.model.entity;
 
 import com.vladmihalcea.hibernate.type.json.JsonType;
+import java.util.Objects;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,12 +15,6 @@ import lombok.ToString;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import java.util.Objects;
 
 @Getter
 @Setter
@@ -43,10 +42,14 @@ public class LinkingRules {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) { return true; }
-    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) { return false; }
+    if (this == o) {
+      return true;
+    }
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) {
+      return false;
+    }
     LinkingRules instanceLink = (LinkingRules) o;
     return Objects.equals(linkingPairType, instanceLink.linkingPairType)
-        && Objects.equals(jsonb, instanceLink.jsonb);
+      && Objects.equals(jsonb, instanceLink.jsonb);
   }
 }

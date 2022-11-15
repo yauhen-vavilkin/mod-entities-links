@@ -17,6 +17,12 @@ public class InstanceLinksController implements InstanceLinksApi {
   private final InstanceLinkService instanceLinkService;
 
   @Override
+  public ResponseEntity<LinksCountDtoCollection> countLinksByAuthorityIds(UuidCollection authorityIdCollection) {
+    var linkCountMapDtoCollection = instanceLinkService.countLinksByAuthorityIds(authorityIdCollection);
+    return ResponseEntity.ok(linkCountMapDtoCollection);
+  }
+
+  @Override
   public ResponseEntity<InstanceLinkDtoCollection> getInstanceLinks(UUID instanceId) {
     var links = instanceLinkService.getInstanceLinks(instanceId);
     return ResponseEntity.ok(links);
@@ -26,11 +32,5 @@ public class InstanceLinksController implements InstanceLinksApi {
   public ResponseEntity<Void> updateInstanceLinks(UUID instanceId, InstanceLinkDtoCollection instanceLinkCollection) {
     instanceLinkService.updateInstanceLinks(instanceId, instanceLinkCollection);
     return ResponseEntity.noContent().build();
-  }
-
-  @Override
-  public ResponseEntity<LinksCountDtoCollection> countLinksByAuthorityIds(UuidCollection authorityIdCollection){
-    var linkCountMapDtoCollection = instanceLinkService.countLinksByAuthorityIds(authorityIdCollection);
-    return ResponseEntity.ok(linkCountMapDtoCollection);
   }
 }

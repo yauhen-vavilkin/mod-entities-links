@@ -1,13 +1,13 @@
 package org.folio.entlinks.controller;
 
+import static org.folio.support.TestUtils.convertFile;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.util.ResourceUtils.getFile;
+
 import lombok.SneakyThrows;
 import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.base.IntegrationTestBase;
 import org.junit.jupiter.api.Test;
-
-import static org.folio.support.TestUtils.convertFile;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.util.ResourceUtils.getFile;
 
 @IntegrationTest
 class LinkingRulesIT extends IntegrationTestBase {
@@ -20,6 +20,6 @@ class LinkingRulesIT extends IntegrationTestBase {
   void getLinkingRules_positive_getInstanceAuthorityRules() {
     var defaultRules = convertFile(getFile(AUTHORITY_RULES_PATH));
     doGet(LINKING_RULES_ENDPOINT)
-        .andExpect(content().json(defaultRules));
+      .andExpect(content().json(defaultRules));
   }
 }
