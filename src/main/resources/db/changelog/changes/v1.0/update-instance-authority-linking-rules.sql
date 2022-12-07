@@ -1,4 +1,5 @@
-[
+UPDATE linking_rules
+SET jsonb = '[
   {
     "bibField": "100",
     "authorityField": "100",
@@ -186,4 +187,5 @@
     "subfieldModifications": [],
     "validation": {}
   }
-]
+]'
+WHERE linking_pair_type = 'INSTANCE_AUTHORITY'

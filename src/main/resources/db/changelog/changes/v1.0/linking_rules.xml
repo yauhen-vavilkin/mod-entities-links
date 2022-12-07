@@ -36,4 +36,11 @@
              splitStatements="false"/>
   </changeSet>
 
+  <changeSet id="MODELINKS-24@@update-instance-authority-linking-rules" author="Shans_Kaluhin">
+    <sqlFile dbms="postgresql"
+             path="update-instance-authority-linking-rules.sql"
+             relativeToChangelogFile="true"
+             splitStatements="false"/>
+  </changeSet>
+
 </databaseChangeLog>
