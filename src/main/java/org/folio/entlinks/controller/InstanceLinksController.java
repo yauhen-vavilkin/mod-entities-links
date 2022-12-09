@@ -2,11 +2,11 @@ package org.folio.entlinks.controller;
 
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.folio.entlinks.service.InstanceLinkService;
-import org.folio.qm.domain.dto.InstanceLinkDtoCollection;
-import org.folio.qm.domain.dto.LinksCountDtoCollection;
-import org.folio.qm.domain.dto.UuidCollection;
-import org.folio.qm.rest.resource.InstanceLinksApi;
+import org.folio.entlinks.controller.delegate.LinkingServiceDelegate;
+import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
+import org.folio.entlinks.domain.dto.LinksCountDtoCollection;
+import org.folio.entlinks.domain.dto.UuidCollection;
+import org.folio.entlinks.rest.resource.InstanceLinksApi;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,23 +14,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class InstanceLinksController implements InstanceLinksApi {
 
-  private final InstanceLinkService instanceLinkService;
+  private final LinkingServiceDelegate linkingServiceDelegate;
 
   @Override
   public ResponseEntity<LinksCountDtoCollection> countLinksByAuthorityIds(UuidCollection authorityIdCollection) {
-    var linkCountMapDtoCollection = instanceLinkService.countLinksByAuthorityIds(authorityIdCollection);
-    return ResponseEntity.ok(linkCountMapDtoCollection);
+    var counts = linkingServiceDelegate.countLinksByAuthorityIds(authorityIdCollection);
+    return ResponseEntity.ok(counts);
   }
 
   @Override
   public ResponseEntity<InstanceLinkDtoCollection> getInstanceLinks(UUID instanceId) {
-    var links = instanceLinkService.getInstanceLinks(instanceId);
+    var links = linkingServiceDelegate.getLinks(instanceId);
     return ResponseEntity.ok(links);
   }
 
   @Override
   public ResponseEntity<Void> updateInstanceLinks(UUID instanceId, InstanceLinkDtoCollection instanceLinkCollection) {
-    instanceLinkService.updateInstanceLinks(instanceId, instanceLinkCollection);
+    linkingServiceDelegate.updateLinks(instanceId, instanceLinkCollection);
     return ResponseEntity.noContent().build();
   }
 }

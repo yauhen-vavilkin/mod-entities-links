@@ -206,7 +206,7 @@ components:
         authoritySubfields:
           type: array
           items:
-            $ref: '#/components/schemas/char'
+            $ref: '#/components/schemas/charString'
         subfieldModifications:
           type: array
           items:
@@ -221,10 +221,10 @@ components:
       properties:
         source:
           description: Authority subfield.
-          $ref: '#/components/schemas/char'
+          $ref: '#/components/schemas/charString'
         target:
           description: Instance subfield.
-          $ref: '#/components/schemas/char'
+          $ref: '#/components/schemas/charString'
 
     subfieldValidation:
       type: object
@@ -243,7 +243,7 @@ components:
       type: string
       format: uuid
 
-    char:
+    charString:
       type: string
       minLength: 1
       maxLength: 1
@@ -269,6 +269,82 @@ components:
 
     authorityInventoryRecord:
       $ref: schemas/authorityInventoryRecord.json
+
+    sourceRecord:
+      $ref: schemas/sourceRecord.json
+
+    linksChangeEvent:
+      type: object
+      description: Links change event body
+      properties:
+        jobId:
+          description: Links change job ID
+          format: uuid
+          type: string
+        authorityId:
+          description: Authority ID
+          format: uuid
+          type: string
+        type:
+          description: Event operation type
+          type: string
+          enum:
+            - UPDATE
+            - DELETE
+        updateTargets:
+          description: MARC Bibs' related instance IDs that are required change grouped by MARC Bib's linked field
+          type: array
+          items:
+            $ref: '#/components/schemas/changeTarget'
+        subfieldsChanges:
+          description: Subfields to change in MARC bib fields
+          type: array
+          items:
+            $ref: '#/components/schemas/fieldChange'
+        tenant:
+          description: Tenant id
+          type: string
+        ts:
+          description: Timestamp
+          type: string
+
+    changeTarget:
+      type: object
+      description: MARC Bibs' related instance IDs that are required change and MARC Bib's linked field
+      properties:
+        field:
+          description: MARC Bib's field that required change
+          type: string
+        instanceIds:
+          description: Instance IDs
+          type: array
+          items:
+            format: uuid
+            type: string
+
+    fieldChange:
+      type: object
+      description: Change that should be applied to MARC field
+      properties:
+        field:
+          description: MARC bib field
+          type: string
+        subfields:
+          description: MARC bib field's subfield that should be changed
+          type: array
+          items:
+            $ref: '#/components/schemas/subfieldChange'
+
+    subfieldChange:
+      type: object
+      description: Change that should be applied to MARC subfield
+      properties:
+        code:
+          description: Subfield code
+          type: string
+        value:
+          description: Subfield value. If empty - then remove
+          type: string
 
   responses:
     badRequestResponse:

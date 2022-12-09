@@ -10,6 +10,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -91,7 +92,9 @@ public class IntegrationTestBase {
 
   @SneakyThrows
   protected static ResultActions tryGet(String uri, Object... args) {
-    return mockMvc.perform(get(uri, args).headers(defaultHeaders()).accept(APPLICATION_JSON));
+    return mockMvc.perform(get(uri, args)
+        .headers(defaultHeaders()).accept(APPLICATION_JSON))
+      .andDo(log());
   }
 
   @SneakyThrows
@@ -101,7 +104,10 @@ public class IntegrationTestBase {
 
   @SneakyThrows
   protected static ResultActions tryPut(String uri, Object body, Object... args) {
-    return mockMvc.perform(put(uri, args).content(body == null ? "" : asJson(body)).headers(defaultHeaders()));
+    return mockMvc.perform(put(uri, args)
+        .content(body == null ? "" : asJson(body))
+        .headers(defaultHeaders()))
+      .andDo(log());
   }
 
   @SneakyThrows
@@ -111,7 +117,10 @@ public class IntegrationTestBase {
 
   @SneakyThrows
   protected static ResultActions tryPost(String uri, Object body, Object... args) {
-    return mockMvc.perform(post(uri, args).content(asJson(body)).headers(defaultHeaders()));
+    return mockMvc.perform(post(uri, args)
+        .content(asJson(body))
+        .headers(defaultHeaders()))
+      .andDo(log());
   }
 
   @SneakyThrows
@@ -122,6 +131,11 @@ public class IntegrationTestBase {
   @SneakyThrows
   protected static void sendKafkaMessage(String topic, Object event) {
     kafkaTemplate.send(topic, new ObjectMapper().writeValueAsString(event));
+  }
+
+  @SneakyThrows
+  protected static void sendKafkaMessage(String topic, String key, Object event) {
+    kafkaTemplate.send(topic, key, new ObjectMapper().writeValueAsString(event));
   }
 
   protected ResultMatcher errorParameterMatch(Matcher<String> errorMessageMatcher) {

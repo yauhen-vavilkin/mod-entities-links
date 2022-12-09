@@ -1,12 +1,10 @@
 package org.folio.entlinks.controller;
 
-import static org.folio.entlinks.LinkingPairType.INSTANCE_AUTHORITY;
-
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.folio.entlinks.service.LinkingRulesService;
-import org.folio.qm.domain.dto.LinkingRuleDto;
-import org.folio.qm.rest.resource.LinkingRulesApi;
+import org.folio.entlinks.controller.delegate.LinkingRulesServiceDelegate;
+import org.folio.entlinks.domain.dto.LinkingRuleDto;
+import org.folio.entlinks.rest.resource.LinkingRulesApi;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,11 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class LinkingRulesController implements LinkingRulesApi {
 
-  private final LinkingRulesService linkingRulesService;
+  private final LinkingRulesServiceDelegate serviceDelegate;
 
   @Override
   public ResponseEntity<List<LinkingRuleDto>> getInstanceAuthorityLinkingRules() {
-    var rules = linkingRulesService.getLinkingRules(INSTANCE_AUTHORITY);
+    var rules = serviceDelegate.getLinkingRules();
     return ResponseEntity.ok(rules);
   }
 }

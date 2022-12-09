@@ -15,8 +15,16 @@
       "version": "16.0"
     },
     {
-      "id": "source-manager-parsed-records",
-      "version": "3.0"
+      "id": "mapping-rules-provider",
+      "version": "2.0"
+    },
+    {
+      "id": "source-storage-source-records",
+      "version": "3.1"
+    },
+    {
+      "id": "authority-source-files",
+      "version": "1.0"
     }
   ],
   "provides": [

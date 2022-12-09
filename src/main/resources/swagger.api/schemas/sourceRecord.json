@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Source record DTO Schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "recordId": {
+      "description": "UUID",
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "uuid.schema",
+      "type": "string",
+      "format": "uuid"
+    },
+    "snapshotId": {
+      "description": "Corresponding snapshot id, which is the same as jobExecutionId",
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "uuid.schema",
+      "type": "string",
+      "format": "uuid"
+    },
+    "parsedRecord": {
+      "description": "Parsed record",
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "UUID",
+          "type": "string",
+          "format": "uuid"
+        },
+        "content": {
+          "description": "Parsed record content, e.g. MARC record"
+        }
+      },
+      "required": [
+        "content"
+      ]
+    }
+  }
+}

@@ -12,6 +12,10 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQL10Dialect
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
   jackson:
     default-property-inclusion: non_null
     deserialization:
@@ -20,7 +24,7 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_HOST:kafka}:${KAFKA_PORT:9092}
     consumer:
-      max-poll-records: ${KAFKA_CONSUMER_MAX_POLL_RECORDS:200}
+      max-poll-records: ${KAFKA_CONSUMER_MAX_POLL_RECORDS:50}
     security:
       protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
     ssl:
@@ -34,6 +38,13 @@ spring:
         enable.idempotence: true
         max.in.flight.requests.per.connection: 5
         retries: 5
+  cache:
+    cache-names:
+      - authority-source-files-cache
+      - authority-mapping-rules-cache
+      - authority-linking-rules-cache
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=3600s
 
 folio:
   environment: ${ENV:folio}
@@ -53,6 +64,10 @@ folio:
         concurrency: ${KAFKA_AUTHORITIES_CONSUMER_CONCURRENCY:1}
         topic-pattern: ${KAFKA_AUTHORITIES_CONSUMER_PATTERN:(${folio.environment}\.)(.*\.)inventory\.authority}
         group-id: ${folio.environment}-mod-entities-links-authorities-group
+  instance-authority:
+    change:
+      numPartitions: ${KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS:100}
+
   retry:
     enabled: true
   tenant:
@@ -63,6 +78,7 @@ folio:
       enabled: true
     feign:
       enabled: true
+
 management:
   endpoints:
     web:

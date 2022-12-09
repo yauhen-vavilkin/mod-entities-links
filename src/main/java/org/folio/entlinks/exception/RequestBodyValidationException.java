@@ -2,7 +2,7 @@ package org.folio.entlinks.exception;
 
 import java.util.List;
 import lombok.Getter;
-import org.folio.entlinks.model.type.ErrorCode;
+import org.folio.entlinks.exception.type.ErrorCode;
 import org.folio.tenant.domain.dto.Parameter;
 
 /**
