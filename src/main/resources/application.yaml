@@ -62,7 +62,7 @@ folio:
     listener:
       authority:
         concurrency: ${KAFKA_AUTHORITIES_CONSUMER_CONCURRENCY:1}
-        topic-pattern: ${KAFKA_AUTHORITIES_CONSUMER_PATTERN:(${folio.environment}\.)(.*\.)inventory\.authority}
+        topic-pattern: (${folio.environment}\.)(.*\.)inventory\.authority
         group-id: ${folio.environment}-mod-entities-links-authorities-group
   instance-authority:
     change:
