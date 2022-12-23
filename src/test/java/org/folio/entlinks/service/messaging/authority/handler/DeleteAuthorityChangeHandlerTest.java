@@ -3,6 +3,7 @@ package org.folio.entlinks.service.messaging.authority.handler;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
+import static org.folio.entlinks.domain.dto.LinksChangeEvent.TypeEnum;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anySet;
@@ -17,10 +18,12 @@ import java.util.Set;
 import java.util.UUID;
 import org.folio.entlinks.config.properties.InstanceAuthorityChangeProperties;
 import org.folio.entlinks.domain.dto.ChangeTarget;
+import org.folio.entlinks.domain.dto.ChangeTargetLink;
 import org.folio.entlinks.domain.dto.InventoryEvent;
-import org.folio.entlinks.domain.dto.InventoryEventType;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
+import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolder;
+import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
 import org.folio.spring.test.type.UnitTest;
 import org.folio.support.TestUtils;
 import org.junit.jupiter.api.Test;
@@ -43,20 +46,21 @@ class DeleteAuthorityChangeHandlerTest {
   void getReplyEventType_positive() {
     var actual = handler.getReplyEventType();
 
-    assertEquals(LinksChangeEvent.TypeEnum.DELETE, actual);
+    assertEquals(TypeEnum.DELETE, actual);
   }
 
   @Test
   void supportedInventoryEventType_positive() {
-    var actual = handler.supportedInventoryEventType();
+    var actual = handler.supportedAuthorityChangeType();
 
-    assertEquals(InventoryEventType.DELETE, actual);
+    assertEquals(AuthorityChangeType.DELETE, actual);
   }
 
   @Test
   void handle_positive() {
     var eventIds = Set.of(UUID.randomUUID(), UUID.randomUUID());
-    var events = eventIds.stream().map(uuid -> new InventoryEvent().id(uuid)).toList();
+    var events =
+      eventIds.stream().map(uuid -> new AuthorityChangeHolder(new InventoryEvent().id(uuid), emptyList())).toList();
     var instanceId1 = UUID.randomUUID();
     var instanceId2 = UUID.randomUUID();
     var instanceId3 = UUID.randomUUID();
@@ -66,12 +70,12 @@ class DeleteAuthorityChangeHandlerTest {
 
     doNothing().when(linkingService).deleteByAuthorityIdIn(anySet());
     when(properties.getNumPartitions()).thenReturn(1);
-    when(linkingService.getLinksByAuthorityId(eq(events.get(0).getId()), any())).thenReturn(
+    when(linkingService.getLinksByAuthorityId(eq(events.get(0).getAuthorityId()), any())).thenReturn(
       new PageImpl<>(List.of(link1.toEntity(instanceId1)), Pageable.ofSize(1), 2)
     ).thenReturn(
       new PageImpl<>(List.of(link2.toEntity(instanceId2)))
     );
-    when(linkingService.getLinksByAuthorityId(eq(events.get(1).getId()), any())).thenReturn(
+    when(linkingService.getLinksByAuthorityId(eq(events.get(1).getAuthorityId()), any())).thenReturn(
       new PageImpl<>(List.of(link3.toEntity(instanceId3)))
     );
 
@@ -83,9 +87,9 @@ class DeleteAuthorityChangeHandlerTest {
       .hasSize(3)
       .extracting(LinksChangeEvent::getAuthorityId, LinksChangeEvent::getType, LinksChangeEvent::getUpdateTargets)
       .contains(
-        tuple(events.get(0).getId(), LinksChangeEvent.TypeEnum.DELETE, List.of(changeTarget(instanceId1, link1))),
-        tuple(events.get(0).getId(), LinksChangeEvent.TypeEnum.DELETE, List.of(changeTarget(instanceId2, link2))),
-        tuple(events.get(1).getId(), LinksChangeEvent.TypeEnum.DELETE, List.of(changeTarget(instanceId3, link3)))
+        tuple(events.get(0).getAuthorityId(), TypeEnum.DELETE, List.of(changeTarget(instanceId1, link1))),
+        tuple(events.get(0).getAuthorityId(), TypeEnum.DELETE, List.of(changeTarget(instanceId2, link2))),
+        tuple(events.get(1).getAuthorityId(), TypeEnum.DELETE, List.of(changeTarget(instanceId3, link3)))
       );
   }
 
@@ -104,6 +108,7 @@ class DeleteAuthorityChangeHandlerTest {
   }
 
   private ChangeTarget changeTarget(UUID instanceId, TestUtils.Link link) {
-    return new ChangeTarget().field(link.tag()).instanceIds(Collections.singletonList(instanceId));
+    return new ChangeTarget().field(link.tag()).links(
+      Collections.singletonList(new ChangeTargetLink().instanceId(instanceId)));
   }
 }

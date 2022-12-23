@@ -4,27 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.folio.entlinks.domain.dto.InventoryEvent;
+import org.folio.entlinks.domain.dto.InventoryEventType;
 import org.jetbrains.annotations.NotNull;
 
+@RequiredArgsConstructor
 public class AuthorityChangeHolder {
 
+  @Getter
   private final @NotNull InventoryEvent event;
-
-  private final @Getter boolean isNaturalIdChanged;
-  private final @Getter boolean isOnlyNaturalIdChanged;
-  private final @Getter AuthorityChange fieldChange;
-
-  public AuthorityChangeHolder(@NotNull InventoryEvent event,
-                               @NotNull List<AuthorityChange> changes) {
-    if (changes.isEmpty()) {
-      throw new IllegalArgumentException("Changes couldn't be empty");
-    }
-    this.event = event;
-    this.isNaturalIdChanged = changes.contains(AuthorityChange.NATURAL_ID);
-    this.isOnlyNaturalIdChanged = isOnlyNaturalIdChanged(changes);
-    this.fieldChange = getFieldChange(changes, isOnlyNaturalIdChanged);
-  }
+  private final @NotNull List<AuthorityChange> changes;
 
   public UUID getAuthorityId() {
     return event.getId();
@@ -38,8 +28,24 @@ public class AuthorityChangeHolder {
     return event.getNew().getSourceFileId();
   }
 
-  private AuthorityChange getFieldChange(List<AuthorityChange> changes, boolean isOnlyNaturalIdChanged) {
-    if (isOnlyNaturalIdChanged) {
+  public boolean isNaturalIdChanged() {
+    return changes.contains(AuthorityChange.NATURAL_ID);
+  }
+
+  public boolean isOnlyNaturalIdChanged() {
+    return changes.size() == 1 && isNaturalIdChanged();
+  }
+
+  public AuthorityChangeType getChangeType() {
+    var eventType = InventoryEventType.fromValue(event.getType());
+    return switch (eventType) {
+      case UPDATE -> fieldChangedUnexpected() ? AuthorityChangeType.DELETE : AuthorityChangeType.UPDATE;
+      case DELETE -> AuthorityChangeType.DELETE;
+    };
+  }
+
+  public AuthorityChange getFieldChange() {
+    if (changes.isEmpty() || isOnlyNaturalIdChanged()) {
       return null;
     } else {
       var authorityChanges = new ArrayList<>(changes);
@@ -48,7 +54,8 @@ public class AuthorityChangeHolder {
     }
   }
 
-  private boolean isOnlyNaturalIdChanged(@NotNull List<AuthorityChange> changes) {
-    return isNaturalIdChanged && changes.size() == 1;
+  private boolean fieldChangedUnexpected() {
+    return changes.size() > 2 || changes.size() == 2 && !changes.contains(AuthorityChange.NATURAL_ID);
   }
+
 }

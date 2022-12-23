@@ -1,6 +1,8 @@
 package org.folio.entlinks.service.messaging.authority;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -10,10 +12,9 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
 import org.assertj.core.groups.Tuple;
 import org.folio.entlinks.domain.dto.InventoryEvent;
-import org.folio.entlinks.domain.dto.InventoryEventType;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
-import org.folio.entlinks.service.messaging.authority.handler.DeleteAuthorityChangeHandler;
-import org.folio.entlinks.service.messaging.authority.handler.UpdateAuthorityChangeHandler;
+import org.folio.entlinks.service.messaging.authority.handler.AuthorityChangeHandler;
+import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.test.type.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,15 +37,15 @@ class InstanceAuthorityLinkUpdateServiceTest {
   private @Mock FolioExecutionContext context;
   private @Mock KafkaTemplate<String, LinksChangeEvent> kafkaTemplate;
 
-  private @Mock UpdateAuthorityChangeHandler updateHandler;
-  private @Mock DeleteAuthorityChangeHandler deleteHandler;
+  private @Mock AuthorityChangeHandler updateHandler;
+  private @Mock AuthorityChangeHandler deleteHandler;
 
   private InstanceAuthorityLinkUpdateService service;
 
   @BeforeEach
   void setUp() {
-    when(updateHandler.supportedInventoryEventType()).thenReturn(InventoryEventType.UPDATE);
-    when(deleteHandler.supportedInventoryEventType()).thenReturn(InventoryEventType.DELETE);
+    when(updateHandler.supportedAuthorityChangeType()).thenReturn(AuthorityChangeType.UPDATE);
+    when(deleteHandler.supportedAuthorityChangeType()).thenReturn(AuthorityChangeType.DELETE);
     when(context.getTenantId()).thenReturn(TENANT);
 
     service = new InstanceAuthorityLinkUpdateService(context, kafkaTemplate,
@@ -57,12 +58,11 @@ class InstanceAuthorityLinkUpdateServiceTest {
 
     var expected = new LinksChangeEvent().type(LinksChangeEvent.TypeEnum.UPDATE);
 
-    when(updateHandler.handle(inventoryEvents)).thenReturn(List.of(expected));
+    when(updateHandler.handle(anyList())).thenReturn(List.of(expected));
     when(context.getOkapiHeaders()).thenReturn(Map.of("tenant", List.of(TENANT)));
 
     service.handleAuthoritiesChanges(inventoryEvents);
 
-    verify(updateHandler).handle(inventoryEvents);
     verify(kafkaTemplate).send(producerRecordCaptor.capture());
 
     var producerRecord = producerRecordCaptor.getValue();
@@ -82,12 +82,11 @@ class InstanceAuthorityLinkUpdateServiceTest {
 
     var changeEvent = new LinksChangeEvent().type(LinksChangeEvent.TypeEnum.DELETE);
 
-    when(deleteHandler.handle(inventoryEvents)).thenReturn(List.of(changeEvent));
+    when(deleteHandler.handle(any())).thenReturn(List.of(changeEvent));
     when(context.getOkapiHeaders()).thenReturn(Map.of("tenant", List.of(TENANT)));
 
     service.handleAuthoritiesChanges(inventoryEvents);
 
-    verify(deleteHandler).handle(inventoryEvents);
     verify(kafkaTemplate).send(producerRecordCaptor.capture());
 
     var producerRecord = producerRecordCaptor.getValue();

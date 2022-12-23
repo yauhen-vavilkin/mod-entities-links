@@ -1,22 +1,16 @@
 package org.folio.entlinks.service.messaging.authority.handler;
 
 import static java.util.Collections.singletonList;
-import static org.folio.entlinks.utils.ObjectUtils.getDifference;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.config.properties.InstanceAuthorityChangeProperties;
-import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
 import org.folio.entlinks.domain.dto.FieldChange;
-import org.folio.entlinks.domain.dto.InventoryEvent;
-import org.folio.entlinks.domain.dto.InventoryEventType;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.dto.SubfieldChange;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
@@ -28,8 +22,8 @@ import org.folio.entlinks.integration.internal.AuthoritySourceRecordService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.AuthorityMappingRulesProcessingService;
-import org.folio.entlinks.service.messaging.authority.model.AuthorityChange;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolder;
+import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
 import org.folio.entlinks.service.messaging.authority.model.FieldChangeHolder;
 import org.springframework.stereotype.Component;
 
@@ -58,15 +52,15 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   }
 
   @Override
-  public List<LinksChangeEvent> handle(List<InventoryEvent> events) {
-    if (events == null || events.isEmpty()) {
+  public List<LinksChangeEvent> handle(List<AuthorityChangeHolder> changes) {
+    if (changes == null || changes.isEmpty()) {
       return Collections.emptyList();
     }
 
     List<LinksChangeEvent> linksEvents = new ArrayList<>();
-    for (InventoryEvent event : events) {
+    for (var change : changes) {
       try {
-        linksEvents.addAll(handle0(event));
+        linksEvents.addAll(handle0(change));
       } catch (AuthorityBatchProcessingException e) {
         log.warn("Skipping authority change processing.", e);
       }
@@ -81,35 +75,16 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   }
 
   @Override
-  public InventoryEventType supportedInventoryEventType() {
-    return InventoryEventType.UPDATE;
+  public AuthorityChangeType supportedAuthorityChangeType() {
+    return AuthorityChangeType.UPDATE;
   }
 
-  private List<FieldChange> getFieldChangesForNaturalId(SubfieldChange subfield0Change,
-                                                        List<InstanceAuthorityLink> instanceLinks) {
-    return instanceLinks.stream()
-      .map(InstanceAuthorityLink::getBibRecordTag)
-      .distinct()
-      .map(tag -> new FieldChange().field(tag).subfields(singletonList(subfield0Change)))
-      .toList();
-  }
-
-  private List<LinksChangeEvent> handle0(InventoryEvent event) throws AuthorityBatchProcessingException {
-    var changeHolder = toAuthorityChangeHolder(event);
+  private List<LinksChangeEvent> handle0(AuthorityChangeHolder changeHolder) throws AuthorityBatchProcessingException {
     if (changeHolder.isOnlyNaturalIdChanged()) {
       return handleNaturalIdChange(changeHolder);
     } else {
       return handleFieldChange(changeHolder);
     }
-  }
-
-  private AuthorityChangeHolder toAuthorityChangeHolder(InventoryEvent event) throws AuthorityBatchProcessingException {
-    var difference = getAuthorityChanges(event.getNew(), event.getOld());
-    if (difference.size() > 2 || difference.size() == 2 && difference.contains(AuthorityChange.NATURAL_ID)) {
-      throw new AuthorityBatchProcessingException(event.getId(),
-        "Unsupported authority change [authorityId: " + event.getId() + ", changed fields: " + difference + "]");
-    }
-    return new AuthorityChangeHolder(event, difference);
   }
 
   private List<LinksChangeEvent> handleNaturalIdChange(AuthorityChangeHolder changeHolder) {
@@ -125,7 +100,15 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
         return constructEvent(UUID.randomUUID(), authorityId, instanceLinks, fieldChanges);
       }
     );
+  }
 
+  private List<FieldChange> getFieldChangesForNaturalId(SubfieldChange subfield0Change,
+                                                        List<InstanceAuthorityLink> instanceLinks) {
+    return instanceLinks.stream()
+      .map(InstanceAuthorityLink::getBibRecordTag)
+      .distinct()
+      .map(tag -> new FieldChange().field(tag).subfields(singletonList(subfield0Change)))
+      .toList();
   }
 
   private List<LinksChangeEvent> handleFieldChange(AuthorityChangeHolder changeHolder)
@@ -192,21 +175,6 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
       subfield0Value = StringUtils.appendIfMissing(baseUrl, "/");
     }
     return new SubfieldChange().code("0").value(subfield0Value + naturalId);
-  }
-
-  @SneakyThrows
-  private List<AuthorityChange> getAuthorityChanges(AuthorityInventoryRecord s1, AuthorityInventoryRecord s2) {
-    return getDifference(s1, s2).stream()
-      .map(fieldName -> {
-        try {
-          return AuthorityChange.fromValue(fieldName);
-        } catch (IllegalArgumentException e) {
-          log.debug("Not supported authority change [fieldName: {}]", fieldName);
-          return null;
-        }
-      })
-      .filter(Objects::nonNull)
-      .toList();
   }
 
 }

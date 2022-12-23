@@ -315,12 +315,23 @@ components:
         field:
           description: MARC Bib's field that required change
           type: string
-        instanceIds:
-          description: Instance IDs
-          type: array
+        links:
+          description: Instance-authority links
           items:
-            format: uuid
-            type: string
+            $ref: '#/components/schemas/changeTargetLink'
+
+    changeTargetLink:
+      description: Instance-authority target link
+      type: object
+      properties:
+        linkId:
+          description: Link ID
+          type: integer
+          format: int64
+        instanceId:
+          description: Instance ID
+          type: string
+          format: uuid
 
     fieldChange:
       type: object

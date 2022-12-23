@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.folio.entlinks.config.properties.InstanceAuthorityChangeProperties;
 import org.folio.entlinks.domain.dto.ChangeTarget;
+import org.folio.entlinks.domain.dto.ChangeTargetLink;
 import org.folio.entlinks.domain.dto.FieldChange;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
@@ -54,7 +55,12 @@ public abstract class AbstractAuthorityChangeHandler implements AuthorityChangeH
       .collect(Collectors.groupingBy(InstanceAuthorityLink::getBibRecordTag))
       .entrySet().stream()
       .map(e -> new ChangeTarget().field(e.getKey())
-        .instanceIds(e.getValue().stream().map(InstanceAuthorityLink::getInstanceId).toList()))
+        .links(e.getValue().stream().map(AbstractAuthorityChangeHandler::toChangeTargetLink).toList()))
       .toList();
+  }
+
+  private static ChangeTargetLink toChangeTargetLink(InstanceAuthorityLink instanceAuthorityLink) {
+    return new ChangeTargetLink().linkId(instanceAuthorityLink.getId())
+      .instanceId(instanceAuthorityLink.getInstanceId());
   }
 }

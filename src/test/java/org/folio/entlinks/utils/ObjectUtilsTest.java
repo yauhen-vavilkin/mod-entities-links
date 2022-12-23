@@ -40,7 +40,7 @@ class ObjectUtilsTest {
 
     var actual = ObjectUtils.getDifference(t1, t2);
 
-    assertThat(actual).containsExactly("A1", "A2");
+    assertThat(actual).containsExactlyInAnyOrder("A1", "A2");
   }
 
   @Value

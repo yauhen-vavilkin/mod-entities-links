@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.folio.entlinks.config.properties.InstanceAuthorityChangeProperties;
-import org.folio.entlinks.domain.dto.InventoryEvent;
-import org.folio.entlinks.domain.dto.InventoryEventType;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
+import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolder;
+import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -25,23 +25,22 @@ public class DeleteAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   }
 
   @Override
-  public List<LinksChangeEvent> handle(List<InventoryEvent> events) {
-    if (events == null || events.isEmpty()) {
+  public List<LinksChangeEvent> handle(List<AuthorityChangeHolder> changes) {
+    if (changes == null || changes.isEmpty()) {
       return emptyList();
     }
 
     List<LinksChangeEvent> linksEvents = new ArrayList<>();
 
-    for (InventoryEvent event : events) {
-      var linksChangeEvents =
-        handleLinksByPartitions(event.getId(),
-          instanceLinks -> constructEvent(UUID.randomUUID(), event.getId(), instanceLinks, emptyList())
-        );
+    for (var change : changes) {
+      var linksChangeEvents = handleLinksByPartitions(change.getAuthorityId(),
+        instanceLinks -> constructEvent(UUID.randomUUID(), change.getAuthorityId(), instanceLinks, emptyList())
+      );
       linksEvents.addAll(linksChangeEvents);
     }
 
-
-    linkingService.deleteByAuthorityIdIn(events.stream().map(InventoryEvent::getId).collect(Collectors.toSet()));
+    var authorityIds = changes.stream().map(AuthorityChangeHolder::getAuthorityId).collect(Collectors.toSet());
+    linkingService.deleteByAuthorityIdIn(authorityIds);
     return linksEvents;
   }
 
@@ -51,8 +50,8 @@ public class DeleteAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   }
 
   @Override
-  public InventoryEventType supportedInventoryEventType() {
-    return InventoryEventType.DELETE;
+  public AuthorityChangeType supportedAuthorityChangeType() {
+    return AuthorityChangeType.DELETE;
   }
 
 }
