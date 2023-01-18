@@ -1,5 +1,6 @@
 package org.folio.entlinks.integration.internal;
 
+import static java.util.Objects.nonNull;
 import static org.folio.entlinks.config.constants.CacheNames.AUTHORITY_SOURCE_FILES_CACHE;
 
 import java.util.List;
@@ -32,6 +33,7 @@ public class AuthoritySourceFilesService {
     }
 
     return authoritySourceFiles.stream()
+      .filter(file -> nonNull(file.id()) && nonNull(file.baseUrl()))
       .collect(Collectors.toMap(AuthoritySourceFile::id, AuthoritySourceFile::baseUrl));
   }
 
