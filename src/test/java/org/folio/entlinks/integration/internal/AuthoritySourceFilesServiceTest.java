@@ -42,6 +42,24 @@ class AuthoritySourceFilesServiceTest {
   }
 
   @Test
+  void fetchAuthoritySourceUrls_positive_ignoreNullValues() {
+    var e1 = new AuthoritySourceFile(UUID.randomUUID(), "url1");
+    var e2 = new AuthoritySourceFile(null, "url2");
+    var e3 = new AuthoritySourceFile(UUID.randomUUID(), "url3");
+    var e4 = new AuthoritySourceFile(UUID.randomUUID(), null);
+    var validSourceFiles = List.of(e1, e3);
+    var sourceFiles = List.of(e1, e2, e3, e4);
+
+    when(client.fetchAuthoritySourceFiles()).thenReturn(new AuthoritySourceFiles(sourceFiles));
+
+    var actual = service.fetchAuthoritySourceUrls();
+
+    assertThat(actual)
+      .hasSize(validSourceFiles.size())
+      .contains(entry(e1.id(), e1.baseUrl()), entry(e3.id(), e3.baseUrl()));
+  }
+
+  @Test
   void fetchAuthoritySourceUrls_negative_emptyResponse() {
     when(client.fetchAuthoritySourceFiles()).thenReturn(new AuthoritySourceFiles(emptyList()));
 
