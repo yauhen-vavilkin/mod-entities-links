@@ -1,5 +1,6 @@
 package org.folio.entlinks.domain.entity;
 
+import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,15 +25,18 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
+@Entity
 @Getter
 @Setter
+@Builder
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@Entity
+@Table(name = "instance_authority_linking_rule", uniqueConstraints = {
+  @UniqueConstraint(name = "unq_bib_field_authority_fields", columnNames = {"bib_field", "authority_field"})
+})
 @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
-@Table(name = "instance_authority_linking_rule")
+@TypeDef(name = "enum", typeClass = PostgreSQLEnumType.class)
 public class InstanceAuthorityLinkingRule {
 
   @Id

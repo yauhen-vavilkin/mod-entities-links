@@ -11,20 +11,20 @@ class AuthorityChangeTest {
 
   @Test
   void fromValue_positive() {
-    var actual = AuthorityChange.fromValue("personalName");
+    var actual = AuthorityChangeField.fromValue("personalName");
 
-    assertEquals(AuthorityChange.PERSONAL_NAME, actual);
+    assertEquals(AuthorityChangeField.PERSONAL_NAME, actual);
   }
 
   @Test
   void fromValue_positive_ignoreCase() {
-    var actual = AuthorityChange.fromValue("PersonalName");
+    var actual = AuthorityChangeField.fromValue("PersonalName");
 
-    assertEquals(AuthorityChange.PERSONAL_NAME, actual);
+    assertEquals(AuthorityChangeField.PERSONAL_NAME, actual);
   }
 
   @Test
   void fromValue_negative() {
-    assertThrows(IllegalArgumentException.class, () -> AuthorityChange.fromValue("sourceFileId"));
+    assertThrows(IllegalArgumentException.class, () -> AuthorityChangeField.fromValue("sourceFileId"));
   }
 }

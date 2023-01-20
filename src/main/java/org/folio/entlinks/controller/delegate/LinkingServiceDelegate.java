@@ -43,10 +43,10 @@ public class LinkingServiceDelegate {
     return new LinksCountDtoCollection().links(mapper.convert(linkCountMap));
   }
 
-  private Map<UUID, Long> fillInMissingIdsWithZeros(Map<UUID, Long> linksCountMap, HashSet<UUID> ids) {
-    Map<UUID, Long> result = new HashMap<>(linksCountMap);
+  private Map<UUID, Integer> fillInMissingIdsWithZeros(Map<UUID, Integer> linksCountMap, HashSet<UUID> ids) {
+    var result = new HashMap<>(linksCountMap);
     for (UUID id : ids) {
-      result.putIfAbsent(id, 0L);
+      result.putIfAbsent(id, 0);
     }
     return result;
   }

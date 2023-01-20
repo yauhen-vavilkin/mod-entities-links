@@ -1,0 +1,23 @@
+"id","bib_field","authority_field","authority_subfields","subfield_modifications","subfields_existence_validations"
+1,"100","100","abcdjq",NULL,"{""t"": false}"
+2,"110","110","abc",NULL,"{""t"": false}"
+3,"111","111","aceq",NULL,"{""t"": false}"
+4,"130","130","adfghklmnoprst",NULL,NULL
+5,"240","100","fghklmnoprst","[{""source"": ""t"", ""target"": ""a""}]","{""t"": true}"
+6,"240","110","dfghklmnoprst","[{""source"": ""t"", ""target"": ""a""}]","{""t"": true}"
+7,"240","111","dfghklnpst","[{""source"": ""t"", ""target"": ""a""}]","{""t"": true}"
+8,"600","100","abcdgjqfhklmnoprstvxyz",NULL,NULL
+9,"610","110","abcdgfhklmnoprstvxyz",NULL,NULL
+10,"611","111","aceqfhklpstdgnvxyz",NULL,NULL
+11,"630","130","adfghklmnoprstvxyz",NULL,NULL
+12,"650","150","abgvxyz",NULL,NULL
+13,"651","151","agvxyz",NULL,NULL
+14,"655","155","avxyz",NULL,NULL
+15,"700","100","abcdjqfhklmnoprstg",NULL,NULL
+16,"710","110","abcfhklmoprstdgn",NULL,NULL
+17,"711","111","aceqfhklpstdgn",NULL,NULL
+18,"730","130","adfghklmnoprst",NULL,NULL
+19,"800","100","abcdjqfhklmnoprstg",NULL,NULL
+20,"810","110","abcfhklmoprstdgn",NULL,NULL
+21,"811","111","aceqfhklpstdgn",NULL,NULL
+22,"830","130","adfghklmnoprst",NULL,NULL

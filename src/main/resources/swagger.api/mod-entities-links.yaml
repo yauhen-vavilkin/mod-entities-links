@@ -191,7 +191,6 @@ components:
           description: Authority ID
         totalLinks:
           type: integer
-          format: int64
           description: Number of titles linked to the authority
 
     linkingRuleDto:

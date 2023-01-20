@@ -29,7 +29,7 @@ class ObjectUtilsTest {
 
     var actual = ObjectUtils.getDifference(t1, t2);
 
-    assertThat(actual).containsExactly("A1");
+    assertThat(actual).containsExactly(new ObjectUtils.Difference("A1", "b1", "c1"));
   }
 
   @Test
@@ -40,7 +40,9 @@ class ObjectUtilsTest {
 
     var actual = ObjectUtils.getDifference(t1, t2);
 
-    assertThat(actual).containsExactlyInAnyOrder("A1", "A2");
+    assertThat(actual).containsExactlyInAnyOrder(
+      new ObjectUtils.Difference("A1", "b1", "c1"),
+      new ObjectUtils.Difference("A2", "b2", "c2"));
   }
 
   @Value

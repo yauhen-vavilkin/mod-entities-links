@@ -17,6 +17,7 @@ import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
 import org.folio.entlinks.domain.dto.InstanceLinkDto;
 import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
 import org.folio.entlinks.domain.dto.InventoryEvent;
+import org.folio.entlinks.domain.entity.AuthorityData;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 
 public class TestUtils {
@@ -94,8 +95,10 @@ public class TestUtils {
     public InstanceAuthorityLink toEntity(UUID instanceId) {
       return InstanceAuthorityLink.builder()
         .instanceId(instanceId)
-        .authorityId(authorityId)
-        .authorityNaturalId(naturalId)
+        .authorityData(AuthorityData.builder()
+          .id(authorityId)
+          .naturalId(naturalId)
+          .build())
         .bibRecordSubfields(subfields)
         .bibRecordTag(tag)
         .build();

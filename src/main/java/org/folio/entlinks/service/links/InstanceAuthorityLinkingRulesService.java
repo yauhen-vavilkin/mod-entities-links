@@ -6,7 +6,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
-import org.folio.entlinks.repository.LinkingRulesRepository;
+import org.folio.entlinks.domain.repository.LinkingRulesRepository;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 

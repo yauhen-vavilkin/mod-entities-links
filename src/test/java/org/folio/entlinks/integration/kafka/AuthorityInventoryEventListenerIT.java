@@ -52,7 +52,7 @@ import org.springframework.kafka.listener.MessageListener;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 @IntegrationTest
-@DatabaseCleanup(tables = "instance_link")
+@DatabaseCleanup(tables = "instance_authority_link")
 class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
 
   private KafkaMessageListenerContainer<String, LinksChangeEvent> container;
@@ -111,7 +111,7 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId3, link3)), instanceId3);
 
     var event = TestUtils.authorityEvent("DELETE", null,
-      new AuthorityInventoryRecord().id(link1.authorityId()));
+      new AuthorityInventoryRecord().id(link1.authorityId()).naturalId("oldNaturalId"));
     sendKafkaMessage(inventoryAuthorityTopic(), link1.authorityId().toString(), event);
 
     var received = getReceivedEvent();

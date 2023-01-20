@@ -4,7 +4,6 @@ import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import org.folio.entlinks.config.properties.InstanceAuthorityChangeProperties;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
@@ -34,7 +33,8 @@ public class DeleteAuthorityChangeHandler extends AbstractAuthorityChangeHandler
 
     for (var change : changes) {
       var linksChangeEvents = handleLinksByPartitions(change.getAuthorityId(),
-        instanceLinks -> constructEvent(UUID.randomUUID(), change.getAuthorityId(), instanceLinks, emptyList())
+        instanceLinks -> constructEvent(change.getAuthorityDataStatId(), change.getAuthorityId(), instanceLinks,
+          emptyList())
       );
       linksEvents.addAll(linksChangeEvents);
     }

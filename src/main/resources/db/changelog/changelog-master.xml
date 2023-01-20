@@ -5,5 +5,4 @@
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
   <include file="/changes/v1.0/initial_schema.xml" relativeToChangelogFile="true"/>
-  <include file="/changes/v1.0/linking_rules.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

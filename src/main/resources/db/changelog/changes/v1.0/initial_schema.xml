@@ -4,82 +4,274 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
-  <changeSet id="MODELINKS-2@@create-instance-link-table" author="Pavlo_Smahin">
+  <changeSet id="@@create-authority-data-table" author="Pavlo_Smahin">
     <preConditions>
       <not>
-        <tableExists tableName="instance_link"/>
+        <tableExists tableName="authority_data"/>
       </not>
     </preConditions>
 
-    <comment>Create instance_link table</comment>
+    <comment>Create authority_data table</comment>
 
-    <createTable tableName="instance_link">
-      <column autoIncrement="true" name="id" type="BIGINT">
-        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_instance_link"/>
+    <createTable tableName="authority_data">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_authority_data"/>
       </column>
-      <column name="authority_id" type="UUID">
+      <column name="natural_id" type="VARCHAR(100)">
         <constraints nullable="false"/>
       </column>
-      <column name="authority_natural_id" type="VARCHAR(100)">
+      <column name="updated_at" type="DATETIME"/>
+      <column name="state" type="bool" defaultValue="false"/>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODELINKS-2@@create-link-status-enum" author="Pavlo_Smahin">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="0">
+        SELECT COUNT(*)
+        FROM pg_type t
+        JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+        WHERE t.typname = 'LinkStatus' AND n.nspname = '${database.defaultSchemaName}';
+      </sqlCheck>
+    </preConditions>
+
+    <comment>Create LinkStatus enum</comment>
+
+    <sql>CREATE TYPE LinkStatus AS ENUM ('ACTUAL', 'ERROR')</sql>
+  </changeSet>
+
+  <changeSet id="MODELINKS-2@@create-instance-authority-link-table" author="Pavlo_Smahin">
+    <preConditions>
+      <not>
+        <tableExists tableName="instance_authority_link"/>
+      </not>
+    </preConditions>
+
+    <comment>Create instance_authority_link table</comment>
+
+    <createTable tableName="instance_authority_link">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_instance_authority_link"/>
+      </column>
+      <column name="authority_id" type="UUID">
         <constraints nullable="false"/>
       </column>
       <column name="instance_id" type="UUID">
         <constraints nullable="false"/>
       </column>
       <column name="bib_record_tag" type="VARCHAR(3)"/>
-      <column name="bib_record_subfields" type="char[]"/>
+      <column name="bib_record_subfields" type="VARCHAR(30)"/>
+      <column name="status" type="LinkStatus"/>
+      <column name="error_cause" type="TEXT"/>
+      <column name="created_at" type="DATETIME"/>
+      <column name="updated_at" type="DATETIME"/>
     </createTable>
   </changeSet>
 
-  <changeSet id="MODELINKS-2@@create-instancelink-authorityid-index" author="Pavlo_Smahin">
+  <changeSet id="1673384627647-1" author="Pavlo_Smahin">
+    <preConditions>
+      <and>
+        <tableExists tableName="authority_data"/>
+        <tableExists tableName="instance_authority_link"/>
+        <not>
+          <foreignKeyConstraintExists foreignKeyName="fk_instance_authority_link_authority_data_id"
+                                      schemaName="${database.defaultSchemaName}"
+                                      foreignKeyTableName="instance_authority_link"/>
+        </not>
+      </and>
+    </preConditions>
+
+    <comment>Add FK for authority_id in instance_authority_link referenced to authority_data.id</comment>
+
+    <addForeignKeyConstraint baseTableName="instance_authority_link"
+                             baseColumnNames="authority_id"
+                             referencedTableName="authority_data"
+                             referencedColumnNames="id"
+                             constraintName="fk_instance_authority_link_authority_data_id"
+                             deleteCascade="true"
+                             onDelete="CASCADE"/>
+  </changeSet>
+
+  <changeSet id="MODELINKS-2@@create-instance-authority-link-authorityid-index" author="Pavlo_Smahin">
     <preConditions>
       <not>
-        <indexExists indexName="idx_instancelink_authority_id" tableName="instance_link"/>
+        <indexExists indexName="idx_instance_authority_link_authority_id" tableName="instance_authority_link"/>
       </not>
     </preConditions>
 
-    <comment>Create B-tree index for authority_id in instance_link</comment>
+    <comment>Create B-tree index for authority_id in instance_authority_link</comment>
 
-    <createIndex tableName="instance_link" indexName="idx_instancelink_authority_id">
+    <createIndex tableName="instance_authority_link" indexName="idx_instancelink_authority_id">
       <column name="authority_id"/>
     </createIndex>
   </changeSet>
 
-  <changeSet id="MODELINKS-2@@create-instancelink-instanceid-index" author="Pavlo_Smahin">
+  <changeSet id="MODELINKS-2@@create-instance-authority-link-instanceid-index" author="Pavlo_Smahin">
     <preConditions>
       <not>
-        <indexExists indexName="idx_instancelink_instance_id" tableName="instance_link"/>
+        <indexExists indexName="idx_instance_authority_link_instance_id" tableName="instance_authority_link"/>
       </not>
     </preConditions>
 
-    <comment>Create B-tree index for instance_id in instance_link</comment>
+    <comment>Create B-tree index for instance_id in instance_authority_link</comment>
 
-    <createIndex tableName="instance_link" indexName="idx_instancelink_instance_id">
+    <createIndex tableName="instance_authority_link" indexName="idx_instancelink_instance_id">
       <column name="instance_id"/>
     </createIndex>
   </changeSet>
 
-  <changeSet id="MODELINKS-18@@cleanup-instance-link-table" author="Pavlo_Smahin">
-    <preConditions>
-      <tableExists tableName="instance_link"/>
+  <changeSet id="MODELINKS-2@@create-authority-data-stat-action-enum" author="Pavlo_Smahin">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="0">
+        SELECT COUNT(*)
+        FROM pg_type t
+        JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+        WHERE t.typname = 'AuthorityDataStatAction' AND n.nspname = '${database.defaultSchemaName}';
+      </sqlCheck>
     </preConditions>
 
-    <comment>Cleanup instance_link table</comment>
+    <comment>Create AuthorityDataStatAction enum</comment>
 
-    <delete tableName="instance_link"/>
+    <sql>CREATE TYPE AuthorityDataStatAction AS ENUM ('DELETE', 'UPDATE_NATURAL_ID', 'UPDATE_HEADING')</sql>
   </changeSet>
 
-  <changeSet id="MODELINKS-18@@modify-bib-record-subfields-to-varchar" author="Pavlo_Smahin">
+  <changeSet id="MODELINKS-2@@create-authority-data-stat-status-enum" author="Pavlo_Smahin">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="0">
+        SELECT COUNT(*)
+        FROM pg_type t
+        JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+        WHERE t.typname = 'AuthorityDataStatStatus' AND n.nspname = '${database.defaultSchemaName}';
+      </sqlCheck>
+    </preConditions>
+
+    <comment>Create AuthorityDataStatStatus enum</comment>
+
+    <sql>CREATE TYPE AuthorityDataStatStatus AS ENUM ('NOT_STARTED', 'IN_PROGRESS', 'COMPLETED_SUCCESS',
+      'COMPLETED_WITH_ERRORS', 'FAILED')
+    </sql>
+  </changeSet>
+
+  <changeSet id="1673384484364-1" author="Pavlo_Smahin">
+    <preConditions>
+      <not>
+        <tableExists tableName="authority_data_stat"/>
+      </not>
+    </preConditions>
+
+    <comment>Create authority_data_stat table</comment>
+
+    <createTable tableName="authority_data_stat">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_authority_data_stat"/>
+      </column>
+      <column name="authority_id" type="UUID"/>
+      <column name="action" type="AuthorityDataStatAction">
+        <constraints nullable="false"/>
+      </column>
+      <column name="authority_natural_id_old" type="VARCHAR(255)"/>
+      <column name="authority_natural_id_new" type="VARCHAR(255)"/>
+      <column name="heading_old" type="VARCHAR(255)"/>
+      <column name="heading_new" type="VARCHAR(255)"/>
+      <column name="heading_type_old" type="VARCHAR(255)"/>
+      <column name="heading_type_new" type="VARCHAR(255)"/>
+      <column name="authority_source_file_old" type="UUID"/>
+      <column name="authority_source_file_new" type="UUID"/>
+      <column name="lb_total" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="lb_updated" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="lb_failed" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="status" type="AuthorityDataStatStatus" defaultValue="IN_PROGRESS">
+        <constraints nullable="false"/>
+      </column>
+      <column name="fail_cause" type="VARCHAR(255)"/>
+      <column name="started_by_user_id" type="UUID"/>
+      <column name="started_at" type="DATETIME"/>
+      <column name="completed_at" type="DATETIME"/>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="1673384754486-1" author="Pavlo_Smahin">
     <preConditions>
       <and>
-        <tableExists tableName="instance_link"/>
-        <columnExists tableName="instance_link" columnName="bib_record_subfields"/>
+        <tableExists tableName="authority_data"/>
+        <tableExists tableName="authority_data_stat"/>
+        <not>
+          <foreignKeyConstraintExists foreignKeyName="fk_authority_data_stat_authority_data_id"
+                                      schemaName="${database.defaultSchemaName}"
+                                      foreignKeyTableName="authority_data_stat"/>
+        </not>
       </and>
     </preConditions>
 
-    <comment>Set bib_record_subfields column as VARCHAR(30)</comment>
+    <comment>Add FK for authority_id in authority_data_stat referenced to authority_data.id</comment>
 
-    <modifyDataType tableName="instance_link" columnName="bib_record_subfields" newDataType="VARCHAR(30)"/>
+    <addForeignKeyConstraint baseTableName="authority_data_stat"
+                             baseColumnNames="authority_id"
+                             referencedTableName="authority_data"
+                             referencedColumnNames="id"
+                             constraintName="fk_authority_data_stat_authority_data_id"/>
+  </changeSet>
+
+
+  <changeSet id="MODELINKS-18@@create-instance-authority-linking-rule-table" author="Pavlo_Smahin">
+    <preConditions>
+      <not>
+        <tableExists tableName="instance_authority_linking_rule"/>
+      </not>
+    </preConditions>
+
+    <comment>Create instance_authority_linking_rule table</comment>
+
+    <createTable tableName="instance_authority_linking_rule">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_instance_authority_linking_rule"/>
+      </column>
+      <column name="bib_field" type="CHAR(3)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="authority_field" type="CHAR(3)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="authority_subfields" type="VARCHAR(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="subfield_modifications" type="jsonb"/>
+      <column name="subfields_existence_validations" type="jsonb"/>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODELINKS-18@@add-unique-constant-bib-authority-fields" author="Pavlo_Smahin">
+    <preConditions>
+      <and>
+        <tableExists tableName="instance_authority_linking_rule"/>
+        <columnExists tableName="instance_authority_linking_rule" columnName="bib_field"/>
+        <columnExists tableName="instance_authority_linking_rule" columnName="authority_field"/>
+      </and>
+    </preConditions>
+
+    <comment>Add unique constant for bib_field and authority_field to instance_authority_linking_rule</comment>
+
+    <addUniqueConstraint tableName="instance_authority_linking_rule"
+                         columnNames="bib_field, authority_field"
+                         constraintName="unq_bib_field_authority_fields"/>
+  </changeSet>
+
+  <changeSet id="MODELINKS-24@@populate-instance-authority-linking-rules" author="Pavlo_Smahin">
+    <preConditions>
+      <tableExists tableName="instance_authority_linking_rule"/>
+    </preConditions>
+
+    <comment>Populate instance_authority_linking_rule table with rules</comment>
+
+    <loadData tableName="instance_authority_linking_rule"
+              file="data/instance_authority_linking_rule_data.csv"
+              relativeToChangelogFile="true"/>
   </changeSet>
 
 </databaseChangeLog>

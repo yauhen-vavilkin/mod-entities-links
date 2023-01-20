@@ -19,6 +19,7 @@ import org.folio.entlinks.exception.AuthorityBatchProcessingException;
 import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
 import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
 import org.folio.entlinks.integration.internal.AuthoritySourceRecordService;
+import org.folio.entlinks.service.links.AuthorityDataService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.AuthorityMappingRulesProcessingService;
@@ -36,19 +37,22 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   private final AuthoritySourceRecordService sourceRecordService;
   private final InstanceAuthorityLinkingRulesService linkingRulesService;
   private final InstanceAuthorityLinkingService linkingService;
+  private final AuthorityDataService authorityDataService;
 
   public UpdateAuthorityChangeHandler(InstanceAuthorityChangeProperties instanceAuthorityChangeProperties,
                                       AuthoritySourceFilesService sourceFilesService,
                                       AuthorityMappingRulesProcessingService mappingRulesProcessingService,
                                       AuthoritySourceRecordService sourceRecordService,
                                       InstanceAuthorityLinkingRulesService linkingRulesService,
-                                      InstanceAuthorityLinkingService linkingService) {
+                                      InstanceAuthorityLinkingService linkingService,
+                                      AuthorityDataService authorityDataService) {
     super(instanceAuthorityChangeProperties, linkingService);
     this.sourceFilesService = sourceFilesService;
     this.mappingRulesProcessingService = mappingRulesProcessingService;
     this.sourceRecordService = sourceRecordService;
     this.linkingRulesService = linkingRulesService;
     this.linkingService = linkingService;
+    this.authorityDataService = authorityDataService;
   }
 
   @Override
@@ -90,14 +94,14 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   private List<LinksChangeEvent> handleNaturalIdChange(AuthorityChangeHolder changeHolder) {
     var authorityId = changeHolder.getAuthorityId();
     var naturalId = changeHolder.getNewNaturalId();
-    linkingService.updateNaturalId(naturalId, authorityId);
+    authorityDataService.updateNaturalId(naturalId, authorityId);
 
     var subfield0Change = getSubfield0Value(naturalId, changeHolder.getNewSourceFileId());
 
     return handleLinksByPartitions(authorityId,
       instanceLinks -> {
         var fieldChanges = getFieldChangesForNaturalId(subfield0Change, instanceLinks);
-        return constructEvent(UUID.randomUUID(), authorityId, instanceLinks, fieldChanges);
+        return constructEvent(changeHolder.getAuthorityDataStatId(), authorityId, instanceLinks, fieldChanges);
       }
     );
   }
@@ -116,7 +120,7 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
     var authorityId = changeHolder.getAuthorityId();
 
     var sourceRecord = sourceRecordService.getAuthoritySourceRecordById(authorityId);
-    var changedTag = mappingRulesProcessingService.getTagByAuthorityChange(changeHolder.getFieldChange());
+    var changedTag = mappingRulesProcessingService.getTagByAuthorityChangeField(changeHolder.getFieldChange());
     var linkingRules = linkingRulesService.getLinkingRulesByAuthorityField(changedTag);
 
     var fieldChangeHolders = getFieldChangeHolders(authorityId, sourceRecord, changedTag, linkingRules);
@@ -131,7 +135,7 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
       .toList();
 
     return handleLinksByPartitions(authorityId,
-      instanceLinks -> constructEvent(UUID.randomUUID(), authorityId, instanceLinks, fieldChanges)
+      instanceLinks -> constructEvent(changeHolder.getAuthorityDataStatId(), authorityId, instanceLinks, fieldChanges)
     );
   }
 
@@ -140,8 +144,8 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
     fieldChangeHolders.forEach(fieldChangeHolder -> {
       var subfieldCodes = fieldChangeHolder.getBibSubfieldCodes();
       var naturalId = changeHolder.getNewNaturalId();
-      linkingService.updateSubfieldsAndNaturalId(subfieldCodes, naturalId, authorityId,
-        fieldChangeHolder.getBibField());
+      authorityDataService.updateNaturalId(naturalId, authorityId);
+      linkingService.updateSubfields(subfieldCodes, authorityId, fieldChangeHolder.getBibField());
     });
   }
 

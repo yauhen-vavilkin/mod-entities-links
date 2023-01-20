@@ -1,4 +1,4 @@
-package org.folio.entlinks.service;
+package org.folio.entlinks.service.links;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.Map;
 import org.folio.entlinks.domain.dto.SubfieldModification;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
-import org.folio.entlinks.repository.LinkingRulesRepository;
-import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
+import org.folio.entlinks.domain.repository.LinkingRulesRepository;
 import org.folio.spring.test.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

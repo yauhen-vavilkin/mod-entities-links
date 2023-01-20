@@ -17,19 +17,24 @@ public class ObjectUtils {
    * @param s2 second object.
    * @return fieldNames that have different values
    */
-  public static <T> List<String> getDifference(T s1, T s2)
+  public static <T> List<Difference> getDifference(T s1, T s2)
     throws InvocationTargetException, IllegalAccessException {
-    List<String> values = new ArrayList<>();
-    for (Method method : s1.getClass().getMethods()) {
+
+    T obj = s1 != null ? s1 : s2;
+
+    List<Difference> values = new ArrayList<>();
+    for (Method method : obj.getClass().getMethods()) {
       if (method.getName().startsWith("get")) {
-        var value1 = method.invoke(s1);
-        var value2 = method.invoke(s2);
+        var value1 = s1 != null ? method.invoke(s1) : null;
+        var value2 = s2 != null ? method.invoke(s2) : null;
         if (!Objects.equals(value1, value2)) {
           var fieldName = method.getName().substring(3);
-          values.add(fieldName);
+          values.add(new Difference(fieldName, value1, value2));
         }
       }
     }
     return values;
   }
+
+  public record Difference(String fieldName, Object val1, Object val2) { }
 }

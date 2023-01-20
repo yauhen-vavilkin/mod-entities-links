@@ -1,6 +1,5 @@
 package org.folio.entlinks.integration.kafka;
 
-import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -9,7 +8,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
@@ -17,7 +15,6 @@ import java.util.function.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
 import org.folio.entlinks.domain.dto.InventoryEvent;
-import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.InstanceAuthorityLinkUpdateService;
 import org.folio.spring.test.type.UnitTest;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
@@ -36,8 +33,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class AuthorityInventoryEventListenerTest {
 
-  @Mock
-  private InstanceAuthorityLinkingService linkingService;
   @Mock
   private SystemUserScopedExecutionService executionService;
   @Mock
@@ -70,7 +65,6 @@ class AuthorityInventoryEventListenerTest {
     mockSuccessHandling();
     when(consumerRecord.key()).thenReturn(authId.toString());
     when(consumerRecord.value()).thenReturn(event);
-    when(linkingService.retainAuthoritiesIdsWithLinks(Set.of(authId))).thenReturn(Set.of(authId));
 
     listener.handleEvents(singletonList(consumerRecord));
 
@@ -79,7 +73,7 @@ class AuthorityInventoryEventListenerTest {
 
   @ValueSource(strings = {"UPDATE", "DELETE"})
   @ParameterizedTest
-  void shouldNotHandleEvent_positive_whenNoLinksExists(String type) {
+  void shouldHandleEvent_positive_whenNoLinksExists(String type) {
     var authId = UUID.randomUUID();
     var newRecord = new AuthorityInventoryRecord().id(authId);
     var oldRecord = new AuthorityInventoryRecord().id(authId);
@@ -88,11 +82,10 @@ class AuthorityInventoryEventListenerTest {
     mockSuccessHandling();
     when(consumerRecord.key()).thenReturn(authId.toString());
     when(consumerRecord.value()).thenReturn(event);
-    when(linkingService.retainAuthoritiesIdsWithLinks(Set.of(authId))).thenReturn(emptySet());
 
     listener.handleEvents(singletonList(consumerRecord));
 
-    verify(instanceAuthorityLinkUpdateService, never()).handleAuthoritiesChanges(singletonList(event));
+    verify(instanceAuthorityLinkUpdateService).handleAuthoritiesChanges(singletonList(event));
   }
 
   @Test
@@ -105,7 +98,6 @@ class AuthorityInventoryEventListenerTest {
     mockFailedHandling(new RuntimeException("test message"));
     when(consumerRecord.key()).thenReturn(authId.toString());
     when(consumerRecord.value()).thenReturn(event);
-    when(linkingService.retainAuthoritiesIdsWithLinks(Set.of(authId))).thenReturn(Set.of(authId));
 
     listener.handleEvents(singletonList(consumerRecord));
 

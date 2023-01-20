@@ -1,0 +1,69 @@
+@startuml
+
+hide circles
+
+'skinparam linetype polyline
+skinparam linetype ortho
+
+package mod-entities-links-DB-schema <<Database>> {
+    json "**authority_data**" as authority_data {
+        "**id** (pk)":"UUID",
+        "authority_natural_id":"Varchar(64)",
+        "updated_at":"DateTime",
+        "deleted":"bool"
+    }
+
+    note left of authority_data
+        The id field contains the id value
+        of an authority record it references to.
+    end note
+
+    json "**authority_data_stat**" as authority_data_stat {
+        "**id** (pk)":"UUID",
+        "//authority_id// (fk)":"UUID",
+        "action_type":["DELETE", "UPDATE_NATURAL_ID", "UPDATE_HEADING"],
+        "data_import_job_id":"UUID",
+        "status":["NOT_STARTED", "IN_PROGRESS", "COMPLETED - SUCCESS", "COMPLETED - WITH ERRORS", "FAILED"],
+        "fail_cause":"Text",
+        "authority_natural_id_old":"Varchar(64)",
+        "authority_natural_id_new":"Varchar(64)",
+        "heading_old":"Text",
+        "heading_new":"Text",
+        "heading_type_old":"Text",
+        "heading_type_new":"Text",
+        "authority_source_file_old":"UUID",
+        "authority_source_file_new":"UUID",
+        "lb_total":"Integer",
+        "lb_updated":"Integer",
+        "lb_failed":"Integer",
+        "started_by_user_id":"UUID",
+        "started_at":"DateTime",
+        "completed_at ":"DateTime"
+    }
+
+    json "**instance_authority_link**" as instance_authority_link {
+        "**id** (pk)":"UUID",
+        "//authority_id// (fk)":"UUID",
+        "//instance_id// (fk)":"UUID",
+        "bib_record_tag":"Varchar(3)",
+        "bib_record_subfields":"Varchar(30)",
+        "created_at":"DateTime",
+        "updated_at":"DateTime",
+        "status":["ACTUAL", "ERROR"],
+        "error_cause":"Text"
+    }
+
+    json "**instance_authority_linking_rule**" as linking_rules {
+        "**id** (pk)":"long",
+        "bib_field":"Char(3)",
+        "authority_field":"Char(3)",
+        "authority_subfields":"Char(50)",
+        "subfield_modifications": "jsonb",
+        "subfields_existence_validations": "jsonb"
+    }
+}
+
+authority_data " 1 " *-left-- " many " instance_authority_link
+authority_data " 1 " *-- " many " authority_data_stat
+
+@enduml

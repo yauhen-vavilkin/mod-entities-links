@@ -128,7 +128,7 @@ class LinkingServiceDelegateTest {
     var ids = List.of(randomUUID(), randomUUID(), randomUUID());
 
     when(linkingService.countLinksByAuthorityIds(new HashSet<>(ids))).thenReturn(
-      Map.of(ids.get(0), 2L, ids.get(1), 1L));
+      Map.of(ids.get(0), 2, ids.get(1), 1));
     when(mapper.convert(anyMap())).thenCallRealMethod();
 
     var actual = delegate.countLinksByAuthorityIds(new UuidCollection().ids(ids));
@@ -136,6 +136,6 @@ class LinkingServiceDelegateTest {
     assertThat(actual.getLinks())
       .hasSize(ids.size())
       .extracting(LinksCountDto::getId, LinksCountDto::getTotalLinks)
-      .containsExactlyInAnyOrder(tuple(ids.get(0), 2L), tuple(ids.get(1), 1L), tuple(ids.get(2), 0L));
+      .containsExactlyInAnyOrder(tuple(ids.get(0), 2), tuple(ids.get(1), 1), tuple(ids.get(2), 0));
   }
 }

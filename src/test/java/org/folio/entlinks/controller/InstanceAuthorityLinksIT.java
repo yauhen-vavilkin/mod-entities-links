@@ -44,7 +44,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 @IntegrationTest
-@DatabaseCleanup(tables = "instance_link")
+@DatabaseCleanup(tables = "instance_authority_link")
 class InstanceAuthorityLinksIT extends IntegrationTestBase {
 
   public static Stream<Arguments> requiredFieldMissingProvider() {
@@ -346,8 +346,8 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
       .andExpect(linksMatch(hasSize(2)))
       .andExpect(content().json(asJson(new LinksCountDtoCollection().links(
         List.of(
-          new LinksCountDto().id(secondAuthorityId).totalLinks(1L),
-          new LinksCountDto().id(authorityId).totalLinks(2L)
+          new LinksCountDto().id(secondAuthorityId).totalLinks(1),
+          new LinksCountDto().id(authorityId).totalLinks(2)
         )))));
   }
 

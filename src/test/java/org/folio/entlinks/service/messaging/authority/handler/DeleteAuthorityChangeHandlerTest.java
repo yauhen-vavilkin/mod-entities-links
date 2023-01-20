@@ -1,6 +1,7 @@
 package org.folio.entlinks.service.messaging.authority.handler;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
 import static org.folio.entlinks.domain.dto.LinksChangeEvent.TypeEnum;
@@ -59,8 +60,9 @@ class DeleteAuthorityChangeHandlerTest {
   @Test
   void handle_positive() {
     var eventIds = Set.of(UUID.randomUUID(), UUID.randomUUID());
-    var events =
-      eventIds.stream().map(uuid -> new AuthorityChangeHolder(new InventoryEvent().id(uuid), emptyList())).toList();
+    var events = eventIds.stream()
+      .map(uuid -> new AuthorityChangeHolder(new InventoryEvent().id(uuid), emptyMap(), emptyMap(), 0))
+      .toList();
     var instanceId1 = UUID.randomUUID();
     var instanceId2 = UUID.randomUUID();
     var instanceId3 = UUID.randomUUID();
