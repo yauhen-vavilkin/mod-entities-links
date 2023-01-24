@@ -9,9 +9,9 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
+import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.Optional;
-import javax.validation.ConstraintViolationException;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Level;
 import org.folio.entlinks.exception.RequestBodyValidationException;

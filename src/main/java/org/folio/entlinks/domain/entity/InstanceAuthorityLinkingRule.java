@@ -1,18 +1,17 @@
 package org.folio.entlinks.domain.entity;
 
-import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,7 +22,6 @@ import org.folio.entlinks.domain.dto.SubfieldModification;
 import org.folio.entlinks.domain.entity.converter.StringToCharArrayConverter;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
 
 @Entity
 @Getter
@@ -35,8 +33,6 @@ import org.hibernate.annotations.TypeDef;
 @Table(name = "instance_authority_linking_rule", uniqueConstraints = {
   @UniqueConstraint(name = "unq_bib_field_authority_fields", columnNames = {"bib_field", "authority_field"})
 })
-@TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
-@TypeDef(name = "enum", typeClass = PostgreSQLEnumType.class)
 public class InstanceAuthorityLinkingRule {
 
   @Id
@@ -54,11 +50,11 @@ public class InstanceAuthorityLinkingRule {
   @Column(name = "authority_subfields", nullable = false, length = 30)
   private char[] authoritySubfields;
 
-  @Type(type = "jsonb")
+  @Type(JsonBinaryType.class)
   @Column(name = "subfieldModifications", columnDefinition = "jsonb")
   private List<SubfieldModification> subfieldModifications;
 
-  @Type(type = "jsonb")
+  @Type(JsonBinaryType.class)
   @Column(name = "subfieldsExistenceValidations", columnDefinition = "jsonb")
   private Map<String, Boolean> subfieldsExistenceValidations;
 
