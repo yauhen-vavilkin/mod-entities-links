@@ -1,3 +1,6 @@
 mapping-rules.get
+mapping-metadata.get
 source-storage.sourceRecords.get
 inventory-storage.authority-source-files.collection.get
+inventory-storage.instances.item.get
+inventory-storage.instances.item.put
