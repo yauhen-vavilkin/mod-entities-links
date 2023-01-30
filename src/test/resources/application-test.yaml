@@ -19,6 +19,13 @@ spring:
   kafka:
     producer:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  sql:
+    init:
+      continue-on-error: true
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
   jackson:
     default-property-inclusion: non_null
     deserialization:

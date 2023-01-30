@@ -47,7 +47,10 @@ spring:
   sql:
     init:
       continue-on-error: true
-
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
 folio:
   environment: ${ENV:folio}
   okapi-url: ${OKAPI_URL:http://localhost:9130}
