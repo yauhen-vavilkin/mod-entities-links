@@ -356,6 +356,9 @@ components:
           description: Subfield value. If empty - then remove
           type: string
 
+    linkUpdateReport:
+      $ref: schemas/linkUpdateReport.json
+
   responses:
     badRequestResponse:
       description: Validation errors.

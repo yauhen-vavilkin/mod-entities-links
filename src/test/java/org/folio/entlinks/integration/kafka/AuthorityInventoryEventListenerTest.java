@@ -1,17 +1,15 @@
 package org.folio.entlinks.integration.kafka;
 
 import static java.util.Collections.singletonList;
+import static org.folio.support.TestUtils.mockBatchFailedHandling;
+import static org.folio.support.TestUtils.mockBatchSuccessHandling;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
 import org.folio.entlinks.domain.dto.InventoryEvent;
@@ -62,7 +60,7 @@ class AuthorityInventoryEventListenerTest {
     var oldRecord = new AuthorityInventoryRecord().id(authId);
     var event = TestUtils.authorityEvent(type, newRecord, oldRecord);
 
-    mockSuccessHandling();
+    mockBatchSuccessHandling(messageBatchProcessor);
     when(consumerRecord.key()).thenReturn(authId.toString());
     when(consumerRecord.value()).thenReturn(event);
 
@@ -79,7 +77,7 @@ class AuthorityInventoryEventListenerTest {
     var oldRecord = new AuthorityInventoryRecord().id(authId);
     var event = TestUtils.authorityEvent(type, newRecord, oldRecord);
 
-    mockSuccessHandling();
+    mockBatchSuccessHandling(messageBatchProcessor);
     when(consumerRecord.key()).thenReturn(authId.toString());
     when(consumerRecord.value()).thenReturn(event);
 
@@ -95,33 +93,13 @@ class AuthorityInventoryEventListenerTest {
     var oldRecord = new AuthorityInventoryRecord().id(authId);
     var event = TestUtils.authorityEvent("UPDATE", newRecord, oldRecord);
 
-    mockFailedHandling(new RuntimeException("test message"));
+    mockBatchFailedHandling(messageBatchProcessor, new RuntimeException("test message"));
     when(consumerRecord.key()).thenReturn(authId.toString());
     when(consumerRecord.value()).thenReturn(event);
 
     listener.handleEvents(singletonList(consumerRecord));
 
     verify(instanceAuthorityLinkUpdateService, never()).handleAuthoritiesChanges(singletonList(event));
-  }
-
-  @SuppressWarnings("unchecked")
-  private void mockSuccessHandling() {
-    doAnswer(invocation -> {
-      var argument = invocation.getArgument(2, Consumer.class);
-      var batch = invocation.getArgument(0, List.class);
-      argument.accept(batch);
-      return null;
-    }).when(messageBatchProcessor).consumeBatchWithFallback(any(), any(), any(), any());
-  }
-
-  @SuppressWarnings("unchecked")
-  private void mockFailedHandling(Exception e) {
-    doAnswer(invocation -> {
-      var argument = invocation.getArgument(3, BiConsumer.class);
-      var batch = invocation.getArgument(0, List.class);
-      argument.accept(batch.get(0), e);
-      return null;
-    }).when(messageBatchProcessor).consumeBatchWithFallback(any(), any(), any(), any());
   }
 
 }

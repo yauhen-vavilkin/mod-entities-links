@@ -1,7 +1,10 @@
 package org.folio.support;
 
 import static java.util.UUID.randomUUID;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.support.base.TestConstants.TENANT_ID;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.springframework.util.ResourceUtils.getFile;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -12,13 +15,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RandomUtils;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
 import org.folio.entlinks.domain.dto.InstanceLinkDto;
 import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
 import org.folio.entlinks.domain.dto.InventoryEvent;
+import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.entity.AuthorityData;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
+import org.folio.spring.tools.batch.MessageBatchProcessor;
 
 public class TestUtils {
 
@@ -51,6 +62,80 @@ public class TestUtils {
 
   public static List<InstanceAuthorityLink> links(UUID instanceId, Link... links) {
     return Arrays.stream(links).map(link -> link.toEntity(instanceId)).toList();
+  }
+
+  public static List<InstanceAuthorityLink> links(List<Integer> ids) {
+    return ids.stream()
+      .map(id -> InstanceAuthorityLink.builder()
+        .id((long) id)
+        .build())
+      .toList();
+  }
+
+  public static List<InstanceAuthorityLink> links(int count, String error) {
+    return Stream.generate(() -> 0)
+      .map(i -> InstanceAuthorityLink.builder()
+        .id((long) RandomUtils.nextInt())
+        .errorCause(error)
+        .build())
+      .limit(count)
+      .toList();
+  }
+
+  public static List<InstanceAuthorityLink> links(int count) {
+    return links(count, EMPTY);
+  }
+
+  public static List<LinkUpdateReport> reports(UUID jobId) {
+    return reports(jobId, LinkUpdateReport.StatusEnum.SUCCESS, EMPTY);
+  }
+
+  public static List<LinkUpdateReport> reports(UUID jobId, LinkUpdateReport.StatusEnum status, String failCause) {
+    var tenant = RandomStringUtils.randomAlphabetic(10);
+    return List.of(
+      report(tenant, jobId, status, failCause),
+      report(tenant, jobId, status, failCause));
+  }
+
+  public static LinkUpdateReport report(String tenant, UUID jobId) {
+    return report(tenant, jobId, LinkUpdateReport.StatusEnum.SUCCESS, EMPTY);
+  }
+
+  public static LinkUpdateReport report(String tenant, UUID jobId, LinkUpdateReport.StatusEnum status,
+                                        String failCause) {
+    return new LinkUpdateReport()
+      .tenant(tenant)
+      .jobId(jobId)
+      .instanceId(UUID.randomUUID())
+      .status(status)
+      .linkIds(List.of(RandomUtils.nextInt(), RandomUtils.nextInt()))
+      .failCause(failCause);
+  }
+
+  public static List<ConsumerRecord<String, LinkUpdateReport>> consumerRecords(List<LinkUpdateReport> reports) {
+    return reports.stream()
+      .map(report -> new ConsumerRecord<>(EMPTY, 0, 0, EMPTY, report))
+      .toList();
+  }
+
+  @SuppressWarnings("unchecked")
+  public static void mockBatchSuccessHandling(MessageBatchProcessor messageBatchProcessor) {
+    doAnswer(invocation -> {
+      var argument = invocation.getArgument(2, Consumer.class);
+      var batch = invocation.getArgument(0, List.class);
+      argument.accept(batch);
+      return null;
+    }).when(messageBatchProcessor).consumeBatchWithFallback(any(), any(), any(), any());
+  }
+
+  @SuppressWarnings("unchecked")
+  public static void mockBatchFailedHandling(MessageBatchProcessor messageBatchProcessor, Exception e) {
+    doAnswer(invocation -> {
+      var argument = invocation.getArgument(3, BiConsumer.class);
+      var batch = invocation.getArgument(0, List.class);
+      argument.accept(batch.get(0), e);
+      return null;
+    }).when(messageBatchProcessor).consumeBatchWithFallback(any(), any(), any(), any());
   }
 
   @SneakyThrows

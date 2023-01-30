@@ -27,6 +27,7 @@ import org.folio.spring.test.extension.EnablePostgres;
 import org.folio.spring.test.extension.impl.OkapiConfiguration;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.hamcrest.Matcher;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
@@ -68,6 +69,11 @@ public class IntegrationTestBase {
     IntegrationTestBase.objectMapper = objectMapper;
     IntegrationTestBase.kafkaTemplate = kafkaTemplate;
     setUpTenant();
+  }
+
+  @AfterAll
+  static void tearDown() {
+    System.clearProperty("env");
   }
 
   @SneakyThrows

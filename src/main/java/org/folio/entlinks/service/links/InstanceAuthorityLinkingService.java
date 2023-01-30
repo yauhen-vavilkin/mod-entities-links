@@ -37,6 +37,15 @@ public class InstanceAuthorityLinkingService {
     return instanceLinkRepository.findByAuthorityId(authorityId, pageable);
   }
 
+  public List<InstanceAuthorityLink> getLinksByIds(List<Integer> ids) {
+    log.info("Retrieving links by ids [{}]", ids);
+    var longIds = ids.stream()
+      .mapToLong(Integer::longValue)
+      .boxed()
+      .toList();
+    return instanceLinkRepository.findAllById(longIds);
+  }
+
   @Transactional
   public void updateLinks(UUID instanceId, List<InstanceAuthorityLink> incomingLinks) {
     if (log.isDebugEnabled()) {
@@ -89,6 +98,14 @@ public class InstanceAuthorityLinkingService {
     }
     instanceLinkRepository.deleteByAuthorityIds(authorityIds);
     authorityDataService.markDeleted(authorityIds);
+  }
+
+  @Transactional
+  public void saveAll(String instanceId, List<InstanceAuthorityLink> links) {
+    log.info("Save links for [instanceId: {}, links amount: {}]", instanceId, links.size());
+    log.debug("Save links for [instanceId: {}, links: {}]", instanceId, links);
+
+    instanceLinkRepository.saveAll(links);
   }
 
   private List<InstanceAuthorityLink> getLinksToSave(List<InstanceAuthorityLink> incomingLinks,

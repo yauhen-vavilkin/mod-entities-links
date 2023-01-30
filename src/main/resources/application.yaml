@@ -59,11 +59,18 @@ folio:
       - name: links.instance-authority
         numPartitions: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS:10}
         replicationFactor: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_REPLICATION_FACTOR:}
+      - name: links.instance-authority-stats
+        numPartitions: ${KAFKA_INSTANCE_AUTHORITY_STATS_TOPIC_PARTITIONS:10}
+        replicationFactor: ${KAFKA_INSTANCE_AUTHORITY_STATS_TOPIC_REPLICATION_FACTOR:}
     listener:
       authority:
         concurrency: ${KAFKA_AUTHORITIES_CONSUMER_CONCURRENCY:1}
         topic-pattern: (${folio.environment}\.)(.*\.)inventory\.authority
         group-id: ${folio.environment}-mod-entities-links-authorities-group
+      instance-authority-stats:
+        concurrency: ${KAFKA_INSTANCE_AUTHORITY_STATS_CONSUMER_CONCURRENCY:1}
+        topic-pattern: (${folio.environment}\.)(.*\.)links\.instance-authority-stats
+        group-id: ${folio.environment}-mod-entities-links-stats-group
   instance-authority:
     change:
       numPartitions: ${KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS:100}

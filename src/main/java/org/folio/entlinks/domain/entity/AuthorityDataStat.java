@@ -6,6 +6,8 @@ import java.util.Objects;
 import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -43,6 +45,7 @@ public class AuthorityDataStat {
   private AuthorityData authorityData;
 
   @Type(type = "enum")
+  @Enumerated(EnumType.STRING)
   @Column(name = "action", nullable = false)
   private AuthorityDataStatAction action;
 
@@ -80,6 +83,7 @@ public class AuthorityDataStat {
   private int lbFailed;
 
   @Type(type = "enum")
+  @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false)
   private AuthorityDataStatStatus status;
 

@@ -10,6 +10,7 @@ import java.util.Map;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.folio.entlinks.domain.dto.InventoryEvent;
+import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.integration.kafka.AuthorityChangeFilterStrategy;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
@@ -40,11 +41,8 @@ public class KafkaConfiguration {
   @Bean
   public ConcurrentKafkaListenerContainerFactory<String, InventoryEvent> authorityListenerFactory(
     ConsumerFactory<String, InventoryEvent> consumerFactory) {
-    var factory = new ConcurrentKafkaListenerContainerFactory<String, InventoryEvent>();
-    factory.setBatchListener(true);
-    factory.setConsumerFactory(consumerFactory);
+    var factory = listenerFactory(consumerFactory);
     factory.setRecordFilterStrategy(new AuthorityChangeFilterStrategy());
-    factory.setCommonErrorHandler(new CommonLoggingErrorHandler());
     return factory;
   }
 
@@ -57,7 +55,44 @@ public class KafkaConfiguration {
    */
   @Bean
   public ConsumerFactory<String, InventoryEvent> authorityConsumerFactory(KafkaProperties kafkaProperties) {
-    var deserializer = new JsonDeserializer<>(InventoryEvent.class);
+    return consumerFactoryForEvent(kafkaProperties, InventoryEvent.class);
+  }
+
+  /**
+   * Creates and configures {@link org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory} as
+   * Spring bean for consuming link update report events from Apache Kafka.
+   *
+   * @return {@link org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory} object as Spring bean.
+   */
+  @Bean
+  public ConcurrentKafkaListenerContainerFactory<String, LinkUpdateReport> statsListenerFactory(
+    ConsumerFactory<String, LinkUpdateReport> consumerFactory) {
+    return listenerFactory(consumerFactory);
+  }
+
+  /**
+   * Creates and configures {@link org.springframework.kafka.core.ConsumerFactory} as Spring bean.
+   *
+   * <p>Key type - {@link String}, value - {@link InventoryEvent}.</p>
+   *
+   * @return typed {@link org.springframework.kafka.core.ConsumerFactory} object as Spring bean.
+   */
+  @Bean
+  public ConsumerFactory<String, LinkUpdateReport> linkUpdateReportConsumerFactory(KafkaProperties kafkaProperties) {
+    return consumerFactoryForEvent(kafkaProperties, LinkUpdateReport.class);
+  }
+
+  private <T> ConcurrentKafkaListenerContainerFactory<String, T> listenerFactory(
+    ConsumerFactory<String, T> consumerFactory) {
+    var factory = new ConcurrentKafkaListenerContainerFactory<String, T>();
+    factory.setBatchListener(true);
+    factory.setConsumerFactory(consumerFactory);
+    factory.setCommonErrorHandler(new CommonLoggingErrorHandler());
+    return factory;
+  }
+
+  private <T> ConsumerFactory<String, T> consumerFactoryForEvent(KafkaProperties kafkaProperties, Class<T> eventClass) {
+    var deserializer = new JsonDeserializer<>(eventClass);
     Map<String, Object> config = new HashMap<>(kafkaProperties.buildConsumerProperties());
     config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     config.put(VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);

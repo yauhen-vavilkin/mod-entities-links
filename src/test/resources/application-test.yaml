@@ -40,11 +40,18 @@ folio:
       - name: inventory.authority
         numPartitions: 1
         replicationFactor:
+      - name: links.instance-authority-stats
+        numPartitions: 1
+        replicationFactor:
     listener:
       authority:
         concurrency: 1
         topic-pattern: (${folio.environment}\.)(.*\.)inventory\.authority
         group-id: ${folio.environment}-mod-entities-links-authorities-group
+      instance-authority-stats:
+        concurrency: 1
+        topic-pattern: (${folio.environment}\.)(.*\.)links\.instance-authority-stats
+        group-id: ${folio.environment}-mod-entities-links-stats-group
   retry:
     enabled: true
   tenant:

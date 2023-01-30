@@ -97,6 +97,24 @@ class InstanceAuthorityLinkingServiceTest {
   }
 
   @Test
+  void getLinksByIds_positive_foundWhenExist() {
+    var links = links(2);
+    var ids = links.stream()
+      .map(link -> link.getId().intValue())
+      .toList();
+    var longIds = links.stream()
+      .map(InstanceAuthorityLink::getId)
+      .toList();
+
+    when(instanceLinkRepository.findAllById(longIds)).thenReturn(links);
+
+    var result = service.getLinksByIds(ids);
+
+    assertThat(result)
+      .containsOnly(links.get(0), links.get(1));
+  }
+
+  @Test
   void updateLinks_positive_saveIncomingLinks_whenAnyExist() {
     final var instanceId = randomUUID();
     final var existedLinks = Collections.<InstanceAuthorityLink>emptyList();
@@ -290,6 +308,16 @@ class InstanceAuthorityLinkingServiceTest {
     service.deleteByAuthorityIdIn(authorityIds);
 
     verify(instanceLinkRepository).deleteByAuthorityIds(authorityIds);
+  }
+
+  @Test
+  void saveAll_positive() {
+    var instanceId = UUID.randomUUID().toString();
+    var links = links(2);
+
+    service.saveAll(instanceId, links);
+
+    verify(instanceLinkRepository).saveAll(links);
   }
 
   @SuppressWarnings("unchecked")
