@@ -99,7 +99,7 @@ public class InstanceAuthorityLink {
 
   public boolean isSameLink(InstanceAuthorityLink link) {
     return authorityData.getId().equals(link.getAuthorityData().getId())
-        && instanceId.equals(link.instanceId)
-        && bibRecordTag.equals(link.bibRecordTag);
+      && instanceId.equals(link.instanceId)
+      && bibRecordTag.equals(link.bibRecordTag);
   }
 }

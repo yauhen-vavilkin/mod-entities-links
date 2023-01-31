@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Link update report",
+  "type": "object",
+  "properties": {
+    "jobId": {
+      "description": "Linked bibs update job id, UUID",
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "uuid.schema",
+      "type": "string",
+      "format": "uuid"
+    },
+    "instanceId": {
+      "description": "Instance id, UUID",
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "uuid.schema",
+      "type": "string",
+      "format": "uuid"
+    },
+    "linkIds": {
+      "description": "All bib-related link ids",
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "failCause": {
+      "description": "Failure message",
+      "type": "string"
+    },
+    "status": {
+      "description": "Link update status",
+      "type": "string",
+      "enum": [
+        "SUCCESS",
+        "FAIL"
+      ]
+    },
+    "tenant": {
+      "description": "Tenant id",
+      "type": "string"
+    },
+    "ts": {
+      "description": "Timestamp",
+      "type": "string"
+    }
+  }
+}
