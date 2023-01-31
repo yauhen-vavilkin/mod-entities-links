@@ -106,6 +106,53 @@ paths:
         '500':
           $ref: '#/components/responses/serverErrorResponse'
 
+  /links/authority/stats:
+    get:
+      description: Retrieve authority updates (related to links) statistics
+      operationId: getAuthorityLinksStats
+      tags:
+        - instance-authority-links-statistics
+      parameters:
+        - name: fromDate
+          in: query
+          required: false
+          description: Start date to seek from
+          schema:
+            type: string
+            format: date-time
+        - name: toDate
+          in: query
+          required: false
+          description: End date to seek from
+          schema:
+            type: string
+            format: date-time
+        - name: action
+          in: query
+          required: false
+          description: Action to filter by
+          schema:
+            $ref: "#/components/schemas/authorityDataStatActionDto"
+        - name: limit
+          in: query
+          required: false
+          description: Max number of items in collection
+          schema:
+            type: integer
+            default: 100
+      responses:
+        "200":
+          description: The authority updates statistics collection
+          content:
+            application/json:
+              schema:
+                description: Collection of authority updates statistics
+                $ref: '#/components/schemas/authorityChangeStatDtoCollection'
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/serverErrorResponse'
+
 components:
   schemas:
     instanceLinkDtoCollection:
@@ -354,6 +401,100 @@ components:
           type: string
         value:
           description: Subfield value. If empty - then remove
+          type: string
+
+    authorityDataStatActionDto:
+      description: Type of change
+      type: string
+      enum:
+        - DELETE
+        - UPDATE_NATURAL_ID
+        - UPDATE_HEADING
+
+    authorityDataStatDto:
+      type: object
+      description: Describe changes to authority that are related to links
+      properties:
+        id:
+          description: Stat ID
+          $ref: "#/components/schemas/uuid"
+        authorityId:
+          description: Authority ID
+          $ref: "#/components/schemas/uuid"
+        action:
+          description: Type of change
+          $ref: "#/components/schemas/authorityDataStatActionDto"
+        naturalIdOld:
+          description: Old natural ID
+          type: string
+        naturalIdNew:
+          description: New natural ID
+          type: string
+        headingOld:
+          description: Old heading
+          type: string
+        headingNew:
+          description: New heading
+          type: string
+        headingTypeOld:
+          description: Old heading type
+          type: string
+        headingTypeNew:
+          description: New heading type
+          type: string
+        sourceFileOld:
+          description: Old source file ID
+          type: string
+        sourceFileNew:
+          description: New source file ID
+          type: string
+        lbTotal:
+          description: Amount of linked bib fields
+          type: integer
+        lbUpdated:
+          description: Amount of linked bib fields that was successfully updated during authority update
+          type: integer
+        lbFailed:
+          description: Amount of linked bib fields that was successfully updated during authority update
+          type: integer
+        metadata:
+          description: Statistics metadata
+          $ref: '#/components/schemas/metadata'
+
+    authorityChangeStatDtoCollection:
+      description: Collection of authority changes statistic
+      type: object
+      properties:
+        stats:
+          description: Authority changes statistic
+          type: array
+          items:
+            $ref: "#/components/schemas/authorityDataStatDto"
+        next:
+          description: Next response item date to seek by
+          type: string
+          format: date-time
+
+    metadata:
+      description: Meta data for authorityDataStatDto
+      type: object
+      properties:
+        startedAt:
+          description: Date-time when authority update was registered
+          type: string
+          format: date-time
+        completedAt:
+          description: Date-time when update of all related links was completed
+          type: string
+          format: date-time
+        startedByUserId:
+          description: User's ID that triggers record
+          $ref: "#/components/schemas/uuid"
+        startedByUserFirstName:
+          description: User's first name that triggers record
+          type: string
+        startedByUserLastName:
+          description: User's last name that triggers record
           type: string
 
     linkUpdateReport:

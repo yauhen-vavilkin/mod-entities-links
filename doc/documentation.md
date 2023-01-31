@@ -263,3 +263,82 @@ Response:
   }
 ]
 ```
+
+### API instance-authority-links-statistics
+
+The API enables possibility to retrieve default linking rules.
+
+| METHOD | URL                      | Required permissions                                                    | DESCRIPTION                                        |
+|:-------|:-------------------------|:------------------------------------------------------------------------|:---------------------------------------------------|
+| GET    | `/links/authority/stats` | `instance-authority.instance-authority-links-statistics.collection.get` | Get Instance to Authority linking rules collection |
+
+#### Instance to Authority linking rule parameters
+
+* `fromDate` - Start date to seek from
+* `toDate` - End date to seek from
+* `action` - Action to filter by
+* `limit` - Max number of items in collection
+
+#### Examples
+
+<a name="retrieve-instance-authority-links-statistics"></a>
+
+##### Retrieve instance to authority links statistics collection:
+
+`GET /links/authority/stats`
+
+Response:
+
+```json
+[
+  { 
+    "next" : "2000-01-23T04:56:07.000+00:00",
+    "stats" : [
+      { 
+        "lbTotal" : 0,
+        "metadata" : {
+          "completedAt" : "2000-01-23T04:56:07.000+00:00",
+          "startedByUserFirstName" : "startedByUserFirstName",
+          "startedByUserId" : "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+          "startedAt" : "2000-01-23T04:56:07.000+00:00",
+          "startedByUserLastName" : "startedByUserLastName"
+        },
+        "headingOld" : "headingOld",
+        "sourceFileNew" : "sourceFileNew",
+        "naturalIdOld" : "naturalIdOld",
+        "lbFailed" : 1,
+        "authorityId" : "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+        "headingTypeNew" : "headingTypeNew",
+        "lbUpdated" : 6,
+        "naturalIdNew" : "naturalIdNew",
+        "id" : "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+        "headingTypeOld" : "headingTypeOld",
+        "sourceFileOld" : "sourceFileOld",
+        "headingNew" : "headingNew"
+      },
+      {
+        "lbTotal" : 0,
+        "metadata" : {
+          "completedAt" : "2000-01-23T04:56:07.000+00:00",
+          "startedByUserFirstName" : "startedByUserFirstName",
+          "startedByUserId" : "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+          "startedAt" : "2000-01-23T04:56:07.000+00:00",
+          "startedByUserLastName" : "startedByUserLastName"
+        },
+        "headingOld" : "headingOld",
+        "sourceFileNew" : "sourceFileNew",
+        "naturalIdOld" : "naturalIdOld",
+        "lbFailed" : 1,
+        "authorityId" : "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+        "headingTypeNew" : "headingTypeNew",
+        "lbUpdated" : 6,
+        "naturalIdNew" : "naturalIdNew",
+        "id" : "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+        "headingTypeOld" : "headingTypeOld",
+        "sourceFileOld" : "sourceFileOld",
+        "headingNew" : "headingNew"
+      }
+    ]
+  }
+]
+```

@@ -5,16 +5,20 @@ import static org.folio.entlinks.domain.dto.LinkUpdateReport.StatusEnum.FAIL;
 import static org.folio.entlinks.domain.dto.LinkUpdateReport.StatusEnum.SUCCESS;
 
 import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.entlinks.domain.dto.AuthorityDataStatActionDto;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
+import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.domain.entity.AuthorityDataStatStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.repository.AuthorityDataStatRepository;
+import org.folio.entlinks.utils.DateUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +46,12 @@ public class AuthorityDataStatService {
     }
 
     return statRepository.saveAll(stats);
+  }
+
+  public List<AuthorityDataStat> fetchDataStats(OffsetDateTime fromDate, OffsetDateTime toDate,
+                                                AuthorityDataStatActionDto action, int limit) {
+    return statRepository.findByDateAndAction(AuthorityDataStatAction.valueOf(action.getValue()),
+      DateUtils.toTimestamp(fromDate), DateUtils.toTimestamp(toDate), limit);
   }
 
   @Transactional
