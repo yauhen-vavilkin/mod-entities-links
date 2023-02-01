@@ -270,7 +270,7 @@
     <comment>Populate instance_authority_linking_rule table with rules</comment>
 
     <loadData tableName="instance_authority_linking_rule"
-              file="data/instance_authority_linking_rule_data.csv"
+              file="v1.0/data/instance_authority_linking_rule_data.csv"
               relativeToChangelogFile="true"/>
   </changeSet>
 

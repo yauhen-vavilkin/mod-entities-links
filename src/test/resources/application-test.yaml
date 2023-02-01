@@ -8,7 +8,7 @@ spring:
   jpa:
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQL10Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
         generate_statistics: true
         jdbc:
@@ -19,6 +19,13 @@ spring:
   kafka:
     producer:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  sql:
+    init:
+      continue-on-error: true
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
   jackson:
     default-property-inclusion: non_null
     deserialization:

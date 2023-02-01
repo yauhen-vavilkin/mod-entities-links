@@ -1,23 +1,23 @@
 package org.folio.entlinks.domain.entity;
 
-import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
+import io.hypersistence.utils.hibernate.type.basic.PostgreSQLEnumType;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.UUID;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,7 +27,6 @@ import lombok.ToString;
 import org.folio.entlinks.domain.entity.converter.StringToCharArrayConverter;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -42,7 +41,6 @@ import org.springframework.data.annotation.LastModifiedDate;
   @Index(name = "idx_instance_authority_link_authority_id", columnList = "authority_id"),
   @Index(name = "idx_instance_authority_link_instance_id", columnList = "instance_id")
 })
-@TypeDef(name = "enum", typeClass = PostgreSQLEnumType.class)
 public class InstanceAuthorityLink {
 
   @Id
@@ -66,8 +64,8 @@ public class InstanceAuthorityLink {
   @Convert(converter = StringToCharArrayConverter.class)
   private char[] bibRecordSubfields;
 
-  @Type(type = "enum")
   @Enumerated(EnumType.STRING)
+  @Type(PostgreSQLEnumType.class)
   @Column(name = "status", nullable = false)
   private InstanceAuthorityLinkStatus status;
 

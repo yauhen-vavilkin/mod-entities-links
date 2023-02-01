@@ -2,7 +2,6 @@ spring:
   application:
     name: mod-entities-links
   datasource:
-    continue-on-error: true
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_DATABASE:okapi_modules}
     password: ${DB_PASSWORD:folio_admin}
     username: ${DB_USERNAME:folio_admin}
@@ -11,7 +10,7 @@ spring:
   jpa:
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQL10Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
           batch_size: 20
         order_inserts: true
@@ -45,7 +44,13 @@ spring:
       - authority-linking-rules-cache
     caffeine:
       spec: maximumSize=500,expireAfterWrite=3600s
-
+  sql:
+    init:
+      continue-on-error: true
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
 folio:
   environment: ${ENV:folio}
   okapi-url: ${OKAPI_URL:http://localhost:9130}

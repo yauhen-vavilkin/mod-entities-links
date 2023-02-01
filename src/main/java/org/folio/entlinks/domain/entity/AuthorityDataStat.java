@@ -1,17 +1,17 @@
 package org.folio.entlinks.domain.entity;
 
-import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
+import io.hypersistence.utils.hibernate.type.basic.PostgreSQLEnumType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.UUID;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,7 +20,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -32,7 +31,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 @Setter
 @ToString
 @Table(name = "authority_data_stat")
-@TypeDef(name = "enum", typeClass = PostgreSQLEnumType.class)
 public class AuthorityDataStat {
 
   @Id
@@ -44,8 +42,8 @@ public class AuthorityDataStat {
   @JoinColumn(name = "authority_id")
   private AuthorityData authorityData;
 
-  @Type(type = "enum")
   @Enumerated(EnumType.STRING)
+  @Type(PostgreSQLEnumType.class)
   @Column(name = "action", nullable = false)
   private AuthorityDataStatAction action;
 
@@ -82,8 +80,8 @@ public class AuthorityDataStat {
   @Column(name = "lb_failed")
   private int lbFailed;
 
-  @Type(type = "enum")
   @Enumerated(EnumType.STRING)
+  @Type(PostgreSQLEnumType.class)
   @Column(name = "status", nullable = false)
   private AuthorityDataStatStatus status;
 
