@@ -455,7 +455,7 @@ components:
           description: Amount of linked bib fields that was successfully updated during authority update
           type: integer
         lbFailed:
-          description: Amount of linked bib fields that was successfully updated during authority update
+          description: Amount of linked bib fields that was failed to update during authority update
           type: integer
         metadata:
           description: Statistics metadata

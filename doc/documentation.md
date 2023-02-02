@@ -268,9 +268,9 @@ Response:
 
 The API enables possibility to retrieve default linking rules.
 
-| METHOD | URL                      | Required permissions                                                    | DESCRIPTION                                        |
-|:-------|:-------------------------|:------------------------------------------------------------------------|:---------------------------------------------------|
-| GET    | `/links/authority/stats` | `instance-authority.instance-authority-links-statistics.collection.get` | Get Instance to Authority linking rules collection |
+| METHOD | URL                      | Required permissions                                           | DESCRIPTION                                                     |
+|:-------|:-------------------------|:---------------------------------------------------------------|:----------------------------------------------------------------|
+| GET    | `/links/authority/stats` | `instance-authority-links.authority-statistics.collection.get` | Get Instance to Authority links authority-statistics collection |
 
 #### Instance to Authority linking rule parameters
 
