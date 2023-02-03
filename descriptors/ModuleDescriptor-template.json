@@ -98,30 +98,30 @@
           ]
         },
         {
-          "id": "instance-authority-links-statistics",
-          "version": "1.0",
-          "handlers": [
-            {
-              "methods": [
-                "GET"
-              ],
-              "pathPattern": "/links/authority/stats",
-              "permissionsRequired": [
-                "instance-authority-links.authority-statistics.collection.get"
-              ],
-              "modulePermissions": [
-                 "users.collection.get"
-              ]
-            }
-          ]
-        },
-        {
           "methods": [
             "GET",
             "DELETE"
           ],
           "pathPattern": "/_/tenant/{id}",
           "permissionsRequired": []
+        }
+      ]
+    },
+    {
+      "id": "instance-authority-links-statistics",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/links/authority/stats",
+          "permissionsRequired": [
+            "instance-authority-links.authority-statistics.collection.get"
+           ],
+          "modulePermissions": [
+             "users.collection.get"
+          ]
         }
       ]
     }
