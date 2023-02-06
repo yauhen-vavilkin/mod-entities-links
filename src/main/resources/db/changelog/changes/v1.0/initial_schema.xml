@@ -2,9 +2,9 @@
 <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
 
-  <changeSet id="@@create-authority-data-table" author="Pavlo_Smahin">
+  <changeSet id="MODELINKS-2@@create-authority-data-table" author="Pavlo_Smahin">
     <preConditions>
       <not>
         <tableExists tableName="authority_data"/>
@@ -68,7 +68,7 @@
     </createTable>
   </changeSet>
 
-  <changeSet id="1673384627647-1" author="Pavlo_Smahin">
+  <changeSet id="MODELINKS-2@@create-fk-authority-id-authority-data" author="Pavlo_Smahin">
     <preConditions>
       <and>
         <tableExists tableName="authority_data"/>
@@ -152,7 +152,7 @@
     </sql>
   </changeSet>
 
-  <changeSet id="1673384484364-1" author="Pavlo_Smahin">
+  <changeSet id="MODELINKS-2@@create-authority-data-stat-table" author="Pavlo_Smahin">
     <preConditions>
       <not>
         <tableExists tableName="authority_data_stat"/>
@@ -196,7 +196,7 @@
     </createTable>
   </changeSet>
 
-  <changeSet id="1673384754486-1" author="Pavlo_Smahin">
+  <changeSet id="MODELINKS-2@@create-fk-authority-id-authority-data-stat" author="Pavlo_Smahin">
     <preConditions>
       <and>
         <tableExists tableName="authority_data"/>
@@ -270,8 +270,31 @@
     <comment>Populate instance_authority_linking_rule table with rules</comment>
 
     <loadData tableName="instance_authority_linking_rule"
-              file="v1.0/data/instance_authority_linking_rule_data.csv"
+              file="data/instance_authority_linking_rule_data.csv"
               relativeToChangelogFile="true"/>
   </changeSet>
+
+  <changeSet id="MODELINKS-2@@remove-created-at-link-column" author="Pavlo_Smahin">
+    <preConditions>
+      <tableExists tableName="instance_authority_link"/>
+    </preConditions>
+
+    <comment>Drop created_at column in instance_authority_link</comment>
+
+    <dropColumn tableName="instance_authority_link" columnName="created_at"/>
+  </changeSet>
+
+  <changeSet id="MODELINKS-2@@remove-updated-at-stat-column" author="Pavlo_Smahin">
+    <preConditions>
+      <tableExists tableName="authority_data_stat"/>
+    </preConditions>
+
+    <comment>Add updated_at column in authority_data_stat</comment>
+
+    <addColumn tableName="authority_data_stat" schemaName="">
+      <column name="updated_at" type="DATETIME"/>
+    </addColumn>
+  </changeSet>
+
 
 </databaseChangeLog>

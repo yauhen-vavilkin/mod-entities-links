@@ -32,6 +32,9 @@
     <lombok.mapstruct-binding.version>0.2.0</lombok.mapstruct-binding.version>
     <marc4j.version>2.9.2</marc4j.version>
 
+    <!-- To fix issue with relativeToChangeLogFile not working (https://github.com/liquibase/liquibase/issues/3393) -->
+    <liquibase.version>4.18.0</liquibase.version>
+
     <testcontainers.version>1.17.4</testcontainers.version>
     <wiremock.version>2.27.2</wiremock.version>
     <awaitility.version>4.2.0</awaitility.version>

@@ -1,0 +1,114 @@
+version: "3.8"
+
+services:
+
+  mod-entities-links:
+    container_name: mod-entities-links
+    image: dev.folio/mod-entities-links
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    networks:
+      - mod-entities-links-local
+    ports:
+      - "${APP_PORT}:8081"
+      - "${DEBUG_PORT}:${DEBUG_PORT}"
+    depends_on:
+      - api-mock
+      - kafka
+      - postgres
+    environment:
+      DB_HOST: postgres
+      JAVA_OPTIONS: -Xmx120m -Xms120m
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:${DEBUG_PORT}
+      OKAPI_URL: ${OKAPI_URL}
+
+  api-mock:
+    image: wiremock/wiremock:2.32.0
+    container_name: api-mock
+    networks:
+      - mod-entities-links-local
+    command:
+      - "--verbose"
+    ports:
+      - "9130:8080"
+    volumes:
+      - ../src/test/resources/mappings:/home/wiremock/mappings
+
+  zookeeper:
+    container_name: zookeeper
+    image: wurstmeister/zookeeper:3.4.6
+    networks:
+      - mod-entities-links-local
+    ports:
+      - "2181:2181"
+
+  kafka:
+    container_name: kafka
+    image: wurstmeister/kafka:2.13-2.8.1
+    networks:
+      - mod-entities-links-local
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:29092
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://localhost:29092
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_MESSAGE_MAX_BYTES: 1000000
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - zookeeper
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      KAFKA_CLUSTERS_0_JMXPORT: 9997
+    networks:
+      - mod-entities-links-local
+
+  postgres:
+    container_name: postgres
+    image: postgres:12-alpine
+    networks:
+      - mod-entities-links-local
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: folio_admin
+      POSTGRES_PASSWORD: folio_admin
+      POSTGRES_DB: okapi_modules
+
+  pgadmin:
+    container_name: "pgadmin-test"
+    image: "dpage/pgadmin4:latest"
+    networks:
+      - mod-entities-links-local
+    ports:
+      - "${PGADMIN_PORT}:80"
+    environment:
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
+      PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
+
+networks:
+  mod-entities-links-local:
+    driver: bridge
+
+volumes:
+  pgadmin-data:
+    driver: "local"
+  postgres-data:
+    driver: "local"

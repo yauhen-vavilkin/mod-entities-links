@@ -31,7 +31,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 @Setter
 @ToString
 @Table(name = "authority_data_stat")
-public class AuthorityDataStat {
+public class AuthorityDataStat extends AuditableEntity {
 
   @Id
   @Column(name = "id", nullable = false)

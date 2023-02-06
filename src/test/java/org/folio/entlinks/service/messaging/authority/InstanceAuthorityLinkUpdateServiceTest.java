@@ -3,9 +3,11 @@ package org.folio.entlinks.service.messaging.authority;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,7 +56,6 @@ class InstanceAuthorityLinkUpdateServiceTest {
   void setUp() {
     when(updateHandler.supportedAuthorityChangeType()).thenReturn(AuthorityChangeType.UPDATE);
     when(deleteHandler.supportedAuthorityChangeType()).thenReturn(AuthorityChangeType.DELETE);
-    when(context.getTenantId()).thenReturn(TENANT);
 
     service = new InstanceAuthorityLinkUpdateService(context, authorityDataStatService, kafkaTemplate,
       mappingRulesProcessingService, List.of(updateHandler, deleteHandler), linkingService);
@@ -70,10 +71,12 @@ class InstanceAuthorityLinkUpdateServiceTest {
     when(linkingService.countLinksByAuthorityIds(Set.of(id))).thenReturn(Map.of(id, 1));
     when(updateHandler.handle(anyList())).thenReturn(List.of(expected));
     when(context.getOkapiHeaders()).thenReturn(Map.of("tenant", List.of(TENANT)));
+    when(context.getTenantId()).thenReturn(TENANT);
 
     service.handleAuthoritiesChanges(inventoryEvents);
 
     verify(kafkaTemplate).send(producerRecordCaptor.capture());
+    verify(authorityDataStatService).createInBatch(anyList());
 
     var producerRecord = producerRecordCaptor.getValue();
     assertThat(producerRecord).isNotNull();
@@ -87,6 +90,20 @@ class InstanceAuthorityLinkUpdateServiceTest {
   }
 
   @Test
+  void handleAuthoritiesChanges_positive_updateEventWhenNoLinksExist() {
+    final var id = UUID.randomUUID();
+    final var inventoryEvents = List.of(new InventoryEvent().id(id)
+      .type("UPDATE")._new(new AuthorityInventoryRecord().naturalId("new")));
+
+    when(linkingService.countLinksByAuthorityIds(Set.of(id))).thenReturn(Collections.emptyMap());
+
+    service.handleAuthoritiesChanges(inventoryEvents);
+
+    verify(kafkaTemplate, never()).send(producerRecordCaptor.capture());
+    verify(authorityDataStatService).createInBatch(anyList());
+  }
+
+  @Test
   void handleAuthoritiesChanges_positive_deleteEvent() {
     final var id = UUID.randomUUID();
     final var inventoryEvents = List.of(new InventoryEvent().id(id)
@@ -97,10 +114,12 @@ class InstanceAuthorityLinkUpdateServiceTest {
     when(linkingService.countLinksByAuthorityIds(Set.of(id))).thenReturn(Map.of(id, 1));
     when(deleteHandler.handle(any())).thenReturn(List.of(changeEvent));
     when(context.getOkapiHeaders()).thenReturn(Map.of("tenant", List.of(TENANT)));
+    when(context.getTenantId()).thenReturn(TENANT);
 
     service.handleAuthoritiesChanges(inventoryEvents);
 
     verify(kafkaTemplate).send(producerRecordCaptor.capture());
+    verify(authorityDataStatService).createInBatch(anyList());
 
     var producerRecord = producerRecordCaptor.getValue();
     assertThat(producerRecord).isNotNull();

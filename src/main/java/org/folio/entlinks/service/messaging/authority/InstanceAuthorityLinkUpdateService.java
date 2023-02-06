@@ -115,7 +115,8 @@ public class InstanceAuthorityLinkUpdateService {
                                                         Map<AuthorityChangeField, String> fieldTagRelation,
                                                         Map<UUID, Integer> linksNumberByAuthorityId) {
     var difference = getAuthorityChanges(event.getNew(), event.getOld());
-    return new AuthorityChangeHolder(event, difference, fieldTagRelation, linksNumberByAuthorityId.get(event.getId()));
+    return new AuthorityChangeHolder(event, difference, fieldTagRelation,
+      linksNumberByAuthorityId.getOrDefault(event.getId(), 0));
   }
 
   @SneakyThrows
