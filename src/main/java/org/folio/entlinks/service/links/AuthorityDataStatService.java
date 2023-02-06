@@ -69,7 +69,6 @@ public class AuthorityDataStatService {
 
       links.forEach(link -> {
         link.setStatus(mapReportStatus(report));
-        link.setUpdatedAt(now());
         if (report.getStatus().equals(FAIL)) {
           link.setErrorCause(report.getFailCause());
         } else {

@@ -1,6 +1,7 @@
 package org.folio.entlinks.integration.kafka;
 
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
 import static org.folio.support.TestUtils.linksDto;
@@ -249,11 +250,9 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
     assertions.then(value.getSubfieldsChanges()).as("Subfield changes")
       .isEqualTo(List.of(
         new FieldChange()
-          .field(link1.tag()).subfields(List.of(new SubfieldChange().code("0")
-            .value("id.loc.gov/authorities/names/newNaturalId"))),
+          .field(link1.tag()).subfields(List.of(subfieldChange("0", "id.loc.gov/authorities/names/newNaturalId"))),
         new FieldChange()
-          .field(link2.tag()).subfields(List.of(new SubfieldChange().code("0")
-            .value("id.loc.gov/authorities/names/newNaturalId")))));
+          .field(link2.tag()).subfields(List.of(subfieldChange("0", "id.loc.gov/authorities/names/newNaturalId")))));
     assertions.then(value.getJobId()).as("Job ID").isNotNull();
     assertions.then(value.getTs()).as("Timestamp").isNotNull();
 
@@ -313,35 +312,91 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
       ));
     assertions.then(value.getSubfieldsChanges()).as("Subfield changes").containsExactlyInAnyOrder(
       new FieldChange().field("100").subfields(List.of(
-        new SubfieldChange().code("a").value("Lansing, John"),
-        new SubfieldChange().code("d").value("1756-1791."),
-        new SubfieldChange().code("q").value("(Jules)")
+        subfieldChange("a", "Lansing, John"),
+        subfieldChangeEmpty("b"),
+        subfieldChangeEmpty("c"),
+        subfieldChange("d", "1756-1791."),
+        subfieldChangeEmpty("j"),
+        subfieldChange("q", "(Jules)")
       )),
       new FieldChange().field("600").subfields(List.of(
-        new SubfieldChange().code("a").value("Lansing, John"),
-        new SubfieldChange().code("d").value("1756-1791."),
-        new SubfieldChange().code("l").value("book"),
-        new SubfieldChange().code("q").value("(Jules)"),
-        new SubfieldChange().code("t").value("Black Eagles")
-      )),
+        subfieldChange("a", "Lansing, John"),
+        subfieldChangeEmpty("b"),
+        subfieldChangeEmpty("c"),
+        subfieldChange("d", "1756-1791."),
+        subfieldChangeEmpty("f"),
+        subfieldChangeEmpty("g"),
+        subfieldChangeEmpty("h"),
+        subfieldChangeEmpty("j"),
+        subfieldChangeEmpty("k"),
+        subfieldChange("l", "book"),
+        subfieldChangeEmpty("m"),
+        subfieldChangeEmpty("n"),
+        subfieldChangeEmpty("o"),
+        subfieldChangeEmpty("p"),
+        subfieldChange("q", "(Jules)"),
+        subfieldChangeEmpty("r"),
+        subfieldChangeEmpty("s"),
+        subfieldChange("t", "Black Eagles"),
+        subfieldChangeEmpty("v"),
+        subfieldChangeEmpty("x"),
+        subfieldChangeEmpty("y"),
+        subfieldChangeEmpty("z")
+        )),
       new FieldChange().field("700").subfields(List.of(
-        new SubfieldChange().code("a").value("Lansing, John"),
-        new SubfieldChange().code("d").value("1756-1791."),
-        new SubfieldChange().code("l").value("book"),
-        new SubfieldChange().code("q").value("(Jules)"),
-        new SubfieldChange().code("t").value("Black Eagles")
+        subfieldChange("a", "Lansing, John"),
+        subfieldChangeEmpty("b"),
+        subfieldChangeEmpty("c"),
+        subfieldChange("d", "1756-1791."),
+        subfieldChangeEmpty("f"),
+        subfieldChangeEmpty("g"),
+        subfieldChangeEmpty("h"),
+        subfieldChangeEmpty("j"),
+        subfieldChangeEmpty("k"),
+        subfieldChange("l", "book"),
+        subfieldChangeEmpty("m"),
+        subfieldChangeEmpty("n"),
+        subfieldChangeEmpty("o"),
+        subfieldChangeEmpty("p"),
+        subfieldChange("q", "(Jules)"),
+        subfieldChangeEmpty("r"),
+        subfieldChangeEmpty("s"),
+        subfieldChange("t", "Black Eagles")
       )),
       new FieldChange().field("800").subfields(List.of(
-        new SubfieldChange().code("a").value("Lansing, John"),
-        new SubfieldChange().code("d").value("1756-1791."),
-        new SubfieldChange().code("l").value("book"),
-        new SubfieldChange().code("q").value("(Jules)"),
-        new SubfieldChange().code("t").value("Black Eagles")
+        subfieldChange("a", "Lansing, John"),
+        subfieldChangeEmpty("b"),
+        subfieldChangeEmpty("c"),
+        subfieldChange("d", "1756-1791."),
+        subfieldChangeEmpty("f"),
+        subfieldChangeEmpty("g"),
+        subfieldChangeEmpty("h"),
+        subfieldChangeEmpty("j"),
+        subfieldChangeEmpty("k"),
+        subfieldChange("l", "book"),
+        subfieldChangeEmpty("m"),
+        subfieldChangeEmpty("n"),
+        subfieldChangeEmpty("o"),
+        subfieldChangeEmpty("p"),
+        subfieldChange("q", "(Jules)"),
+        subfieldChangeEmpty("r"),
+        subfieldChangeEmpty("s"),
+        subfieldChange("t", "Black Eagles")
       )),
       new FieldChange().field("240").subfields(List.of(
-        new SubfieldChange().code("a").value("Black Eagles"),
-        new SubfieldChange().code("l").value("book")
-      ))
+        subfieldChange("a", "Black Eagles"),
+        subfieldChangeEmpty("f"),
+        subfieldChangeEmpty("g"),
+        subfieldChangeEmpty("h"),
+        subfieldChangeEmpty("k"),
+        subfieldChange("l", "book"),
+        subfieldChangeEmpty("m"),
+        subfieldChangeEmpty("n"),
+        subfieldChangeEmpty("o"),
+        subfieldChangeEmpty("p"),
+        subfieldChangeEmpty("r"),
+        subfieldChangeEmpty("s")
+        ))
     );
     assertions.then(value.getJobId()).as("Job ID").isNotNull();
     assertions.then(value.getTs()).as("Timestamp").isNotNull();
@@ -353,6 +408,14 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
       .andExpect(jsonPath("$.links[0].bibRecordSubfields", containsInAnyOrder("a", "d", "q")));
     doGet(linksInstanceEndpoint(), instanceId2)
       .andExpect(jsonPath("$.links[0].bibRecordSubfields", containsInAnyOrder("a", "l")));
+  }
+
+  private static SubfieldChange subfieldChange(String code, String value) {
+    return new SubfieldChange().code(code).value(value);
+  }
+
+  private static SubfieldChange subfieldChangeEmpty(String code) {
+    return subfieldChange(code, EMPTY);
   }
 
   @Nullable

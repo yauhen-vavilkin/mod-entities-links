@@ -64,7 +64,7 @@ public class InstanceAuthorityLink extends AuditableEntity {
   @Enumerated(EnumType.STRING)
   @Type(PostgreSQLEnumType.class)
   @Column(name = "status", nullable = false)
-  private InstanceAuthorityLinkStatus status;
+  private InstanceAuthorityLinkStatus status = InstanceAuthorityLinkStatus.ACTUAL;
 
   @Column(name = "error_cause")
   private String errorCause;

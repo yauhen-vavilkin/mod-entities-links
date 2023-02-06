@@ -21,7 +21,6 @@ import lombok.ToString;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Type;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
 @Builder
 @AllArgsConstructor
@@ -95,9 +94,13 @@ public class AuthorityDataStat extends AuditableEntity {
   @Column(name = "started_at")
   private Timestamp startedAt;
 
-  @LastModifiedDate
   @Column(name = "completed_at")
   private Timestamp completedAt;
+
+  @Override
+  public int hashCode() {
+    return getClass().hashCode();
+  }
 
   @Override
   public boolean equals(Object o) {
@@ -109,10 +112,5 @@ public class AuthorityDataStat extends AuditableEntity {
     }
     AuthorityDataStat that = (AuthorityDataStat) o;
     return id != null && Objects.equals(id, that.id);
-  }
-
-  @Override
-  public int hashCode() {
-    return getClass().hashCode();
   }
 }

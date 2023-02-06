@@ -1,5 +1,7 @@
 package org.folio.entlinks.service.messaging.authority.model;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -20,14 +22,14 @@ public class FieldChangeHolder {
 
   private final @Getter String bibField;
 
-  private final List<Subfield> bibSubfields;
+  private final List<Subfield> authSubfields;
 
   private final List<SubfieldChange> extraSubfieldChanges = new ArrayList<>();
 
   public FieldChangeHolder(DataField dataField, InstanceAuthorityLinkingRule linkingRule) {
     this.linkingRule = linkingRule;
     this.bibField = linkingRule.getBibField();
-    this.bibSubfields = getBibSubfields(dataField.getSubfields());
+    this.authSubfields = getAuthSubfields(dataField.getSubfields());
   }
 
   public void addExtraSubfieldChange(SubfieldChange change) {
@@ -37,9 +39,9 @@ public class FieldChangeHolder {
   }
 
   public char[] getBibSubfieldCodes() {
-    var bibSubfieldCodes = new char[bibSubfields.size()];
-    for (int i = 0; i < bibSubfields.size(); i++) {
-      bibSubfieldCodes[i] = bibSubfields.get(i).getCode();
+    var bibSubfieldCodes = new char[authSubfields.size()];
+    for (int i = 0; i < authSubfields.size(); i++) {
+      bibSubfieldCodes[i] = authSubfields.get(i).getCode();
     }
     return bibSubfieldCodes;
   }
@@ -53,15 +55,26 @@ public class FieldChangeHolder {
   }
 
   private List<SubfieldChange> toSubfieldsChange() {
-    return bibSubfields.stream()
+    // create subfield changes for subfields that exist in authority
+    var subfieldChanges = authSubfields.stream()
       .map(subfield -> new SubfieldChange()
         .code(Character.toString(subfield.getCode()))
         .value(subfield.getData()))
+      .collect(Collectors.groupingBy(subfieldChange -> subfieldChange.getCode().charAt(0)));
+
+    // create subfield changes for subfields that missing in authority but still could be controlled
+    for (char subfieldCode : linkingRule.getAuthoritySubfields()) {
+      var code = getCode(subfieldCode);
+      subfieldChanges.putIfAbsent(code, List.of(new SubfieldChange().code(Character.toString(code)).value(EMPTY)));
+    }
+
+    return subfieldChanges.values().stream()
+      .flatMap(List::stream)
       .sorted(Comparator.comparing(SubfieldChange::getCode))
       .collect(Collectors.toCollection(ArrayList::new));
   }
 
-  private List<Subfield> getBibSubfields(List<Subfield> subfields) {
+  private List<Subfield> getAuthSubfields(List<Subfield> subfields) {
     return subfields.stream()
       .filter(subfield -> Arrays.contains(linkingRule.getAuthoritySubfields(), subfield.getCode()))
       .map(subfield -> {
@@ -73,14 +86,18 @@ public class FieldChangeHolder {
   }
 
   private char getCode(Subfield subfield) {
+    return getCode(subfield.getCode());
+  }
+
+  private char getCode(char subfieldCode) {
     var subfieldModifications = linkingRule.getSubfieldModifications();
     if (subfieldModifications != null && !subfieldModifications.isEmpty()) {
       for (SubfieldModification subfieldModification : subfieldModifications) {
-        if (subfieldModification.getSource().charAt(0) == subfield.getCode()) {
+        if (subfieldModification.getSource().charAt(0) == subfieldCode) {
           return subfieldModification.getTarget().charAt(0);
         }
       }
     }
-    return subfield.getCode();
+    return subfieldCode;
   }
 }

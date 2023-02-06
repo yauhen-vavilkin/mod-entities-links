@@ -175,7 +175,6 @@ class AuthorityDataStatServiceTest {
   private Consumer<InstanceAuthorityLink> linkAsserter(InstanceAuthorityLinkStatus status, String errorCause) {
     return link -> {
       assertThat(link.getStatus()).isEqualTo(status);
-      assertThat(link.getUpdatedAt()).isAfter(testStartTime);
       assertThat(link.getErrorCause()).isEqualTo(errorCause);
     };
   }

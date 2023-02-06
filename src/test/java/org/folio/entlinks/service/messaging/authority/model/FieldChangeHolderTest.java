@@ -1,5 +1,6 @@
 package org.folio.entlinks.service.messaging.authority.model;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -12,6 +13,14 @@ import org.marc4j.marc.impl.DataFieldImpl;
 import org.marc4j.marc.impl.SubfieldImpl;
 
 class FieldChangeHolderTest {
+
+  private static SubfieldChange valueChangeEmpty(String f) {
+    return valueChange(f, EMPTY);
+  }
+
+  private static SubfieldChange valueChange(String f, String empty) {
+    return new SubfieldChange().code(f).value(empty);
+  }
 
   @Test
   void getBibSubfieldCodes_positive_modificationsExists() {
@@ -28,7 +37,7 @@ class FieldChangeHolderTest {
 
     var fieldChangeHolder = new FieldChangeHolder(dataField, linkingRule);
 
-    assertThat(fieldChangeHolder.getBibSubfieldCodes()).contains('a', 'h');
+    assertThat(fieldChangeHolder.getBibSubfieldCodes()).containsExactly('a', 'h');
   }
 
   @Test
@@ -41,7 +50,7 @@ class FieldChangeHolderTest {
     var linkingRule = new InstanceAuthorityLinkingRule();
     linkingRule.setAuthorityField("100");
     linkingRule.setBibField("240");
-    linkingRule.setAuthoritySubfields(new char[] {'f', 'g', 'h', 'k', 'l', 'm', 'n', 'o', 'p', 'r', 's', 't'});
+    linkingRule.setAuthoritySubfields(new char[] {'f', 'g', 'h', 'k', 'l', 'm', 'n', 't'});
     linkingRule.setSubfieldModifications(List.of(new SubfieldModification().source("t").target("a")));
 
     var fieldChangeHolder = new FieldChangeHolder(dataField, linkingRule);
@@ -50,9 +59,15 @@ class FieldChangeHolderTest {
 
     assertThat(actual)
       .extracting(FieldChange::getField, FieldChange::getSubfields)
-      .contains(linkingRule.getBibField(), List.of(
-        new SubfieldChange().code("a").value("t-data"),
-        new SubfieldChange().code("h").value("h-data")
+      .containsExactly(linkingRule.getBibField(), List.of(
+        valueChange("a", "t-data"),
+        valueChangeEmpty("f"),
+        valueChangeEmpty("g"),
+        valueChange("h", "h-data"),
+        valueChangeEmpty("k"),
+        valueChangeEmpty("l"),
+        valueChangeEmpty("m"),
+        valueChangeEmpty("n")
       ));
   }
 
@@ -69,16 +84,18 @@ class FieldChangeHolderTest {
     linkingRule.setAuthoritySubfields(new char[] {'a', 'g', 'h', 'k'});
 
     var fieldChangeHolder = new FieldChangeHolder(dataField, linkingRule);
-    fieldChangeHolder.addExtraSubfieldChange(new SubfieldChange().code("0").value("0-data"));
+    fieldChangeHolder.addExtraSubfieldChange(valueChange("0", "0-data"));
 
     var actual = fieldChangeHolder.toFieldChange();
 
     assertThat(actual)
       .extracting(FieldChange::getField, FieldChange::getSubfields)
-      .contains(linkingRule.getBibField(), List.of(
-        new SubfieldChange().code("a").value("a-data"),
-        new SubfieldChange().code("h").value("h-data"),
-        new SubfieldChange().code("0").value("0-data")
+      .containsExactly(linkingRule.getBibField(), List.of(
+        valueChange("a", "a-data"),
+        valueChangeEmpty("g"),
+        valueChange("h", "h-data"),
+        valueChangeEmpty("k"),
+        valueChange("0", "0-data")
       ));
   }
 
@@ -101,9 +118,11 @@ class FieldChangeHolderTest {
 
     assertThat(actual)
       .extracting(FieldChange::getField, FieldChange::getSubfields)
-      .contains(linkingRule.getBibField(), List.of(
-        new SubfieldChange().code("a").value("a-data"),
-        new SubfieldChange().code("h").value("h-data")
+      .containsExactly(linkingRule.getBibField(), List.of(
+        valueChange("a", "a-data"),
+        valueChangeEmpty("g"),
+        valueChange("h", "h-data"),
+        valueChangeEmpty("k")
       ));
   }
 }

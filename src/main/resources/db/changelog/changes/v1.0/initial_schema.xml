@@ -5,7 +5,7 @@
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
 
   <changeSet id="MODELINKS-2@@create-authority-data-table" author="Pavlo_Smahin">
-    <preConditions>
+    <preConditions onFail="MARK_RAN">
       <not>
         <tableExists tableName="authority_data"/>
       </not>
@@ -41,7 +41,7 @@
   </changeSet>
 
   <changeSet id="MODELINKS-2@@create-instance-authority-link-table" author="Pavlo_Smahin">
-    <preConditions>
+    <preConditions onFail="MARK_RAN">
       <not>
         <tableExists tableName="instance_authority_link"/>
       </not>
@@ -69,7 +69,7 @@
   </changeSet>
 
   <changeSet id="MODELINKS-2@@create-fk-authority-id-authority-data" author="Pavlo_Smahin">
-    <preConditions>
+    <preConditions onFail="MARK_RAN">
       <and>
         <tableExists tableName="authority_data"/>
         <tableExists tableName="instance_authority_link"/>
@@ -93,7 +93,7 @@
   </changeSet>
 
   <changeSet id="MODELINKS-2@@create-instance-authority-link-authorityid-index" author="Pavlo_Smahin">
-    <preConditions>
+    <preConditions onFail="MARK_RAN">
       <not>
         <indexExists indexName="idx_instance_authority_link_authority_id" tableName="instance_authority_link"/>
       </not>
@@ -107,7 +107,7 @@
   </changeSet>
 
   <changeSet id="MODELINKS-2@@create-instance-authority-link-instanceid-index" author="Pavlo_Smahin">
-    <preConditions>
+    <preConditions onFail="MARK_RAN">
       <not>
         <indexExists indexName="idx_instance_authority_link_instance_id" tableName="instance_authority_link"/>
       </not>
@@ -153,7 +153,7 @@
   </changeSet>
 
   <changeSet id="MODELINKS-2@@create-authority-data-stat-table" author="Pavlo_Smahin">
-    <preConditions>
+    <preConditions onFail="MARK_RAN">
       <not>
         <tableExists tableName="authority_data_stat"/>
       </not>
@@ -197,7 +197,7 @@
   </changeSet>
 
   <changeSet id="MODELINKS-2@@create-fk-authority-id-authority-data-stat" author="Pavlo_Smahin">
-    <preConditions>
+    <preConditions onFail="MARK_RAN">
       <and>
         <tableExists tableName="authority_data"/>
         <tableExists tableName="authority_data_stat"/>
@@ -220,7 +220,7 @@
 
 
   <changeSet id="MODELINKS-18@@create-instance-authority-linking-rule-table" author="Pavlo_Smahin">
-    <preConditions>
+    <preConditions onFail="MARK_RAN">
       <not>
         <tableExists tableName="instance_authority_linking_rule"/>
       </not>
@@ -247,7 +247,7 @@
   </changeSet>
 
   <changeSet id="MODELINKS-18@@add-unique-constant-bib-authority-fields" author="Pavlo_Smahin">
-    <preConditions>
+    <preConditions onFail="MARK_RAN">
       <and>
         <tableExists tableName="instance_authority_linking_rule"/>
         <columnExists tableName="instance_authority_linking_rule" columnName="bib_field"/>
@@ -263,7 +263,7 @@
   </changeSet>
 
   <changeSet id="MODELINKS-24@@populate-instance-authority-linking-rules" author="Pavlo_Smahin">
-    <preConditions>
+    <preConditions onFail="MARK_RAN">
       <tableExists tableName="instance_authority_linking_rule"/>
     </preConditions>
 
@@ -275,7 +275,7 @@
   </changeSet>
 
   <changeSet id="MODELINKS-2@@remove-created-at-link-column" author="Pavlo_Smahin">
-    <preConditions>
+    <preConditions onFail="MARK_RAN">
       <tableExists tableName="instance_authority_link"/>
     </preConditions>
 
@@ -285,7 +285,7 @@
   </changeSet>
 
   <changeSet id="MODELINKS-2@@remove-updated-at-stat-column" author="Pavlo_Smahin">
-    <preConditions>
+    <preConditions onFail="MARK_RAN">
       <tableExists tableName="authority_data_stat"/>
     </preConditions>
 
