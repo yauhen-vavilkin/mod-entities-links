@@ -73,6 +73,14 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
     return value.getUpdateTargets();
   }
 
+  private static SubfieldChange subfieldChange(String code, String value) {
+    return new SubfieldChange().code(code).value(value);
+  }
+
+  private static SubfieldChange subfieldChangeEmpty(String code) {
+    return subfieldChange(code, EMPTY);
+  }
+
   @BeforeEach
   void setUp() {
     consumerRecords = new LinkedBlockingQueue<>();
@@ -342,7 +350,7 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
         subfieldChangeEmpty("x"),
         subfieldChangeEmpty("y"),
         subfieldChangeEmpty("z")
-        )),
+      )),
       new FieldChange().field("700").subfields(List.of(
         subfieldChange("a", "Lansing, John"),
         subfieldChangeEmpty("b"),
@@ -396,7 +404,7 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
         subfieldChangeEmpty("p"),
         subfieldChangeEmpty("r"),
         subfieldChangeEmpty("s")
-        ))
+      ))
     );
     assertions.then(value.getJobId()).as("Job ID").isNotNull();
     assertions.then(value.getTs()).as("Timestamp").isNotNull();
@@ -405,17 +413,11 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
 
     // check that links were updated according to authority changes
     doGet(linksInstanceEndpoint(), instanceId1)
-      .andExpect(jsonPath("$.links[0].bibRecordSubfields", containsInAnyOrder("a", "d", "q")));
+      .andExpect(jsonPath("$.links[0].bibRecordSubfields",
+        containsInAnyOrder("a", "b", "c", "d", "j", "q")));
     doGet(linksInstanceEndpoint(), instanceId2)
-      .andExpect(jsonPath("$.links[0].bibRecordSubfields", containsInAnyOrder("a", "l")));
-  }
-
-  private static SubfieldChange subfieldChange(String code, String value) {
-    return new SubfieldChange().code(code).value(value);
-  }
-
-  private static SubfieldChange subfieldChangeEmpty(String code) {
-    return subfieldChange(code, EMPTY);
+      .andExpect(jsonPath("$.links[0].bibRecordSubfields",
+        containsInAnyOrder("f", "g", "h", "k", "l", "m", "n", "o", "p", "r", "s", "a")));
   }
 
   @Nullable

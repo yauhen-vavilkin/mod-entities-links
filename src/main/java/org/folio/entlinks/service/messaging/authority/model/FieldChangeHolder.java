@@ -39,9 +39,10 @@ public class FieldChangeHolder {
   }
 
   public char[] getBibSubfieldCodes() {
-    var bibSubfieldCodes = new char[authSubfields.size()];
-    for (int i = 0; i < authSubfields.size(); i++) {
-      bibSubfieldCodes[i] = authSubfields.get(i).getCode();
+    var authoritySubfields = linkingRule.getAuthoritySubfields();
+    var bibSubfieldCodes = new char[authoritySubfields.length];
+    for (int i = 0; i < authoritySubfields.length; i++) {
+      bibSubfieldCodes[i] = getCode(authoritySubfields[i]);
     }
     return bibSubfieldCodes;
   }
