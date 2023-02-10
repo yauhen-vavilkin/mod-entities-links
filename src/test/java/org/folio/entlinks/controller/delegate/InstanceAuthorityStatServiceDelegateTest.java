@@ -15,6 +15,7 @@ import org.folio.entlinks.controller.converter.AuthorityDataStatMapper;
 import org.folio.entlinks.domain.dto.AuthorityDataStatActionDto;
 import org.folio.entlinks.domain.dto.AuthorityDataStatDto;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
+import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.spring.test.type.UnitTest;
 import org.folio.spring.tools.client.UsersClient;
@@ -44,7 +45,7 @@ class InstanceAuthorityStatServiceDelegateTest {
   @Test
   void fetchStats() {
     var userIds = List.of(UUID.randomUUID(), UUID.randomUUID());
-    var statData = TestUtils.dataStatList(userIds.get(0), userIds.get(1));
+    var statData = TestUtils.dataStatList(userIds.get(0), userIds.get(1), AuthorityDataStatAction.UPDATE_HEADING);
     var users = TestUtils.usersList(userIds);
 
     var fromDate = OffsetDateTime.of(2022, 10, 10, 15, 30, 30, 0, ZoneOffset.UTC);

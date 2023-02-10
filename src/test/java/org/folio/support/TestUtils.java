@@ -154,11 +154,11 @@ public class TestUtils {
     return new String(Files.readAllBytes(getFile(filePath).toPath()));
   }
 
-  public static List<AuthorityDataStat> dataStatList(UUID userId1, UUID userId2) {
+  public static List<AuthorityDataStat> dataStatList(UUID userId1, UUID userId2, AuthorityDataStatAction action) {
     return List.of(
       AuthorityDataStat.builder()
         .id(randomUUID())
-        .action(AuthorityDataStatAction.UPDATE_HEADING)
+        .action(action)
         .authorityData(AuthorityData.builder()
           .id(UUID.randomUUID())
           .deleted(false)
@@ -180,7 +180,7 @@ public class TestUtils {
         .build(),
       AuthorityDataStat.builder()
         .id(UUID.randomUUID())
-        .action(AuthorityDataStatAction.UPDATE_HEADING)
+        .action(action)
         .authorityData(AuthorityData.builder()
           .id(UUID.randomUUID())
           .deleted(false)

@@ -19,6 +19,9 @@ import org.folio.entlinks.domain.entity.AuthorityDataStatStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.repository.AuthorityDataStatRepository;
 import org.folio.entlinks.utils.DateUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,8 +53,12 @@ public class AuthorityDataStatService {
 
   public List<AuthorityDataStat> fetchDataStats(OffsetDateTime fromDate, OffsetDateTime toDate,
                                                 AuthorityDataStatActionDto action, int limit) {
-    return statRepository.findByDateAndAction(AuthorityDataStatAction.valueOf(action.getValue()),
-      DateUtils.toTimestamp(fromDate), DateUtils.toTimestamp(toDate), limit);
+    Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc("startedAt")));
+    return statRepository.findByActionAndStartedAtGreaterThanEqualAndStartedAtLessThanEqual(
+                                                          AuthorityDataStatAction.valueOf(action.getValue()),
+                                                          DateUtils.toTimestamp(fromDate),
+                                                          DateUtils.toTimestamp(toDate),
+                                                          pageable);
   }
 
   @Transactional
