@@ -1,5 +1,6 @@
 [
   {
+    "id": 1,
     "bibField": "100",
     "authorityField": "100",
     "authoritySubfields": [
@@ -19,6 +20,7 @@
     }
   },
   {
+    "id": 2,
     "bibField": "110",
     "authorityField": "110",
     "authoritySubfields": [
@@ -35,6 +37,7 @@
     }
   },
   {
+    "id": 3,
     "bibField": "111",
     "authorityField": "111",
     "authoritySubfields": [
@@ -52,6 +55,7 @@
     }
   },
   {
+    "id": 4,
     "bibField": "130",
     "authorityField": "130",
     "authoritySubfields": [
@@ -72,6 +76,7 @@
     ]
   },
   {
+    "id": 5,
     "bibField": "240",
     "authorityField": "100",
     "authoritySubfields": [
@@ -103,6 +108,7 @@
     }
   },
   {
+    "id": 6,
     "bibField": "240",
     "authorityField": "110",
     "authoritySubfields": [
@@ -135,6 +141,7 @@
     }
   },
   {
+    "id": 7,
     "bibField": "240",
     "authorityField": "111",
     "authoritySubfields": [
@@ -164,6 +171,7 @@
     }
   },
   {
+    "id": 8,
     "bibField": "600",
     "authorityField": "100",
     "authoritySubfields": [
@@ -192,6 +200,7 @@
     ]
   },
   {
+    "id": 9,
     "bibField": "610",
     "authorityField": "110",
     "authoritySubfields": [
@@ -218,6 +227,7 @@
     ]
   },
   {
+    "id": 10,
     "bibField": "611",
     "authorityField": "111",
     "authoritySubfields": [
@@ -242,6 +252,7 @@
     ]
   },
   {
+    "id": 11,
     "bibField": "630",
     "authorityField": "130",
     "authoritySubfields": [
@@ -266,6 +277,7 @@
     ]
   },
   {
+    "id": 12,
     "bibField": "650",
     "authorityField": "150",
     "authoritySubfields": [
@@ -279,6 +291,7 @@
     ]
   },
   {
+    "id": 13,
     "bibField": "651",
     "authorityField": "151",
     "authoritySubfields": [
@@ -291,6 +304,7 @@
     ]
   },
   {
+    "id": 14,
     "bibField": "655",
     "authorityField": "155",
     "authoritySubfields": [
@@ -302,6 +316,7 @@
     ]
   },
   {
+    "id": 15,
     "bibField": "700",
     "authorityField": "100",
     "authoritySubfields": [
@@ -326,6 +341,7 @@
     ]
   },
   {
+    "id": 16,
     "bibField": "710",
     "authorityField": "110",
     "authoritySubfields": [
@@ -348,6 +364,7 @@
     ]
   },
   {
+    "id": 17,
     "bibField": "711",
     "authorityField": "111",
     "authoritySubfields": [
@@ -368,6 +385,7 @@
     ]
   },
   {
+    "id": 18,
     "bibField": "730",
     "authorityField": "130",
     "authoritySubfields": [
@@ -388,6 +406,7 @@
     ]
   },
   {
+    "id": 19,
     "bibField": "800",
     "authorityField": "100",
     "authoritySubfields": [
@@ -412,6 +431,7 @@
     ]
   },
   {
+    "id": 20,
     "bibField": "810",
     "authorityField": "110",
     "authoritySubfields": [
@@ -434,6 +454,7 @@
     ]
   },
   {
+    "id": 21,
     "bibField": "811",
     "authorityField": "111",
     "authoritySubfields": [
@@ -454,6 +475,7 @@
     ]
   },
   {
+    "id": 22,
     "bibField": "830",
     "authorityField": "130",
     "authoritySubfields": [

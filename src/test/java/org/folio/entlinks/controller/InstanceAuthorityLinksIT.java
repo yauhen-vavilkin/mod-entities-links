@@ -53,21 +53,30 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
         new InstanceLinkDto()
           .authorityId(randomUUID()).authorityNaturalId("id")
           .bibRecordTag("100").bibRecordSubfields(List.of("a"))
+          .linkingRuleId(1)
       ),
       arguments("authorityId",
         new InstanceLinkDto().instanceId(randomUUID())
           .authorityNaturalId("id")
           .bibRecordTag("100").bibRecordSubfields(List.of("a"))
+          .linkingRuleId(1)
       ),
       arguments("authorityNaturalId",
         new InstanceLinkDto().instanceId(randomUUID())
           .authorityId(randomUUID())
           .bibRecordTag("100").bibRecordSubfields(List.of("a"))
+          .linkingRuleId(1)
       ),
       arguments("bibRecordTag",
         new InstanceLinkDto().instanceId(randomUUID())
           .authorityId(randomUUID()).authorityNaturalId("id")
           .bibRecordSubfields(List.of("a"))
+          .linkingRuleId(1)
+      ),
+      arguments("linkingRuleId",
+        new InstanceLinkDto().instanceId(randomUUID())
+          .authorityId(randomUUID()).authorityNaturalId("id")
+          .bibRecordTag("100").bibRecordSubfields(List.of("a"))
       )
     );
   }
@@ -271,6 +280,7 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
     var incomingLinks = linksDtoCollection(List.of(new InstanceLinkDto()
       .instanceId(randomUUID()).authorityId(randomUUID())
       .authorityNaturalId("id").bibRecordTag("100")
+      .linkingRuleId(1)
     ));
 
     tryPut(linksInstanceEndpoint(), incomingLinks, instanceId)
@@ -291,6 +301,7 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
       .instanceId(instanceId).authorityId(randomUUID())
       .authorityNaturalId("id").bibRecordTag("100")
       .bibRecordSubfields(List.of("aa", "bb", "11"))
+      .linkingRuleId(1)
     ));
 
     tryPut(linksInstanceEndpoint(), incomingLinks, instanceId)
@@ -418,7 +429,8 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
           && Objects.equals(expectedLink.getAuthorityNaturalId(), actualLink.get("authorityNaturalId"))
           && Objects.equals(expectedLink.getInstanceId().toString(), actualLink.get("instanceId"))
           && Objects.equals(expectedLink.getBibRecordTag(), actualLink.get("bibRecordTag"))
-          && Objects.equals(expectedLink.getBibRecordSubfields(), actualLink.get("bibRecordSubfields"));
+          && Objects.equals(expectedLink.getBibRecordSubfields(), actualLink.get("bibRecordSubfields"))
+          && Objects.equals(expectedLink.getLinkingRuleId(), actualLink.get("linkingRuleId"));
       }
 
       return false;

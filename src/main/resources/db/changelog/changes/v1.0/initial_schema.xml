@@ -296,5 +296,19 @@
     </addColumn>
   </changeSet>
 
+  <changeSet id="MODELINKS-49-2@@add-linking-rule-id-column" author="Pavlo_Smahin">
+    <preConditions>
+      <tableExists tableName="instance_authority_link"/>
+    </preConditions>
+
+    <comment>Add linking_rule_id column in instance_authority_link</comment>
+
+    <addColumn tableName="instance_authority_link" schemaName="">
+      <column name="linking_rule_id" type="BIGINT">
+          <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
 
 </databaseChangeLog>

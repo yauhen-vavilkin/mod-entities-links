@@ -197,12 +197,16 @@ components:
           maxItems: 100
           items:
             type: string
+        linkingRuleId:
+          type: integer
+          description: ID of linking rule by which link should be created
       required:
         - authorityId
         - authorityNaturalId
         - instanceId
         - bibRecordTag
         - bibRecordSubfields
+        - linkingRuleId
 
     uuidCollection:
       type: object
@@ -245,6 +249,8 @@ components:
       title: Field to filed linking rule
       description: Field to filed linking rule
       properties:
+        id:
+          type: integer
         bibField:
           type: string
         authorityField:
