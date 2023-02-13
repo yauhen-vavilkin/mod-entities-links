@@ -25,6 +25,10 @@
     {
       "id": "authority-source-files",
       "version": "1.0"
+    },
+    {
+      "id": "instance-storage",
+      "version": "10.0"
     }
   ],
   "provides": [
@@ -124,6 +128,24 @@
           ]
         }
       ]
+    },
+    {
+      "id": "linked-bib-update-statistics",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/links/stats/instance",
+          "permissionsRequired": [
+            "instance-authority-links.instance-statistics.collection.get"
+           ],
+          "modulePermissions": [
+            "inventory-storage.instances.collection.get"
+          ]
+        }
+      ]
     }
   ],
   "permissionSets": [
@@ -148,6 +170,16 @@
       "description": "Get instance-authority linking rules"
     },
     {
+      "permissionName":"instance-authority-links.authority-statistics.collection.get",
+      "displayName": "Entities Authority Links Statistics - get instance-authority links statistics",
+      "description": "Get instance-authority links statistics"
+    },
+    {
+      "permissionName":"instance-authority-links.instance-statistics.collection.get",
+      "displayName": "Entities Instance Links Statistics - get instance-authority links statistics",
+      "description": "Get instance-authority links (Instance) statistics"
+    },
+    {
       "permissionName": "instance-authority-links.instances.all",
       "displayName": "Entities Links - all instance-authority links permissions",
       "description": "Entire set of permissions needed to use instance-links operations",
@@ -155,13 +187,10 @@
         "instance-authority-links.instances.collection.get",
         "instance-authority-links.instances.collection.put",
         "instance-authority-links.authorities.bulk.post",
-        "instance-authority.linking-rules.collection.get"
+        "instance-authority.linking-rules.collection.get",
+        "instance-authority-links.authority-statistics.collection.get",
+        "instance-authority-links.instance-statistics.collection.get"
       ]
-    },
-    {
-      "permissionName":"instance-authority-links.authority-statistics.collection.get",
-      "displayName": "Entities Authority Links Statistics - get instance-authority links statistics",
-      "description": "Get instance-authority links statistics"
     }
   ],
   "launchDescriptor": {

@@ -24,6 +24,14 @@
       * [Instance to Authority linking rule parameters](#instance-to-authority-linking-rule-parameters)
       * [Examples](#examples-1)
         * [Retrieve instance to authority linking rules collection:](#retrieve-instance-to-authority-linking-rules-collection-)
+    * [API instance-authority-links-statistics](#api-instance-authority-links-statistics)
+      * [Instance to Authority linking rule parameters](#instance-to-authority-linking-rule-parameters-1)
+      * [Examples](#examples-2)
+        * [Retrieve instance to authority links statistics collection:](#retrieve-instance-to-authority-links-statistics-collection-)
+    * [API linked-bib-update-statistics](#api-linked-bib-update-statistics)
+      * [Linked bib updates statistics parameters](#linked-bib-updates-statistics-parameters)
+      * [Examples](#examples-3)
+        * [Retrieve linked bib updates statistics collection:](#retrieve-linked-bib-updates-statistics-collection-)
 <!-- TOC -->
 
 ## Compiling
@@ -87,6 +95,7 @@ docker run -t -i -p 8081:8081 mod-entities-links
 | KAFKA_AUTHORITIES_CONSUMER_CONCURRENCY                  | 1                  | Number of kafka concurrent threads for `inventory.authority` message consuming                                                                                                        |
 | KAFKA_INSTANCE_AUTHORITY_STATS_CONSUMER_CONCURRENCY     | 1                  | Number of kafka concurrent threads for `links.instance-authority-stats` message consuming                                                                                             |
 | KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS              | 100                | Number of instance-authority links `links.instance-authority` event contains while processing authority link source change.                                                           |
+| INSTANCE_STORAGE_QUERY_BATCH_SIZE                       | 100                | Number of instances to retrieve from inventory storage per one request                                                                                                                |
 
 ### Configuring spring-boot
 
@@ -337,6 +346,57 @@ Response:
         "headingTypeOld" : "headingTypeOld",
         "sourceFileOld" : "sourceFileOld",
         "headingNew" : "headingNew"
+      }
+    ]
+  }
+]
+```
+
+### API linked-bib-update-statistics
+
+The API provides statistics for linked bib updates.
+
+| METHOD | URL                     | Required permissions                                          | DESCRIPTION                                           |
+|:-------|:------------------------|:--------------------------------------------------------------|:------------------------------------------------------|
+| GET    | `/links/stats/instance` | `instance-authority-links.instance-statistics.collection.get` | Get linked bib update statistics collection           |
+
+#### Linked bib updates statistics parameters
+
+* `fromDate` - Start date to seek from
+* `toDate` - End date to seek to
+* `status` - Link status to filter by
+* `limit` - Max number of items in collection
+
+#### Examples
+
+<a name="retrieve-linked-bib-update-statistics"></a>
+
+##### Retrieve linked bib updates statistics collection:
+
+`GET /links/stats/instance`
+
+Response:
+
+```json
+[
+  { 
+    "next" : "2000-01-23T04:56:07.000+00:00",
+    "stats" : [
+      {
+        "instanceId": "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+        "instanceTitle": "Some title",
+        "bibRecordTag": "123",
+        "authorityNaturalId": "nr123123",
+        "updatedAt": "2000-01-23T04:56:07.000+00:00",
+        "errorCause": "Error cause"
+      },
+      {
+        "instanceId": "054b6c7f-0b8a-43b9-b35d-6489e6daee91",
+        "instanceTitle": "Some title 1",
+        "bibRecordTag": "321",
+        "authorityNaturalId": "nr321321",
+        "updatedAt": "2000-01-23T04:57:07.000+00:00",
+        "errorCause": "Error cause 1"
       }
     ]
   }

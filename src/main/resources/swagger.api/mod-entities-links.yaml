@@ -153,6 +153,53 @@ paths:
         '500':
           $ref: '#/components/responses/serverErrorResponse'
 
+  /links/stats/instance:
+    get:
+      description: Retrieve linked bib update statistics
+      operationId: getLinkedBibUpdateStats
+      tags:
+        - linked-bib-update-statistics
+      parameters:
+        - name: fromDate
+          in: query
+          required: false
+          description: Start date to seek from
+          schema:
+            type: string
+            format: date-time
+        - name: toDate
+          in: query
+          required: false
+          description: End date to seek to
+          schema:
+            type: string
+            format: date-time
+        - name: status
+          in: query
+          required: false
+          description: Status to filter by
+          schema:
+            $ref: "#/components/schemas/linkStatus"
+        - name: limit
+          in: query
+          required: false
+          description: Max number of items in collection
+          schema:
+            type: integer
+            minimum: 1
+            default: 99
+      responses:
+        "200":
+          description: The linked bib update statistics collection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bibStatsDtoCollection'
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/serverErrorResponse'
+
 components:
   schemas:
     instanceLinkDtoCollection:
@@ -505,6 +552,25 @@ components:
 
     linkUpdateReport:
       $ref: schemas/linkUpdateReport.json
+
+    linkStatus:
+      type: string
+      enum:
+        - ACTUAL
+        - ERROR
+
+    bibStatsDtoCollection:
+      description: Collection of linked bibs update statistics
+      type: object
+      properties:
+        stats:
+          type: array
+          items:
+            $ref: schemas/bibStatsDto.json
+        next:
+          description: Next response item date to seek by
+          type: string
+          format: date-time
 
   responses:
     badRequestResponse:

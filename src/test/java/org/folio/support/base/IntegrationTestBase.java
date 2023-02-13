@@ -45,6 +45,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @EnableKafka
 @EnableOkapi
@@ -94,6 +95,14 @@ public class IntegrationTestBase {
 
   protected static WireMockServer getWireMock() {
     return okapi.wireMockServer();
+  }
+
+  //use if params contain special characters that should be encoded
+  @SneakyThrows
+  protected static ResultActions perform(MockHttpServletRequestBuilder rb) {
+    return mockMvc.perform(rb
+        .headers(defaultHeaders()).accept(APPLICATION_JSON))
+      .andDo(log());
   }
 
   @SneakyThrows

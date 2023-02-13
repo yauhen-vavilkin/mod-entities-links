@@ -15,6 +15,7 @@ public class TestConstants {
 
   private static final String INSTANCE_LINKS_ENDPOINT_PATH = "/links/instances/{id}";
   private static final String AUTHORITY_LINKS_COUNT_ENDPOINT_PATH = "/links/authorities/bulk/count";
+  private static final String LINKS_STATS_INSTANCE_ENDPOINT_PATH = "/links/stats/instance";
 
   public static String inventoryAuthorityTopic() {
     return String.format("%s.%s.%s", getFolioEnvName(), TENANT_ID, AUTHORITY_TOPIC);
@@ -30,5 +31,9 @@ public class TestConstants {
 
   public static String authoritiesLinksCountEndpoint() {
     return AUTHORITY_LINKS_COUNT_ENDPOINT_PATH;
+  }
+
+  public static String linksStatsInstanceEndpoint() {
+    return LINKS_STATS_INSTANCE_ENDPOINT_PATH;
   }
 }

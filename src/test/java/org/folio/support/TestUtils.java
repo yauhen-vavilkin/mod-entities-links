@@ -2,6 +2,7 @@ package org.folio.support;
 
 import static java.util.UUID.randomUUID;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -13,13 +14,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -28,6 +32,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.entlinks.domain.dto.AuthorityDataStatActionDto;
 import org.folio.entlinks.domain.dto.AuthorityDataStatDto;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
+import org.folio.entlinks.domain.dto.BibStatsDto;
+import org.folio.entlinks.domain.dto.BibStatsDtoCollection;
 import org.folio.entlinks.domain.dto.InstanceLinkDto;
 import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
 import org.folio.entlinks.domain.dto.InventoryEvent;
@@ -37,7 +43,6 @@ import org.folio.entlinks.domain.entity.AuthorityData;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
-import org.folio.entlinks.utils.DateUtils;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
 import org.folio.spring.tools.client.UsersClient;
 import org.folio.spring.tools.model.ResultList;
@@ -55,7 +60,7 @@ public class TestUtils {
   }
 
   public static InventoryEvent inventoryEvent(String resource, String type,
-    AuthorityInventoryRecord n, AuthorityInventoryRecord o) {
+                                              AuthorityInventoryRecord n, AuthorityInventoryRecord o) {
     return new InventoryEvent().type(type).resourceName(resource).tenant(TENANT_ID)._new(n).old(o);
   }
 
@@ -85,10 +90,19 @@ public class TestUtils {
 
   public static List<InstanceAuthorityLink> links(int count, String error) {
     return Stream.generate(() -> 0)
-      .map(i -> InstanceAuthorityLink.builder()
-        .id((long) RandomUtils.nextInt())
-        .errorCause(error)
-        .build())
+      .map(i -> {
+        var link = InstanceAuthorityLink.builder()
+          .id((long) RandomUtils.nextInt())
+          .instanceId(UUID.randomUUID())
+          .bibRecordTag("100")
+          .authorityData(AuthorityData.builder()
+            .naturalId("naturalId")
+            .build())
+          .errorCause(error)
+          .build();
+        link.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
+        return link;
+      })
       .limit(count)
       .toList();
   }
@@ -121,6 +135,36 @@ public class TestUtils {
       .status(status)
       .linkIds(List.of(RandomUtils.nextInt(), RandomUtils.nextInt()))
       .failCause(failCause);
+  }
+
+  public static List<BibStatsDto> stats(List<InstanceAuthorityLink> links) {
+    return links.stream()
+      .map(link -> new BibStatsDto()
+        .instanceId(link.getInstanceId())
+        .bibRecordTag(link.getBibRecordTag())
+        .authorityNaturalId(link.getAuthorityData().getNaturalId())
+        .updatedAt(fromTimestamp(link.getUpdatedAt()))
+        .errorCause(link.getErrorCause()))
+      .toList();
+  }
+
+  public static BibStatsDtoCollection stats(List<InstanceLinkDto> links, String errorCause, OffsetDateTime next,
+                                            String instanceTitle) {
+    var stats = links.stream()
+      .map(link -> new BibStatsDto()
+        .instanceId(link.getInstanceId())
+        .bibRecordTag(link.getBibRecordTag())
+        .authorityNaturalId(link.getAuthorityNaturalId())
+        .instanceTitle(instanceTitle)
+        .updatedAt(OffsetDateTime.now())
+        .errorCause(errorCause))
+      .collect(Collectors.toList());
+    // because returned by updatedDate desc
+    Collections.reverse(stats);
+
+    return new BibStatsDtoCollection()
+      .stats(stats)
+      .next(next);
   }
 
   public static List<ConsumerRecord<String, LinkUpdateReport>> consumerRecords(List<LinkUpdateReport> reports) {
@@ -238,8 +282,8 @@ public class TestUtils {
     metadata.setStartedByUserId(dataStat.getStartedByUserId());
     metadata.setStartedByUserFirstName(user.personal().firstName());
     metadata.setStartedByUserLastName(user.personal().lastName());
-    metadata.setStartedAt(DateUtils.fromTimestamp(dataStat.getStartedAt()));
-    metadata.setCompletedAt(DateUtils.fromTimestamp(dataStat.getCompletedAt()));
+    metadata.setStartedAt(fromTimestamp(dataStat.getStartedAt()));
+    metadata.setCompletedAt(fromTimestamp(dataStat.getCompletedAt()));
     dto.setMetadata(metadata);
     dto.setSourceFileNew(dataStat.getAuthoritySourceFileNew().toString());
     dto.setSourceFileOld(dataStat.getAuthoritySourceFileOld().toString());

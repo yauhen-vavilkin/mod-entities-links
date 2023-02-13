@@ -64,6 +64,7 @@ public class InstanceAuthorityLink extends AuditableEntity {
   @Column(name = "linking_rule_id", nullable = false)
   private Long linkingRuleId;
 
+  @Builder.Default
   @Enumerated(EnumType.STRING)
   @Type(PostgreSQLEnumType.class)
   @Column(name = "status", nullable = false)

@@ -1,0 +1,17 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "GET",
+        "urlPath": "/instance-storage/instances"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"instances\":[{\"id\":\"fea1c418-ba1f-438e-85bb-c6ae1011bf5c\",\"title\":\"title1\"},{\"id\":\"e083463e-96d4-4fa0-8ee1-13bfd4f674cf\",\"title\":\"title2\"},{\"id\":\"68de093d-8c0d-44c2-b3a8-79393f6cb195\",\"title\":\"title3\"}]}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    }
+  ]
+}
