@@ -15,4 +15,12 @@ public class DateUtils {
   public static Timestamp toTimestamp(OffsetDateTime value) {
     return value != null ? Timestamp.valueOf(value.toLocalDateTime()) : null;
   }
+
+  public static String currentTsInString() {
+    return String.valueOf(System.currentTimeMillis());
+  }
+
+  public static Timestamp currentTs() {
+    return new Timestamp(System.currentTimeMillis());
+  }
 }

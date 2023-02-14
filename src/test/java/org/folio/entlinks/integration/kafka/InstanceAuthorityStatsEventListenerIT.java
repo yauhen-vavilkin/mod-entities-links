@@ -1,5 +1,6 @@
 package org.folio.entlinks.integration.kafka;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
@@ -56,9 +57,9 @@ import org.springframework.kafka.support.serializer.JsonDeserializer;
 @DatabaseCleanup(tables = {"instance_authority_link", "authority_data_stat"})
 class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
 
+  private final Timestamp testStartTime = new Timestamp(System.currentTimeMillis());
   private KafkaMessageListenerContainer<String, LinksChangeEvent> container;
   private BlockingQueue<ConsumerRecord<String, LinksChangeEvent>> consumerRecords;
-
   @Autowired
   private SystemUserScopedExecutionService executionService;
   @Autowired
@@ -67,8 +68,6 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
   private InstanceLinkRepository linkRepository;
   @Autowired
   private KafkaProperties kafkaProperties;
-
-  private final Timestamp testStartTime = new Timestamp(System.currentTimeMillis());
 
   @BeforeEach
   void setUp() {
@@ -102,13 +101,7 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
     var authorityId = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
     var link = new Link(authorityId, TAGS[0]);
 
-    // save link
-    doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
-    // prepare and send inventory update authority event to save stats data
-    var authUpdateEvent = TestUtils.authorityEvent("UPDATE",
-      new AuthorityInventoryRecord().id(authorityId).personalName("new personal name").naturalId("naturalId"),
-      new AuthorityInventoryRecord().id(authorityId).personalName("personal name").naturalId("naturalId"));
-    sendKafkaMessage(inventoryAuthorityTopic(), authorityId.toString(), authUpdateEvent);
+    prepareData(instanceId, authorityId, link);
 
     var linksChangeEvent = Objects.requireNonNull(getReceivedEvent()).value();
 
@@ -124,6 +117,47 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
       .failCause(failCause);
     sendKafkaMessage(instanceAuthorityStatsTopic(), event.getJobId().toString(), event);
 
+    assertLinksUpdated(linkId, failCause, event);
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldHandleEvent_positive_whenLinkIdsAndInstanceIdAreEmpty() {
+    var instanceId = UUID.randomUUID();
+    var authorityId = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
+    var link = new Link(authorityId, TAGS[0]);
+
+    // save link
+    prepareData(instanceId, authorityId, link);
+
+    var linksChangeEvent = Objects.requireNonNull(getReceivedEvent()).value();
+
+    // prepare and send instance authority stats event
+    var linkId = linksChangeEvent.getUpdateTargets().get(0).getLinks().get(0).getLinkId();
+    var failCause = "test";
+    var event = new LinkUpdateReport()
+      .tenant(TENANT_ID)
+      .jobId(linksChangeEvent.getJobId())
+      .instanceId(null)
+      .status(FAIL)
+      .linkIds(emptyList())
+      .failCause(failCause);
+    sendKafkaMessage(instanceAuthorityStatsTopic(), event.getJobId().toString(), event);
+
+    assertLinksUpdated(linkId, failCause, event);
+  }
+
+  private void prepareData(UUID instanceId, UUID authorityId, Link link) {
+    // save link
+    doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
+    // prepare and send inventory update authority event to save stats data
+    var authUpdateEvent = TestUtils.authorityEvent("UPDATE",
+      new AuthorityInventoryRecord().id(authorityId).personalName("new personal name").naturalId("naturalId"),
+      new AuthorityInventoryRecord().id(authorityId).personalName("personal name").naturalId("naturalId"));
+    sendKafkaMessage(inventoryAuthorityTopic(), authorityId.toString(), authUpdateEvent);
+  }
+
+  private void assertLinksUpdated(Long linkId, String failCause, LinkUpdateReport event) throws InterruptedException {
     ThreadUtils.sleep(Duration.ofSeconds(2));
 
     // todo: replace scoped repository query with api call (when implemented in MODELINKS-34, MODELINKS-35)

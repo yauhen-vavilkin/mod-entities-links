@@ -11,6 +11,7 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.config.properties.InstanceAuthorityChangeProperties;
 import org.folio.entlinks.domain.dto.FieldChange;
+import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.dto.SubfieldChange;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
@@ -19,6 +20,7 @@ import org.folio.entlinks.exception.AuthorityBatchProcessingException;
 import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
 import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
 import org.folio.entlinks.integration.internal.AuthoritySourceRecordService;
+import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.links.AuthorityDataService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
@@ -38,6 +40,7 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   private final InstanceAuthorityLinkingRulesService linkingRulesService;
   private final InstanceAuthorityLinkingService linkingService;
   private final AuthorityDataService authorityDataService;
+  private final EventProducer<LinkUpdateReport> eventProducer;
 
   public UpdateAuthorityChangeHandler(InstanceAuthorityChangeProperties instanceAuthorityChangeProperties,
                                       AuthoritySourceFilesService sourceFilesService,
@@ -45,7 +48,8 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
                                       AuthoritySourceRecordService sourceRecordService,
                                       InstanceAuthorityLinkingRulesService linkingRulesService,
                                       InstanceAuthorityLinkingService linkingService,
-                                      AuthorityDataService authorityDataService) {
+                                      AuthorityDataService authorityDataService,
+                                      EventProducer<LinkUpdateReport> eventProducer) {
     super(instanceAuthorityChangeProperties, linkingService);
     this.sourceFilesService = sourceFilesService;
     this.mappingRulesProcessingService = mappingRulesProcessingService;
@@ -53,6 +57,7 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
     this.linkingRulesService = linkingRulesService;
     this.linkingService = linkingService;
     this.authorityDataService = authorityDataService;
+    this.eventProducer = eventProducer;
   }
 
   @Override
@@ -67,6 +72,11 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
         linksEvents.addAll(handle0(change));
       } catch (AuthorityBatchProcessingException e) {
         log.warn("Skipping authority change processing.", e);
+        var report = new LinkUpdateReport();
+        report.setFailCause(e.getMessage());
+        report.setJobId(change.getAuthorityDataStatId());
+        report.setStatus(LinkUpdateReport.StatusEnum.FAIL);
+        eventProducer.sendMessages(singletonList(report));
       }
     }
 

@@ -375,6 +375,7 @@ components:
     linksChangeEvent:
       type: object
       description: Links change event body
+      x-implements: ['org.folio.entlinks.integration.dto.BaseEvent']
       properties:
         jobId:
           description: Links change job ID
@@ -551,7 +552,38 @@ components:
           type: string
 
     linkUpdateReport:
-      $ref: schemas/linkUpdateReport.json
+      description: Link update report
+      type: object
+      x-implements: ['org.folio.entlinks.integration.dto.BaseEvent']
+      properties:
+        jobId:
+          description: Linked bibs update job id, UUID
+          type: string
+          format: uuid
+        instanceId:
+          description: Instance id, UUID
+          type: string
+          format: uuid
+        linkIds:
+          description: All bib-related link ids
+          type: array
+          items:
+            type: integer
+        failCause:
+          description: Failure message
+          type: string
+        status:
+          description: Link update status
+          type: string
+          enum:
+            - SUCCESS
+            - FAIL
+        tenant:
+          description: Tenant id
+          type: string
+        ts:
+          description: Timestamp
+          type: string
 
     linkStatus:
       type: string

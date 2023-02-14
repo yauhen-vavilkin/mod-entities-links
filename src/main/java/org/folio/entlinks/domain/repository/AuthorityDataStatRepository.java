@@ -12,8 +12,8 @@ import org.springframework.lang.Nullable;
 public interface AuthorityDataStatRepository extends JpaRepository<AuthorityDataStat, UUID> {
 
   List<AuthorityDataStat> findByActionAndStartedAtGreaterThanEqualAndStartedAtLessThanEqual(
-                                              AuthorityDataStatAction action,
-                                              @Nullable Timestamp startedAtStart,
-                                              @Nullable Timestamp startedAtEnd,
-                                              Pageable pageable);
+    AuthorityDataStatAction action,
+    @Nullable Timestamp startedAtStart,
+    @Nullable Timestamp startedAtEnd,
+    Pageable pageable);
 }

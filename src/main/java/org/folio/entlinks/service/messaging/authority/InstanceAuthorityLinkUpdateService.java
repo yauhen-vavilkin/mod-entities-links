@@ -9,11 +9,11 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
 import org.folio.entlinks.domain.dto.InventoryEvent;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
+import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.handler.AuthorityChangeHandler;
@@ -21,37 +21,29 @@ import org.folio.entlinks.service.messaging.authority.model.AuthorityChange;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeField;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolder;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
-import org.folio.entlinks.utils.KafkaUtils;
-import org.folio.spring.FolioExecutionContext;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Log4j2
 @Service
 public class InstanceAuthorityLinkUpdateService {
 
-  private static final String REPLY_TOPIC_NAME = "links.instance-authority";
-
-  private final FolioExecutionContext context;
   private final AuthorityDataStatService authorityDataStatService;
-  private final KafkaTemplate<String, LinksChangeEvent> kafkaTemplate;
   private final Map<AuthorityChangeType, AuthorityChangeHandler> changeHandlers;
   private final AuthorityMappingRulesProcessingService mappingRulesProcessingService;
   private final InstanceAuthorityLinkingService linkingService;
+  private final EventProducer<LinksChangeEvent> eventProducer;
 
-  public InstanceAuthorityLinkUpdateService(FolioExecutionContext context,
-                                            AuthorityDataStatService authorityDataStatService,
-                                            KafkaTemplate<String, LinksChangeEvent> kafkaTemplate,
+  public InstanceAuthorityLinkUpdateService(AuthorityDataStatService authorityDataStatService,
                                             AuthorityMappingRulesProcessingService mappingRulesProcessingService,
-                                            List<AuthorityChangeHandler> changeHandlers,
-                                            InstanceAuthorityLinkingService linkingService) {
-    this.context = context;
+                                            InstanceAuthorityLinkingService linkingService,
+                                            EventProducer<LinksChangeEvent> eventProducer,
+                                            List<AuthorityChangeHandler> changeHandlers) {
     this.authorityDataStatService = authorityDataStatService;
-    this.kafkaTemplate = kafkaTemplate;
     this.mappingRulesProcessingService = mappingRulesProcessingService;
+    this.linkingService = linkingService;
+    this.eventProducer = eventProducer;
     this.changeHandlers = changeHandlers.stream()
       .collect(Collectors.toMap(AuthorityChangeHandler::supportedAuthorityChangeType, handler -> handler));
-    this.linkingService = linkingService;
   }
 
   public void handleAuthoritiesChanges(List<InventoryEvent> events) {
@@ -138,21 +130,7 @@ public class InstanceAuthorityLinkUpdateService {
 
   private void sendEvents(List<LinksChangeEvent> events, AuthorityChangeType type) {
     log.info("Sending {} {} events to Kafka", events.size(), type);
-    events.stream()
-      .map(this::toProducerRecord)
-      .forEach(kafkaTemplate::send);
-  }
-
-  private ProducerRecord<String, LinksChangeEvent> toProducerRecord(LinksChangeEvent linksEvent) {
-    linksEvent.tenant(context.getTenantId());
-    var producerRecord = new ProducerRecord<String, LinksChangeEvent>(topicName(), linksEvent);
-    KafkaUtils.toKafkaHeaders(context.getOkapiHeaders())
-      .forEach(header -> producerRecord.headers().add(header));
-    return producerRecord;
-  }
-
-  private String topicName() {
-    return KafkaUtils.getTenantTopicName(REPLY_TOPIC_NAME, context.getTenantId());
+    eventProducer.sendMessages(events);
   }
 
 }

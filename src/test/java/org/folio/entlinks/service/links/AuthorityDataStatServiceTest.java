@@ -1,7 +1,6 @@
 package org.folio.entlinks.service.links;
 
 import static java.util.Collections.emptyList;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ACTUAL;
 import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ERROR;
@@ -73,15 +72,15 @@ class AuthorityDataStatServiceTest {
 
     service.updateForReports(jobId, reports);
 
-    verify(linkingService).saveAll(eq(reports.get(0).getInstanceId().toString()), linksCaptor.capture());
+    verify(linkingService).saveAll(eq(reports.get(0).getInstanceId()), linksCaptor.capture());
     var links = linksCaptor.getValue();
     assertThat(links)
-      .anySatisfy(linkAsserter(ACTUAL, EMPTY));
+      .anySatisfy(linkAsserter(ACTUAL, null));
 
-    verify(linkingService).saveAll(eq(reports.get(1).getInstanceId().toString()), linksCaptor.capture());
+    verify(linkingService).saveAll(eq(reports.get(1).getInstanceId()), linksCaptor.capture());
     links = linksCaptor.getValue();
     assertThat(links)
-      .anySatisfy(linkAsserter(ACTUAL, EMPTY));
+      .anySatisfy(linkAsserter(ACTUAL, null));
   }
 
   @Test
@@ -93,12 +92,12 @@ class AuthorityDataStatServiceTest {
 
     service.updateForReports(jobId, reports);
 
-    verify(linkingService).saveAll(eq(reports.get(0).getInstanceId().toString()), linksCaptor.capture());
+    verify(linkingService).saveAll(eq(reports.get(0).getInstanceId()), linksCaptor.capture());
     var links = linksCaptor.getValue();
     assertThat(links)
       .anySatisfy(linkAsserter(ERROR, REPORT_ERROR));
 
-    verify(linkingService).saveAll(eq(reports.get(1).getInstanceId().toString()), linksCaptor.capture());
+    verify(linkingService).saveAll(eq(reports.get(1).getInstanceId()), linksCaptor.capture());
     links = linksCaptor.getValue();
     assertThat(links)
       .anySatisfy(linkAsserter(ERROR, REPORT_ERROR));

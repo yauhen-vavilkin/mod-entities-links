@@ -1,5 +1,7 @@
 package org.folio.entlinks.service.messaging.authority.handler;
 
+import static org.folio.entlinks.utils.DateUtils.currentTsInString;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -47,8 +49,9 @@ public abstract class AbstractAuthorityChangeHandler implements AuthorityChangeH
       .authorityId(authorityId)
       .updateTargets(toChangeTargets(partition))
       .subfieldsChanges(fieldChanges)
-      .ts(String.valueOf(System.currentTimeMillis()));
+      .ts(currentTsInString());
   }
+
 
   private List<ChangeTarget> toChangeTargets(List<InstanceAuthorityLink> partition) {
     return partition.stream()

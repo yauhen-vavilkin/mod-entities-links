@@ -13,6 +13,7 @@ import org.folio.entlinks.domain.dto.InventoryEvent;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.integration.kafka.AuthorityChangeFilterStrategy;
+import org.folio.entlinks.integration.kafka.EventProducer;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -82,6 +83,68 @@ public class KafkaConfiguration {
     return consumerFactoryForEvent(kafkaProperties, LinkUpdateReport.class);
   }
 
+  /**
+   * Creates and configures {@link org.springframework.kafka.core.ProducerFactory} as Spring bean.
+   *
+   * <p>Key type - {@link String}, value - {@link LinksChangeEvent}.</p>
+   *
+   * @return typed {@link org.springframework.kafka.core.ProducerFactory} object as Spring bean.
+   */
+  @Bean
+  public ProducerFactory<String, LinksChangeEvent> producerFactory(KafkaProperties kafkaProperties) {
+    return new DefaultKafkaProducerFactory<>(getProducerConfigProps(kafkaProperties));
+  }
+
+  /**
+   * Creates and configures {@link org.springframework.kafka.core.ProducerFactory} as Spring bean.
+   *
+   * <p>Key type - {@link String}, value - {@link LinkUpdateReport}.</p>
+   *
+   * @return typed {@link org.springframework.kafka.core.ProducerFactory} object as Spring bean.
+   */
+  @Bean
+  public ProducerFactory<String, LinkUpdateReport> linkUpdateProducerFactory(KafkaProperties kafkaProperties) {
+    return new DefaultKafkaProducerFactory<>(getProducerConfigProps(kafkaProperties));
+  }
+
+  /**
+   * Creates and configures {@link org.springframework.kafka.core.KafkaTemplate} as Spring bean.
+   *
+   * <p>Key type - {@link String}, value - {@link LinksChangeEvent}.</p>
+   *
+   * @return typed {@link org.springframework.kafka.core.KafkaTemplate} object as Spring bean.
+   */
+  @Bean
+  public KafkaTemplate<String, LinksChangeEvent> linksChangeKafkaTemplate(
+    ProducerFactory<String, LinksChangeEvent> factory) {
+    return new KafkaTemplate<>(factory);
+  }
+
+  /**
+   * Creates and configures {@link org.springframework.kafka.core.KafkaTemplate} as Spring bean.
+   *
+   * <p>Key type - {@link String}, value - {@link LinkUpdateReport}.</p>
+   *
+   * @return typed {@link org.springframework.kafka.core.KafkaTemplate} object as Spring bean.
+   */
+  @Bean
+  public KafkaTemplate<String, LinkUpdateReport> linksUpdateKafkaTemplate(
+    ProducerFactory<String, LinkUpdateReport> linkUpdateProducerFactory) {
+    return new KafkaTemplate<>(linkUpdateProducerFactory);
+  }
+
+  @Bean
+  public EventProducer<LinksChangeEvent> linksChangeEventMessageProducerService(
+    KafkaTemplate<String, LinksChangeEvent> template) {
+    return new EventProducer<>(template, "links.instance-authority");
+  }
+
+  @Bean
+  public EventProducer<LinkUpdateReport> linkUpdateReportMessageProducerService(
+    KafkaTemplate<String, LinkUpdateReport> template) {
+    return new EventProducer<>(template, "links.instance-authority-stats");
+  }
+
   private <T> ConcurrentKafkaListenerContainerFactory<String, T> listenerFactory(
     ConsumerFactory<String, T> consumerFactory) {
     var factory = new ConcurrentKafkaListenerContainerFactory<String, T>();
@@ -99,31 +162,10 @@ public class KafkaConfiguration {
     return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), deserializer);
   }
 
-  /**
-   * Creates and configures {@link org.springframework.kafka.core.ProducerFactory} as Spring bean.
-   *
-   * <p>Key type - {@link String}, value - {@link LinksChangeEvent}.</p>
-   *
-   * @return typed {@link org.springframework.kafka.core.ProducerFactory} object as Spring bean.
-   */
-  @Bean
-  public ProducerFactory<String, LinksChangeEvent> producerFactory(KafkaProperties kafkaProperties) {
+  private Map<String, Object> getProducerConfigProps(KafkaProperties kafkaProperties) {
     Map<String, Object> configProps = new HashMap<>(kafkaProperties.buildProducerProperties());
     configProps.put(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     configProps.put(VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-    return new DefaultKafkaProducerFactory<>(configProps);
-  }
-
-  /**
-   * Creates and configures {@link org.springframework.kafka.core.KafkaTemplate} as Spring bean.
-   *
-   * <p>Key type - {@link String}, value - {@link LinksChangeEvent}.</p>
-   *
-   * @return typed {@link org.springframework.kafka.core.KafkaTemplate} object as Spring bean.
-   */
-  @Bean
-  public KafkaTemplate<String, LinksChangeEvent> linksChangeKafkaTemplate(
-    ProducerFactory<String, LinksChangeEvent> factory) {
-    return new KafkaTemplate<>(factory);
+    return configProps;
   }
 }

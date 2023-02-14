@@ -320,7 +320,7 @@ class InstanceAuthorityLinkingServiceTest {
 
   @Test
   void saveAll_positive() {
-    var instanceId = UUID.randomUUID().toString();
+    var instanceId = UUID.randomUUID();
     var links = links(2);
 
     service.saveAll(instanceId, links);

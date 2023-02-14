@@ -1,5 +1,6 @@
 package org.folio.entlinks.service.links;
 
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.folio.entlinks.utils.DateUtils.toTimestamp;
 
 import jakarta.persistence.criteria.Predicate;
@@ -103,6 +104,12 @@ public class InstanceAuthorityLinkingService {
   }
 
   @Transactional
+  public void updateStatus(UUID authorityId, InstanceAuthorityLinkStatus status, String errorCause) {
+    log.info("Update links [authority id: {}, status: {}, errorCause: {}]", authorityId, status, errorCause);
+    instanceLinkRepository.updateStatusAndErrorCauseByAuthorityId(status, trimToNull(errorCause), authorityId);
+  }
+
+  @Transactional
   public void deleteByAuthorityIdIn(Set<UUID> authorityIds) {
     if (log.isDebugEnabled()) {
       log.info("Delete links for [authority ids: {}]", authorityIds);
@@ -114,7 +121,7 @@ public class InstanceAuthorityLinkingService {
   }
 
   @Transactional
-  public void saveAll(String instanceId, List<InstanceAuthorityLink> links) {
+  public void saveAll(UUID instanceId, List<InstanceAuthorityLink> links) {
     log.info("Save links for [instanceId: {}, links amount: {}]", instanceId, links.size());
     log.debug("Save links for [instanceId: {}, links: {}]", instanceId, links);
 

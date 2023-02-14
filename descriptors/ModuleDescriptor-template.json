@@ -327,7 +327,6 @@
         "name": "KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS",
         "value": "100",
         "description": "Number of instance-authority links `links.instance-authority` event contains while processing authority link source change."
-      }
-    ]
+      }    ]
   }
 }

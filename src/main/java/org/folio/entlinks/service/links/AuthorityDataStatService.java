@@ -1,16 +1,17 @@
 package org.folio.entlinks.service.links;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.entlinks.domain.dto.LinkUpdateReport.StatusEnum.FAIL;
 import static org.folio.entlinks.domain.dto.LinkUpdateReport.StatusEnum.SUCCESS;
+import static org.folio.entlinks.utils.DateUtils.currentTs;
 
-import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.domain.dto.AuthorityDataStatActionDto;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
@@ -55,64 +56,70 @@ public class AuthorityDataStatService {
                                                 AuthorityDataStatActionDto action, int limit) {
     Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc("startedAt")));
     return statRepository.findByActionAndStartedAtGreaterThanEqualAndStartedAtLessThanEqual(
-                                                          AuthorityDataStatAction.valueOf(action.getValue()),
-                                                          DateUtils.toTimestamp(fromDate),
-                                                          DateUtils.toTimestamp(toDate),
-                                                          pageable);
+      AuthorityDataStatAction.valueOf(action.getValue()),
+      DateUtils.toTimestamp(fromDate),
+      DateUtils.toTimestamp(toDate),
+      pageable);
   }
 
   @Transactional
   public void updateForReports(UUID jobId, List<LinkUpdateReport> reports) {
     log.info("Updating links, stats for reports: [jobId: {}, reports count: {}]", jobId, reports.size());
     log.debug("Updating links,stats for reports: [reports: {}]", reports);
-    updateLinks(reports);
+    updateLinks(jobId, reports);
     updateStatsData(jobId, reports);
   }
 
-  private void updateLinks(List<LinkUpdateReport> reports) {
-    reports.forEach(report -> {
-      var linkIds = report.getLinkIds();
-      var links = linkingService.getLinksByIds(linkIds);
-
-      links.forEach(link -> {
-        link.setStatus(mapReportStatus(report));
-        if (report.getStatus().equals(FAIL)) {
-          link.setErrorCause(report.getFailCause());
-        } else {
-          link.setErrorCause(EMPTY);
-        }
-      });
-
-      linkingService.saveAll(report.getInstanceId().toString(), links);
-    });
+  private void checkIfAllFailed(List<LinkUpdateReport> reports, AuthorityDataStat dataStat) {
+    reports.stream()
+      .filter(linkUpdateReport -> CollectionUtils.isEmpty(linkUpdateReport.getLinkIds())
+        && linkUpdateReport.getStatus().equals(FAIL))
+      .findFirst()
+      .ifPresent(linkUpdateReport -> dataStat.setLbFailed(dataStat.getLbTotal()));
   }
 
-  private InstanceAuthorityLinkStatus mapReportStatus(LinkUpdateReport report) {
-    return switch (report.getStatus()) {
-      case SUCCESS -> InstanceAuthorityLinkStatus.ACTUAL;
-      case FAIL -> InstanceAuthorityLinkStatus.ERROR;
-      default -> throw new IllegalArgumentException("Unknown link update report status.");
-    };
+  private void updateLinks(UUID jobId, List<LinkUpdateReport> reports) {
+    reports.forEach(report -> {
+      var linkIds = report.getLinkIds();
+      var status = mapReportStatus(report);
+      log.debug("Update links status for [status: {}, linkIds: {}, jobId: {}]", status, linkIds, jobId);
+      if (CollectionUtils.isNotEmpty(linkIds)) {
+        var links = linkingService.getLinksByIds(linkIds);
+
+        links.forEach(link -> {
+          link.setStatus(status);
+          link.setErrorCause(StringUtils.trimToNull(report.getFailCause()));
+        });
+
+        linkingService.saveAll(report.getInstanceId(), links);
+      } else {
+        var dataStat = getDataStatOrFail(jobId);
+        var authorityId = dataStat.getAuthorityData().getId();
+        linkingService.updateStatus(authorityId, status, report.getFailCause());
+      }
+    });
   }
 
   /**
    * Updates authority statistics data.
-
+   *
    * @param jobId linked bib update job id.
    *              AuthorityDataStat id and jobId are interchangeable (jobId is used as id to create stat record)
-   * */
+   */
   private void updateStatsData(UUID jobId, List<LinkUpdateReport> reports) {
-    var dataStat = statRepository.findById(jobId)
-      .orElseThrow(() -> new IllegalStateException("Cannot find authority data statistics for id: " + jobId));
+    var dataStat = getDataStatOrFail(jobId);
+
     var failedCount = getReportCountForStatus(reports, FAIL);
     var successCount = getReportCountForStatus(reports, SUCCESS);
 
     dataStat.setLbUpdated(dataStat.getLbUpdated() + successCount);
     dataStat.setLbFailed(dataStat.getLbFailed() + failedCount);
 
+    checkIfAllFailed(reports, dataStat);
+
     var jobCompleted = dataStat.getLbUpdated() + dataStat.getLbFailed() == dataStat.getLbTotal();
     if (jobCompleted) {
-      dataStat.setCompletedAt(now());
+      dataStat.setCompletedAt(currentTs());
       updateStatStatus(dataStat);
     }
 
@@ -123,6 +130,7 @@ public class AuthorityDataStatService {
 
   private int getReportCountForStatus(List<LinkUpdateReport> reports, LinkUpdateReport.StatusEnum status) {
     return (int) reports.stream()
+      .filter(linkUpdateReport -> CollectionUtils.isNotEmpty(linkUpdateReport.getLinkIds()))
       .filter(linkUpdateReport -> linkUpdateReport.getStatus().equals(status))
       .count();
   }
@@ -137,8 +145,17 @@ public class AuthorityDataStatService {
     }
   }
 
-  private Timestamp now() {
-    return new Timestamp(System.currentTimeMillis());
+  private InstanceAuthorityLinkStatus mapReportStatus(LinkUpdateReport report) {
+    return switch (report.getStatus()) {
+      case SUCCESS -> InstanceAuthorityLinkStatus.ACTUAL;
+      case FAIL -> InstanceAuthorityLinkStatus.ERROR;
+      default -> throw new IllegalArgumentException("Unknown link update report status.");
+    };
+  }
+
+  private AuthorityDataStat getDataStatOrFail(UUID jobId) {
+    return statRepository.findById(jobId)
+      .orElseThrow(() -> new IllegalStateException("Cannot find authority data statistics for id: " + jobId));
   }
 
 }

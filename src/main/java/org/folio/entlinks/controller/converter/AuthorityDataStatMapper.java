@@ -9,6 +9,10 @@ import org.mapstruct.Mapping;
 public interface AuthorityDataStatMapper {
 
   @Mapping(target = "authorityId", source = "source.authorityData.id")
+  @Mapping(target = "naturalIdOld", source = "authorityNaturalIdOld")
+  @Mapping(target = "naturalIdNew", source = "authorityNaturalIdNew")
+  @Mapping(target = "sourceFileOld", source = "authoritySourceFileOld")
+  @Mapping(target = "sourceFileNew", source = "authoritySourceFileNew")
   AuthorityDataStatDto convertToDto(AuthorityDataStat source);
 
 }
