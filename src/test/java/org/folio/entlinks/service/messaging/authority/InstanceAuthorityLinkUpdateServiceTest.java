@@ -42,7 +42,6 @@ class InstanceAuthorityLinkUpdateServiceTest {
   private @Mock AuthorityChangeHandler deleteHandler;
   private @Mock AuthorityMappingRulesProcessingService mappingRulesProcessingService;
   private @Mock InstanceAuthorityLinkingService linkingService;
-
   private InstanceAuthorityLinkUpdateService service;
 
   @BeforeEach

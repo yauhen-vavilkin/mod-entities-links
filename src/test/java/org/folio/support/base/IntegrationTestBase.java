@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.SneakyThrows;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.folio.entlinks.support.DatabaseHelper;
+import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.test.extension.EnableKafka;
 import org.folio.spring.test.extension.EnableOkapi;
@@ -38,6 +40,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
@@ -60,15 +63,18 @@ public class IntegrationTestBase {
   protected static OkapiConfiguration okapi;
   protected static KafkaTemplate<String, String> kafkaTemplate;
   protected static ObjectMapper objectMapper;
+  protected static DatabaseHelper databaseHelper;
 
   @BeforeAll
   static void setUp(@Autowired MockMvc mockMvc,
                     @Autowired ObjectMapper objectMapper,
-                    @Autowired KafkaTemplate<String, String> kafkaTemplate) {
+                    @Autowired KafkaTemplate<String, String> kafkaTemplate,
+                    @Autowired DatabaseHelper databaseHelper) {
     System.setProperty("env", "folio-test");
     IntegrationTestBase.mockMvc = mockMvc;
     IntegrationTestBase.objectMapper = objectMapper;
     IntegrationTestBase.kafkaTemplate = kafkaTemplate;
+    IntegrationTestBase.databaseHelper = databaseHelper;
     setUpTenant();
   }
 
@@ -189,6 +195,11 @@ public class IntegrationTestBase {
     @Primary
     public KafkaTemplate<String, String> kafkaStringTemplate(ProducerFactory<String, String> producerFactory) {
       return new KafkaTemplate<>(producerFactory);
+    }
+
+    @Bean
+    public DatabaseHelper databaseHelper(JdbcTemplate jdbcTemplate, FolioModuleMetadata moduleMetadata) {
+      return new DatabaseHelper(moduleMetadata, jdbcTemplate);
     }
   }
 }

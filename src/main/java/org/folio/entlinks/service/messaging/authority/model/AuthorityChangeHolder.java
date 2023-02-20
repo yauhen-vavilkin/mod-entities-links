@@ -104,7 +104,7 @@ public class AuthorityChangeHolder {
       }
     }
 
-    return AuthorityDataStat.builder()
+    AuthorityDataStat authorityDataStat = AuthorityDataStat.builder()
       .authorityData(AuthorityData.builder()
         .id(getAuthorityId())
         .naturalId(getNewNaturalId() == null ? getOldNaturalId() : getNewNaturalId())
@@ -120,6 +120,11 @@ public class AuthorityChangeHolder {
       .action(getAuthorityDataStatAction())
       .lbTotal(numberOfLinks)
       .build();
+    if (this.event.getNew() != null && this.event.getNew().getMetadata() != null) {
+      authorityDataStat.setStartedByUserId(UUID.fromString(this.event.getNew().getMetadata().getUpdatedByUserId()));
+    }
+
+    return authorityDataStat;
   }
 
   @NotNull

@@ -56,6 +56,11 @@
     "naturalId": {
       "type": "string",
       "description": "Authority Natural ID"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "metaData.json",
+      "description": "Authority metaData"
     }
   }
 }

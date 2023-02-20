@@ -372,6 +372,9 @@ components:
     sourceRecord:
       $ref: schemas/sourceRecord.json
 
+    metaData:
+      $ref: schemas/metaData.json
+
     linksChangeEvent:
       type: object
       description: Links change event body

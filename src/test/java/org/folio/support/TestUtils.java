@@ -42,6 +42,7 @@ import org.folio.entlinks.domain.dto.Metadata;
 import org.folio.entlinks.domain.entity.AuthorityData;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
+import org.folio.entlinks.domain.entity.AuthorityDataStatStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
 import org.folio.spring.tools.client.UsersClient;
@@ -205,6 +206,7 @@ public class TestUtils {
         .action(action)
         .authorityData(AuthorityData.builder()
           .id(UUID.randomUUID())
+          .naturalId(UUID.randomUUID().toString())
           .deleted(false)
           .build())
         .authorityNaturalIdOld("naturalIdOld2")
@@ -219,14 +221,16 @@ public class TestUtils {
         .lbUpdated(2)
         .lbFailed(1)
         .lbTotal(5)
-        .startedAt(Timestamp.from(Instant.now().minus(5, ChronoUnit.DAYS)))
+        .startedAt(Timestamp.from(Instant.now().minus(4, ChronoUnit.DAYS)))
         .startedByUserId(userId1)
+        .status(AuthorityDataStatStatus.COMPLETED_SUCCESS)
         .build(),
       AuthorityDataStat.builder()
         .id(UUID.randomUUID())
         .action(action)
         .authorityData(AuthorityData.builder()
           .id(UUID.randomUUID())
+          .naturalId(UUID.randomUUID().toString())
           .deleted(false)
           .build())
         .authorityNaturalIdOld("naturalIdOld2")
@@ -243,6 +247,7 @@ public class TestUtils {
         .lbTotal(5)
         .startedAt(Timestamp.from(Instant.now().minus(5, ChronoUnit.DAYS)))
         .startedByUserId(userId2)
+        .status(AuthorityDataStatStatus.COMPLETED_SUCCESS)
         .build()
     );
   }
