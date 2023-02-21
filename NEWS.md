@@ -1,4 +1,4 @@
-## 1.0.0-SNAPSHOT
+## v1.0.0 Released 2023-02-21
 ### APIs versions
 * Provides `instance-authority-links v1.0`
 * Provides `instance-authority-links-statistics v1.0`
