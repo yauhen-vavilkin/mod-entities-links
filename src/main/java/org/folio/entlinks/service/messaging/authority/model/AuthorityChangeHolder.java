@@ -121,7 +121,7 @@ public class AuthorityChangeHolder {
       .lbTotal(numberOfLinks)
       .build();
     if (this.event.getNew() != null && this.event.getNew().getMetadata() != null) {
-      authorityDataStat.setStartedByUserId(UUID.fromString(this.event.getNew().getMetadata().getUpdatedByUserId()));
+      authorityDataStat.setStartedByUserId(this.event.getNew().getMetadata().getUpdatedByUserId());
     }
 
     return authorityDataStat;

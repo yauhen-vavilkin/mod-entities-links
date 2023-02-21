@@ -59,8 +59,13 @@
     },
     "metadata": {
       "type": "object",
-      "$ref": "metaData.json",
-      "description": "Authority metaData"
+      "properties": {
+        "updatedByUserId": {
+          "description": "ID of the user who last updated the record (when available)",
+          "type": "string",
+          "format": "uuid"
+        }
+      }
     }
   }
 }

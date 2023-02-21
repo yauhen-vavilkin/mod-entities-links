@@ -12,8 +12,8 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
+import org.folio.entlinks.domain.dto.AuthorityInventoryRecordMetadata;
 import org.folio.entlinks.domain.dto.InventoryEvent;
-import org.folio.entlinks.domain.dto.MetaData;
 import org.folio.entlinks.service.messaging.authority.InstanceAuthorityLinkUpdateService;
 import org.folio.spring.test.type.UnitTest;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
@@ -74,10 +74,10 @@ class AuthorityInventoryEventListenerTest {
   @ParameterizedTest
   void shouldHandleEvent_positive_whenNoLinksExists(String type) {
     var authId = UUID.randomUUID();
-    String updatedByUserId = UUID.randomUUID().toString();
-    MetaData metaData = new MetaData().updatedByUserId(updatedByUserId);
-    var newRecord = new AuthorityInventoryRecord().id(authId).metadata(metaData);
-    var oldRecord = new AuthorityInventoryRecord().id(authId).metadata(metaData.updatedByUserId(updatedByUserId));
+    var updatedByUserId = UUID.randomUUID();
+    var meta = new AuthorityInventoryRecordMetadata().updatedByUserId(updatedByUserId);
+    var newRecord = new AuthorityInventoryRecord().id(authId).metadata(meta);
+    var oldRecord = new AuthorityInventoryRecord().id(authId).metadata(meta.updatedByUserId(updatedByUserId));
     var event = TestUtils.authorityEvent(type, newRecord, oldRecord);
 
     mockBatchSuccessHandling(messageBatchProcessor);

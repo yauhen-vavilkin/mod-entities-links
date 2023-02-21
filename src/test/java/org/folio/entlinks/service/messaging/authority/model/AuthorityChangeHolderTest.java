@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Map;
 import java.util.UUID;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
+import org.folio.entlinks.domain.dto.AuthorityInventoryRecordMetadata;
 import org.folio.entlinks.domain.dto.InventoryEvent;
 import org.folio.entlinks.domain.dto.InventoryEventType;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
@@ -270,12 +271,11 @@ class AuthorityChangeHolderTest {
 
   @Test
   void toAuthorityDataStat_positive_metadataGiven() {
-    UUID startedByUserId = UUID.randomUUID();
-    String updatedByUserId = startedByUserId.toString();
+    UUID updatedByUserId = UUID.randomUUID();
     var holder = new AuthorityChangeHolder(
       new InventoryEvent().type(InventoryEventType.UPDATE.toString())
         ._new(new AuthorityInventoryRecord().naturalId("n")
-          .metadata(new org.folio.entlinks.domain.dto.MetaData().updatedByUserId(updatedByUserId)))
+          .metadata(new AuthorityInventoryRecordMetadata().updatedByUserId(updatedByUserId)))
         .old(new AuthorityInventoryRecord().naturalId("o")),
       Map.of(PERSONAL_NAME, new AuthorityChange(PERSONAL_NAME, "n", "o"),
         NATURAL_ID, new AuthorityChange(NATURAL_ID, "n", "o")),
@@ -286,7 +286,7 @@ class AuthorityChangeHolderTest {
     assertThat(actual)
       .extracting(STAT_OBJ_PROPERTIES)
       .containsExactly(AuthorityDataStatAction.UPDATE_HEADING, "o", "n", "100", "100", "o", "n", null, null, 1,
-        startedByUserId);
+        updatedByUserId);
   }
 
   @Test
