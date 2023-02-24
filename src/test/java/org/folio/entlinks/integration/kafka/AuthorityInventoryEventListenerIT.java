@@ -345,11 +345,7 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
         subfieldChange("q", "(Jules)"),
         subfieldChangeEmpty("r"),
         subfieldChangeEmpty("s"),
-        subfieldChange("t", "Black Eagles"),
-        subfieldChangeEmpty("v"),
-        subfieldChangeEmpty("x"),
-        subfieldChangeEmpty("y"),
-        subfieldChangeEmpty("z")
+        subfieldChange("t", "Black Eagles")
       )),
       new FieldChange().field("700").subfields(List.of(
         subfieldChange("a", "Lansing, John"),
