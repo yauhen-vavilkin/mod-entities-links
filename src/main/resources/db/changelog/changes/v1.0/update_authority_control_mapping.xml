@@ -13,7 +13,7 @@
 
     <sql>
       UPDATE
-        diku_mod_entities_links.instance_authority_linking_rule
+        instance_authority_linking_rule
       SET
         authority_subfields = REPLACE(authority_subfields, 'vxyz', '')
       WHERE
