@@ -57,7 +57,7 @@ folio:
   system-user:
     username: mod-entities-links
     password: ${SYSTEM_USER_PASSWORD:mod-entities-links}
-    lastname: System
+    lastname: Automated linking update
     permissionsFilePath: permissions/mod-entities-links-permissions.csv
   kafka:
     topics:
