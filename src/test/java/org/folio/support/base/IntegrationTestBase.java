@@ -2,7 +2,10 @@ package org.folio.support.base;
 
 import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
-import static org.folio.support.TestUtils.asJson;
+import static org.awaitility.Awaitility.await;
+import static org.awaitility.Durations.ONE_SECOND;
+import static org.awaitility.Durations.TEN_SECONDS;
+import static org.folio.support.JsonTestUtils.asJson;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 import static org.hamcrest.Matchers.is;
@@ -20,16 +23,18 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.SneakyThrows;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.folio.entlinks.support.DatabaseHelper;
+import org.awaitility.core.ThrowingRunnable;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.test.extension.EnableKafka;
 import org.folio.spring.test.extension.EnableOkapi;
 import org.folio.spring.test.extension.EnablePostgres;
 import org.folio.spring.test.extension.impl.OkapiConfiguration;
+import org.folio.support.DatabaseHelper;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
@@ -126,7 +131,7 @@ public class IntegrationTestBase {
   @SneakyThrows
   protected static ResultActions tryPut(String uri, Object body, Object... args) {
     return mockMvc.perform(put(uri, args)
-        .content(body == null ? "" : asJson(body))
+        .content(body == null ? "" : asJson(body, objectMapper))
         .headers(defaultHeaders()))
       .andDo(log());
   }
@@ -139,7 +144,7 @@ public class IntegrationTestBase {
   @SneakyThrows
   protected static ResultActions tryPost(String uri, Object body, Object... args) {
     return mockMvc.perform(post(uri, args)
-        .content(asJson(body))
+        .content(asJson(body, objectMapper))
         .headers(defaultHeaders()))
       .andDo(log());
   }
@@ -150,13 +155,14 @@ public class IntegrationTestBase {
   }
 
   @SneakyThrows
-  protected static void sendKafkaMessage(String topic, Object event) {
-    kafkaTemplate.send(topic, new ObjectMapper().writeValueAsString(event));
+  protected static void sendKafkaMessage(String topic, String key, Object event) {
+    var future = kafkaTemplate.send(topic, key, new ObjectMapper().writeValueAsString(event));
+    awaitUntilAsserted(() -> Assertions.assertTrue(future.isDone(), "Message was not sent"));
   }
 
-  @SneakyThrows
-  protected static void sendKafkaMessage(String topic, String key, Object event) {
-    kafkaTemplate.send(topic, key, new ObjectMapper().writeValueAsString(event));
+
+  protected static void awaitUntilAsserted(ThrowingRunnable throwingRunnable) {
+    await().pollInterval(ONE_SECOND).atMost(TEN_SECONDS).untilAsserted(throwingRunnable);
   }
 
   protected ResultMatcher errorParameterMatch(Matcher<String> errorMessageMatcher) {

@@ -19,7 +19,7 @@ import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.spring.test.type.UnitTest;
 import org.folio.spring.tools.client.UsersClient;
-import org.folio.support.TestUtils;
+import org.folio.support.TestDataUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,8 +45,11 @@ class InstanceAuthorityStatServiceDelegateTest {
   @Test
   void fetchStats() {
     var userIds = List.of(UUID.randomUUID(), UUID.randomUUID());
-    var statData = TestUtils.dataStatList(userIds.get(0), userIds.get(1), AuthorityDataStatAction.UPDATE_HEADING);
-    var users = TestUtils.usersList(userIds);
+    var statData = List.of(
+      TestDataUtils.authorityDataStat(userIds.get(0), AuthorityDataStatAction.UPDATE_HEADING),
+      TestDataUtils.authorityDataStat(userIds.get(1), AuthorityDataStatAction.UPDATE_HEADING)
+    );
+    var users = TestDataUtils.usersList(userIds);
 
     var fromDate = OffsetDateTime.of(2022, 10, 10, 15, 30, 30, 0, ZoneOffset.UTC);
     var toDate = OffsetDateTime.now();
@@ -58,9 +61,9 @@ class InstanceAuthorityStatServiceDelegateTest {
     AuthorityDataStat authorityDataStat2 = statData.get(1);
     var userList = users.getResult();
     when(mapper.convertToDto(authorityDataStat1))
-      .thenReturn(TestUtils.getStatDataDto(authorityDataStat1, userList.get(0)));
+      .thenReturn(TestDataUtils.getStatDataDto(authorityDataStat1, userList.get(0)));
     when(mapper.convertToDto(authorityDataStat2))
-      .thenReturn(TestUtils.getStatDataDto(authorityDataStat2, userList.get(0)));
+      .thenReturn(TestDataUtils.getStatDataDto(authorityDataStat2, userList.get(0)));
 
     var authorityChangeStatDtoCollection = delegate.fetchAuthorityLinksStats(
       fromDate,

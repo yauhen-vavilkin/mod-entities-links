@@ -3,8 +3,10 @@ package org.folio.entlinks.controller.delegate;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.folio.entlinks.controller.converter.AuthorityDataStatMapper;
 import org.folio.entlinks.domain.dto.AuthorityChangeStatDtoCollection;
@@ -26,7 +28,7 @@ public class InstanceAuthorityStatServiceDelegate {
   private final UsersClient usersClient;
 
   public AuthorityChangeStatDtoCollection fetchAuthorityLinksStats(OffsetDateTime fromDate, OffsetDateTime toDate,
-    AuthorityDataStatActionDto action, Integer limit) {
+                                                                   AuthorityDataStatActionDto action, Integer limit) {
     List<AuthorityDataStat> dataStatList = dataStatService.fetchDataStats(fromDate, toDate, action, limit + 1);
 
     Optional<AuthorityDataStat> last = Optional.empty();
@@ -37,7 +39,7 @@ public class InstanceAuthorityStatServiceDelegate {
 
     String query = getUsersQueryString(dataStatList);
     ResultList<UsersClient.User> userResultList =
-            query.isEmpty() ? ResultList.of(0, Collections.emptyList()) : usersClient.query(query);
+      query.isEmpty() ? ResultList.of(0, Collections.emptyList()) : usersClient.query(query);
     var stats = dataStatList.stream()
       .map(source -> {
         Metadata metadata = getMetadata(userResultList, source);
@@ -53,7 +55,7 @@ public class InstanceAuthorityStatServiceDelegate {
         .orElse(null));
   }
 
-  private static Metadata getMetadata(ResultList<UsersClient.User> userResultList, AuthorityDataStat source) {
+  private Metadata getMetadata(ResultList<UsersClient.User> userResultList, AuthorityDataStat source) {
     if (userResultList == null) {
       return null;
     }
@@ -75,17 +77,13 @@ public class InstanceAuthorityStatServiceDelegate {
     return metadata;
   }
 
-  private static String getUsersQueryString(List<AuthorityDataStat> dataStatList) {
-    List<UUID> userIds = dataStatList.stream().map(AuthorityDataStat::getStartedByUserId).toList();
-    if (userIds.isEmpty()) {
-      return "";
-    }
-
-    var querySb = new StringBuilder();
-    querySb.append("id==").append(userIds.get(0));
-    for (int i = 1; i < userIds.size(); i++) {
-      querySb.append(" or id==").append(userIds.get(i));
-    }
-    return querySb.toString();
+  private String getUsersQueryString(List<AuthorityDataStat> dataStatList) {
+    var userIds = dataStatList.stream()
+      .map(AuthorityDataStat::getStartedByUserId)
+      .filter(Objects::nonNull)
+      .map(UUID::toString)
+      .distinct()
+      .collect(Collectors.joining(" or "));
+    return userIds.isEmpty() ? "" : "id=(" + userIds + ")";
   }
 }
