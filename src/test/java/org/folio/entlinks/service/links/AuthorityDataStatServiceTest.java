@@ -4,7 +4,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ACTUAL;
 import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ERROR;
-import static org.folio.support.TestUtils.reports;
+import static org.folio.support.TestDataUtils.reports;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -25,7 +25,7 @@ import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.repository.AuthorityDataStatRepository;
 import org.folio.spring.test.type.UnitTest;
-import org.folio.support.TestUtils;
+import org.folio.support.TestDataUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,7 +68,7 @@ class AuthorityDataStatServiceTest {
     var jobId = UUID.randomUUID();
     var reports = reports(jobId);
 
-    when(linkingService.getLinksByIds(anyList())).thenReturn(TestUtils.links(2, REPORT_ERROR));
+    when(linkingService.getLinksByIds(anyList())).thenReturn(TestDataUtils.links(2, REPORT_ERROR));
 
     service.updateForReports(jobId, reports);
 
@@ -88,7 +88,7 @@ class AuthorityDataStatServiceTest {
     var jobId = UUID.randomUUID();
     var reports = reports(jobId, LinkUpdateReport.StatusEnum.FAIL, REPORT_ERROR);
 
-    when(linkingService.getLinksByIds(anyList())).thenReturn(TestUtils.links(2));
+    when(linkingService.getLinksByIds(anyList())).thenReturn(TestDataUtils.links(2));
 
     service.updateForReports(jobId, reports);
 

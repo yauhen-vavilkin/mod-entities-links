@@ -1,93 +1,128 @@
 package org.folio.entlinks.controller;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static java.util.UUID.randomUUID;
+import static org.folio.entlinks.domain.dto.AuthorityDataStatActionDto.UPDATE_HEADING;
+import static org.folio.support.TestDataUtils.Link.TAGS;
+import static org.folio.support.TestDataUtils.linksDto;
+import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.base.TestConstants.TENANT_ID;
+import static org.folio.support.base.TestConstants.USER_ID;
+import static org.folio.support.base.TestConstants.authorityStatsEndpoint;
+import static org.folio.support.base.TestConstants.inventoryAuthorityTopic;
+import static org.folio.support.base.TestConstants.linksInstanceEndpoint;
 import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.UUID;
 import lombok.SneakyThrows;
-import org.apache.http.HttpStatus;
-import org.folio.entlinks.domain.dto.AuthorityDataStatActionDto;
-import org.folio.entlinks.domain.entity.AuthorityDataStat;
-import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
-import org.folio.entlinks.support.DatabaseHelper;
+import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
+import org.folio.entlinks.domain.dto.AuthorityInventoryRecordMetadata;
 import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
-import org.folio.spring.tools.client.UsersClient;
-import org.folio.spring.tools.model.ResultList;
-import org.folio.support.TestUtils;
+import org.folio.support.DatabaseHelper;
+import org.folio.support.TestDataUtils;
 import org.folio.support.base.IntegrationTestBase;
+import org.folio.support.base.TestConstants;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 
 @IntegrationTest
-@DatabaseCleanup(tables = {DatabaseHelper.AUTHORITY_DATA_STAT, DatabaseHelper.AUTHORITY_DATA})
+@DatabaseCleanup(tables = {DatabaseHelper.AUTHORITY_DATA_STAT_TABLE,
+                           DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE,
+                           DatabaseHelper.AUTHORITY_DATA_TABLE})
 class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
 
-  private static final String LINK_STATISTICS_ENDPOINT = "/links/authority/stats";
-  private static final OffsetDateTime FROM_DATE = OffsetDateTime.of(2020, 10, 10, 10, 10, 10, 10, ZoneOffset.UTC);
-  private static final OffsetDateTime TO_DATE = OffsetDateTime.of(LocalDateTime.now(), ZoneOffset.UTC);
-  private static final Integer LIMIT = 2;
-  private static final AuthorityDataStatActionDto STAT_ACTION_DTO = AuthorityDataStatActionDto.UPDATE_HEADING;
+  private static final UUID SOURCE_FILE_ID = UUID.randomUUID();
+  private static final OffsetDateTime TO_DATE = OffsetDateTime.of(LocalDateTime.now().plusHours(1), ZoneOffset.UTC);
+  private static final OffsetDateTime FROM_DATE = TO_DATE.minusMonths(1);
 
   @Test
   @SneakyThrows
   void getAuthDataStat_positive_whenStatsIsEmpty() {
-    var preparedLink = LINK_STATISTICS_ENDPOINT + "?action=" + STAT_ACTION_DTO
-      + "&fromDate=" + FROM_DATE
-      + "&toDate=" + TO_DATE + "&limit=" + LIMIT;
-    doGet(preparedLink)
+    doGet(authorityStatsEndpoint(UPDATE_HEADING, FROM_DATE, TO_DATE, 1))
       .andExpect(status().isOk())
-      .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+      .andExpect(jsonPath("$.stats[0]").doesNotExist());
   }
 
   @Test
-  void getAuthDataStat_positive_whenStatsIsNotEmpty() throws Exception {
-    UUID userId1 = randomUUID();
-    UUID userId2 = randomUUID();
-    var list = TestUtils.dataStatList(userId1, userId2, AuthorityDataStatAction.UPDATE_HEADING);
-    ResultList<UsersClient.User> userResultList = TestUtils.usersList(List.of(userId1, userId2));
-    okapi.wireMockServer().stubFor(get(urlPathEqualTo("/users"))
-      .withQueryParam("query", equalTo("id==" + userId1 + " or id==" + userId2))
-      .willReturn(aResponse().withBody(objectMapper.writeValueAsString(userResultList))
-        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-        .withStatus(HttpStatus.SC_OK)));
-    for (AuthorityDataStat authorityDataStat : list) {
-      databaseHelper.saveAuthData(authorityDataStat.getAuthorityData(), TENANT_ID);
-      databaseHelper.saveStat(authorityDataStat, TENANT_ID);
-    }
+  @SneakyThrows
+  void getAuthDataStat_positive() {
+    var instanceId = UUID.randomUUID();
+    var authorityId = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
+    var link = new TestDataUtils.Link(authorityId, TAGS[0]);
 
-    var preparedLink = LINK_STATISTICS_ENDPOINT + "?action=" + STAT_ACTION_DTO
-      + "&fromDate=" + FROM_DATE
-      + "&toDate=" + TO_DATE + "&limit=" + LIMIT;
+    // save link
+    doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
+    // send update event to store authority data stat
+    sendInventoryAuthorityEvent(authorityId, TestConstants.UPDATE_TYPE);
+    //await until stat saved to database
+    awaitUntilAsserted(() -> assertEquals(1,
+      databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
 
-    var authorityDataStat = list.get(0);
-    UsersClient.User.Personal personal = userResultList.getResult().get(0).personal();
-    doGet(preparedLink)
+    // send update event to store another authority data stat
+    sendInventoryAuthorityEvent(authorityId, TestConstants.UPDATE_TYPE);
+    //await until stat saved to database
+    awaitUntilAsserted(() -> assertEquals(2,
+      databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
+
+    doGet(authorityStatsEndpoint(UPDATE_HEADING, FROM_DATE, TO_DATE, 1))
       .andExpect(status().is2xxSuccessful())
-      .andExpect(jsonPath("$.stats[0].action", is(AuthorityDataStatActionDto.UPDATE_HEADING.name())))
-      .andExpect(jsonPath("$.stats[0].metadata.startedByUserFirstName", is(personal.firstName())))
-      .andExpect(jsonPath("$.stats[0].metadata.startedByUserLastName", is(personal.lastName())))
-      .andExpect(jsonPath("$.stats[0].id", is(authorityDataStat.getId().toString())))
-      .andExpect(jsonPath("$.stats[0].authorityId", is(authorityDataStat.getAuthorityData().getId().toString())))
-      .andExpect(jsonPath("$.stats[0].lbFailed", is(authorityDataStat.getLbFailed())))
-      .andExpect(jsonPath("$.stats[0].lbUpdated", is(authorityDataStat.getLbUpdated())))
-      .andExpect(jsonPath("$.stats[0].lbTotal", is(authorityDataStat.getLbTotal())))
-      .andExpect(jsonPath("$.stats[0].headingOld", is(authorityDataStat.getHeadingOld())))
-      .andExpect(jsonPath("$.stats[0].headingNew", is(authorityDataStat.getHeadingNew())))
-      .andExpect(jsonPath("$.stats[0].headingTypeOld", is(authorityDataStat.getHeadingTypeOld())))
-      .andExpect(jsonPath("$.stats[0].headingTypeNew", is(authorityDataStat.getHeadingTypeNew())));
+      .andExpect(jsonPath("$.next", notNullValue()))
+      .andExpect(jsonPath("$.stats[0].action", is(UPDATE_HEADING.name())))
+      .andExpect(jsonPath("$.stats[0].authorityId", is(authorityId.toString())))
+      .andExpect(jsonPath("$.stats[0].lbFailed", is(0)))
+      .andExpect(jsonPath("$.stats[0].lbUpdated", is(0)))
+      .andExpect(jsonPath("$.stats[0].lbTotal", is(1)))
+      .andExpect(jsonPath("$.stats[0].naturalIdOld", is("naturalId")))
+      .andExpect(jsonPath("$.stats[0].naturalIdNew", is("naturalId")))
+      .andExpect(jsonPath("$.stats[0].sourceFileNew", is(SOURCE_FILE_ID.toString())))
+      .andExpect(jsonPath("$.stats[0].headingOld", is("personal name")))
+      .andExpect(jsonPath("$.stats[0].headingNew", is("new personal name")))
+      .andExpect(jsonPath("$.stats[0].headingTypeOld", is("100")))
+      .andExpect(jsonPath("$.stats[0].headingTypeNew", is("100")))
+      .andExpect(jsonPath("$.stats[0].metadata.startedByUserId", is(USER_ID)))
+      .andExpect(jsonPath("$.stats[0].metadata.startedByUserLastName", is("Doe")))
+      .andExpect(jsonPath("$.stats[0].metadata.startedByUserFirstName", is("John")))
+      .andExpect(jsonPath("$.stats[0].metadata.startedAt", notNullValue()));
+  }
+
+  @Test
+  @SneakyThrows
+  void getAuthDataStat_positive_whenAuthorityWasDeleted() {
+    var instanceId = UUID.randomUUID();
+    var authorityId = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
+    var link = new TestDataUtils.Link(authorityId, TAGS[0]);
+
+    // save link
+    doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
+    // send update event to store authority data stats
+    sendInventoryAuthorityEvent(authorityId, TestConstants.UPDATE_TYPE);
+    //await until stat saved to database
+    awaitUntilAsserted(() -> assertEquals(1,
+      databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
+
+    // send delete event to mark authority as deleted
+    sendInventoryAuthorityEvent(authorityId, TestConstants.DELETE_TYPE);
+    //await until stat saved to database
+    awaitUntilAsserted(() -> assertEquals(2,
+      databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
+
+    doGet(authorityStatsEndpoint(UPDATE_HEADING, FROM_DATE, TO_DATE, 1))
+      .andExpect(status().is2xxSuccessful())
+      .andExpect(jsonPath("$.stats[0]").doesNotExist());
+  }
+
+  private void sendInventoryAuthorityEvent(UUID authorityId, String type) {
+    var authUpdateEvent = TestDataUtils.authorityEvent(type,
+      new AuthorityInventoryRecord().id(authorityId).personalName("new personal name").naturalId("naturalId")
+        .sourceFileId(SOURCE_FILE_ID)
+        .metadata(new AuthorityInventoryRecordMetadata().updatedByUserId(UUID.fromString(USER_ID))),
+      new AuthorityInventoryRecord().id(authorityId).personalName("personal name").naturalId("naturalId"));
+    sendKafkaMessage(inventoryAuthorityTopic(), authorityId.toString(), authUpdateEvent);
+
   }
 }

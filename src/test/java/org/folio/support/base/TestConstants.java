@@ -1,8 +1,11 @@
 package org.folio.support.base;
 
-import static org.folio.spring.tools.config.properties.FolioEnvironment.getFolioEnvName;
+import static org.folio.support.KafkaTestUtils.fullTopicName;
 
+import java.time.OffsetDateTime;
 import lombok.experimental.UtilityClass;
+import org.folio.entlinks.domain.dto.AuthorityDataStatActionDto;
+import org.folio.entlinks.domain.dto.LinkStatus;
 
 @UtilityClass
 public class TestConstants {
@@ -11,22 +14,37 @@ public class TestConstants {
   public static final String USER_ID = "38d3a441-c100-5e8d-bd12-71bde492b723";
 
   public static final String AUTHORITY_TOPIC = "inventory.authority";
+  public static final String INSTANCE_AUTHORITY_TOPIC = "links.instance-authority";
   public static final String INSTANCE_AUTHORITY_STATS_TOPIC = "links.instance-authority-stats";
+  public static final String DELETE_TYPE = "DELETE";
+  public static final String UPDATE_TYPE = "UPDATE";
 
   private static final String INSTANCE_LINKS_ENDPOINT_PATH = "/links/instances/{id}";
   private static final String AUTHORITY_LINKS_COUNT_ENDPOINT_PATH = "/links/authorities/bulk/count";
   private static final String LINKS_STATS_INSTANCE_ENDPOINT_PATH = "/links/stats/instance";
+  private static final String LINKS_STATS_INSTANCE_ENDPOINT_PARAMS = "?status=%s&fromDate=%s&toDate=%s";
+  private static final String AUTH_STATS_ENDPOINT_PATH_PATTERN = "/links/authority/stats";
+  private static final String AUTH_STATS_ENDPOINT_PARAMS = "?action=%s&fromDate=%s&toDate=%s&limit=%d";
+  private static final String LINKING_RULES_ENDPOINT = "/linking-rules/instance-authority";
 
   public static String inventoryAuthorityTopic() {
-    return String.format("%s.%s.%s", getFolioEnvName(), TENANT_ID, AUTHORITY_TOPIC);
+    return fullTopicName(AUTHORITY_TOPIC, TENANT_ID);
   }
 
-  public static String instanceAuthorityStatsTopic() {
-    return String.format("%s.%s.%s", getFolioEnvName(), TENANT_ID, INSTANCE_AUTHORITY_STATS_TOPIC);
+  public static String linksInstanceAuthorityTopic() {
+    return fullTopicName(INSTANCE_AUTHORITY_TOPIC, TENANT_ID);
+  }
+
+  public static String linksInstanceAuthorityStatsTopic() {
+    return fullTopicName(INSTANCE_AUTHORITY_STATS_TOPIC, TENANT_ID);
   }
 
   public static String linksInstanceEndpoint() {
     return INSTANCE_LINKS_ENDPOINT_PATH;
+  }
+
+  public static String linkingRulesEndpoint() {
+    return LINKING_RULES_ENDPOINT;
   }
 
   public static String authoritiesLinksCountEndpoint() {
@@ -35,5 +53,16 @@ public class TestConstants {
 
   public static String linksStatsInstanceEndpoint() {
     return LINKS_STATS_INSTANCE_ENDPOINT_PATH;
+  }
+
+  public static String linksStatsInstanceEndpoint(LinkStatus status, OffsetDateTime fromDate,
+                                                  OffsetDateTime toDate) {
+    return LINKS_STATS_INSTANCE_ENDPOINT_PATH
+      + LINKS_STATS_INSTANCE_ENDPOINT_PARAMS.formatted(status, fromDate, toDate);
+  }
+
+  public static String authorityStatsEndpoint(AuthorityDataStatActionDto action, OffsetDateTime fromDate,
+                                              OffsetDateTime toDate, int limit) {
+    return AUTH_STATS_ENDPOINT_PATH_PATTERN + AUTH_STATS_ENDPOINT_PARAMS.formatted(action, fromDate, toDate, limit);
   }
 }

@@ -2,9 +2,9 @@ package org.folio.entlinks.integration.kafka;
 
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
-import static org.folio.support.TestUtils.mockBatchFailedHandling;
-import static org.folio.support.TestUtils.mockBatchSuccessHandling;
-import static org.folio.support.TestUtils.report;
+import static org.folio.support.MockingTestUtils.mockBatchFailedHandling;
+import static org.folio.support.MockingTestUtils.mockBatchSuccessHandling;
+import static org.folio.support.TestDataUtils.report;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -18,7 +18,7 @@ import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.spring.test.type.UnitTest;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
 import org.folio.spring.tools.systemuser.SystemUserScopedExecutionService;
-import org.folio.support.TestUtils;
+import org.folio.support.KafkaTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,7 +61,7 @@ class InstanceAuthorityStatsEventListenerTest {
       report(tenant2, job1Id),
       report(tenant2, job1Id)
     );
-    var consumerRecords = TestUtils.consumerRecords(reports);
+    var consumerRecords = KafkaTestUtils.consumerRecords(reports);
 
     mockBatchSuccessHandling(messageBatchProcessor);
 
@@ -81,7 +81,7 @@ class InstanceAuthorityStatsEventListenerTest {
   @Test
   void shouldNotHandleEvent_negative_whenExceptionOccurred() {
     var report = report(randomAlphabetic(10), UUID.randomUUID());
-    var consumerRecords = TestUtils.consumerRecords(singletonList(report));
+    var consumerRecords = KafkaTestUtils.consumerRecords(singletonList(report));
 
     mockBatchFailedHandling(messageBatchProcessor, new RuntimeException("test message"));
 
