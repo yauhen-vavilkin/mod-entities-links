@@ -148,7 +148,7 @@ public class TestDataUtils {
       .next(next);
   }
 
-  public static AuthorityDataStat authorityDataStat(UUID userId, AuthorityDataStatAction action) {
+  public static AuthorityDataStat authorityDataStat(UUID userId, UUID sourceFileId, AuthorityDataStatAction action) {
     return AuthorityDataStat.builder()
       .id(randomUUID())
       .action(action)
@@ -158,7 +158,7 @@ public class TestDataUtils {
         .build())
       .authorityNaturalIdOld("naturalIdOld")
       .authorityNaturalIdNew("naturalIdNew")
-      .authoritySourceFileNew(UUID.randomUUID())
+      .authoritySourceFileNew(sourceFileId)
       .authoritySourceFileOld(UUID.randomUUID())
       .completedAt(Timestamp.from(Instant.now()))
       .headingNew("headingNew")

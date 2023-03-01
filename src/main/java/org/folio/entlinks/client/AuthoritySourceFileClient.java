@@ -14,7 +14,7 @@ public interface AuthoritySourceFileClient {
   @GetMapping(produces = APPLICATION_JSON_VALUE)
   AuthoritySourceFiles fetchAuthoritySourceFiles();
 
-  record AuthoritySourceFile(UUID id, String baseUrl) { }
+  record AuthoritySourceFile(UUID id, String baseUrl, String name) { }
 
   record AuthoritySourceFiles(List<AuthoritySourceFile> authoritySourceFiles) { }
 }
