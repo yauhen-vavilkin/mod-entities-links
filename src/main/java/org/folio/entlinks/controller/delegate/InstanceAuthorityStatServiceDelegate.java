@@ -77,24 +77,25 @@ public class InstanceAuthorityStatServiceDelegate {
   }
 
   private Metadata getMetadata(ResultList<UsersClient.User> userResultList, AuthorityDataStat source) {
-    if (userResultList == null) {
-      return null;
+    UUID startedByUserId = source.getStartedByUserId();
+    Metadata metadata = new Metadata();
+    metadata.setStartedByUserId(startedByUserId);
+    metadata.setStartedAt(DateUtils.fromTimestamp(source.getStartedAt()));
+    metadata.setCompletedAt(DateUtils.fromTimestamp(source.getCompletedAt()));
+    if (userResultList == null || userResultList.getResult() == null) {
+      return metadata;
     }
 
     var user = userResultList.getResult()
       .stream()
-      .filter(u -> UUID.fromString(u.id()).equals(source.getStartedByUserId()))
+      .filter(u -> UUID.fromString(u.id()).equals(startedByUserId))
       .findFirst().orElse(null);
     if (user == null) {
-      return null;
+      return metadata;
     }
 
-    Metadata metadata = new Metadata();
     metadata.setStartedByUserFirstName(user.personal().firstName());
     metadata.setStartedByUserLastName(user.personal().lastName());
-    metadata.setStartedByUserId(UUID.fromString(user.id()));
-    metadata.setStartedAt(DateUtils.fromTimestamp(source.getStartedAt()));
-    metadata.setCompletedAt(DateUtils.fromTimestamp(source.getCompletedAt()));
     return metadata;
   }
 
