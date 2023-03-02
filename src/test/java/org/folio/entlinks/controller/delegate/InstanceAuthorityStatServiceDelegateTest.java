@@ -26,6 +26,7 @@ import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.spring.test.type.UnitTest;
 import org.folio.spring.tools.client.UsersClient;
+import org.folio.spring.tools.model.ResultList;
 import org.folio.support.TestDataUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -123,6 +124,47 @@ class InstanceAuthorityStatServiceDelegateTest {
       .toList();
     assertNull(authorityChangeStatDtoCollection.getNext());
     assertThat(List.of(USER_ID_1, USER_ID_2)).containsAll(resultUserIds);
+  }
+
+  @Test
+  void fetchStats_whenUpdatedUserIsNull() {
+    //  GIVEN
+    AuthoritySourceFile sourceFile = new AuthoritySourceFile(SOURCE_FILE_ID, BASE_URL, SOURCE_FILE_NAME);
+    Map<UUID, AuthoritySourceFile> expectedMap = new HashMap<>();
+    expectedMap.put(sourceFile.id(), sourceFile);
+
+    //  WHEN
+    when(sourceFilesService.fetchAuthoritySources()).thenReturn(expectedMap);
+    when(usersClient.query(anyString())).thenReturn(ResultList.of(0, null));
+    var authorityChangeStatDtoCollection = delegate
+      .fetchAuthorityLinksStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION_DTO, LIMIT_SIZE);
+
+    //  THEN
+    assertNotNull(authorityChangeStatDtoCollection);
+    assertNotNull(authorityChangeStatDtoCollection.getStats());
+    assertEquals(LIMIT_SIZE, authorityChangeStatDtoCollection.getStats().size());
+    var resultStatDtos = authorityChangeStatDtoCollection.getStats();
+    for (AuthorityDataStatDto statDto : resultStatDtos) {
+      assertNotNull(statDto.getAction());
+      assertNotNull(statDto.getAuthorityId());
+      assertNotNull(statDto.getHeadingNew());
+      assertNotNull(statDto.getHeadingOld());
+      assertNotNull(statDto.getHeadingTypeNew());
+      assertNotNull(statDto.getHeadingTypeOld());
+      assertNotNull(statDto.getLbFailed());
+      assertNotNull(statDto.getLbTotal());
+      assertNotNull(statDto.getLbUpdated());
+      assertNotNull(statDto.getMetadata());
+      assertNotNull(statDto.getMetadata().getStartedByUserId());
+      assertNull(statDto.getMetadata().getStartedByUserFirstName());
+      assertNull(statDto.getMetadata().getStartedByUserLastName());
+      assertNotNull(statDto.getMetadata().getStartedAt());
+      assertNotNull(statDto.getMetadata().getCompletedAt());
+      assertNotNull(statDto.getNaturalIdNew());
+      assertNotNull(statDto.getNaturalIdOld());
+      assertNotNull(sourceFile.name());
+      assertNotNull(statDto.getSourceFileOld());
+    }
   }
 
   @Test
