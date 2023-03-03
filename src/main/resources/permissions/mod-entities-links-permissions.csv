@@ -35,3 +35,4 @@ inventory-storage.statistical-codes.collection.get
 mapping-metadata.get
 mapping-rules.get
 source-storage.sourceRecords.get
+users.collection.get
