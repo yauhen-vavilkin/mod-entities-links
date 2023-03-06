@@ -1,16 +1,16 @@
 package org.folio.entlinks.controller.delegate;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.entlinks.client.AuthoritySourceFileClient;
 import org.folio.entlinks.controller.converter.AuthorityDataStatMapper;
 import org.folio.entlinks.domain.dto.AuthorityChangeStatDtoCollection;
 import org.folio.entlinks.domain.dto.AuthorityDataStatActionDto;
@@ -28,9 +28,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class InstanceAuthorityStatServiceDelegate {
 
+  private static final String NOT_SPECIFIED_SOURCE_FILE = "Not specified";
   private final AuthorityDataStatService dataStatService;
   private final AuthoritySourceFilesService sourceFilesService;
-
   private final AuthorityDataStatMapper dataStatMapper;
   private final UsersClient usersClient;
 
@@ -44,9 +44,6 @@ public class InstanceAuthorityStatServiceDelegate {
       last.ifPresent(dataStatList::remove);
     }
 
-    Map<UUID, AuthoritySourceFileClient.AuthoritySourceFile> sourceFilesMap =
-      sourceFilesService.fetchAuthoritySources();
-
     String query = getUsersQueryString(dataStatList);
     ResultList<UsersClient.User> userResultList =
       query.isEmpty() ? ResultList.of(0, Collections.emptyList()) : usersClient.query(query);
@@ -55,17 +52,13 @@ public class InstanceAuthorityStatServiceDelegate {
         Metadata metadata = getMetadata(userResultList, source);
         var authorityDataStatDto = dataStatMapper.convertToDto(source);
 
-        if (authorityDataStatDto != null && authorityDataStatDto.getSourceFileNew() != null) {
-          var sourceFile = sourceFilesMap.get(UUID.fromString(authorityDataStatDto.getSourceFileNew()));
-          if (sourceFile != null) {
-            authorityDataStatDto.setSourceFileNew(sourceFile.name());
-          } else {
-            // keep original value authSourceFileId
-            log.warn("AuthoritySourceFile not found by [sourceFileId={}]", authorityDataStatDto.getSourceFileNew());
-          }
+        if (authorityDataStatDto != null) {
+          var sourceFileIdOld = authorityDataStatDto.getSourceFileOld();
+          var sourceFileIdNew = authorityDataStatDto.getSourceFileNew();
+          authorityDataStatDto.setSourceFileOld(getSourceFileName(sourceFileIdOld));
+          authorityDataStatDto.setSourceFileNew(getSourceFileName(sourceFileIdNew));
+          authorityDataStatDto.setMetadata(metadata);
         }
-
-        authorityDataStatDto.setMetadata(metadata);
         return authorityDataStatDto;
       })
       .toList();
@@ -107,5 +100,15 @@ public class InstanceAuthorityStatServiceDelegate {
       .distinct()
       .collect(Collectors.joining(" or "));
     return userIds.isEmpty() ? "" : "id=(" + userIds + ")";
+  }
+
+  private String getSourceFileName(String uuid) {
+    if (isNotBlank(uuid)) {
+      var sourceFile = sourceFilesService.fetchAuthoritySources().get(UUID.fromString(uuid));
+      if (sourceFile != null) {
+        return sourceFile.name();
+      }
+    }
+    return NOT_SPECIFIED_SOURCE_FILE;
   }
 }
