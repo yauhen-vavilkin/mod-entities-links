@@ -1,9 +1,9 @@
 package org.folio.entlinks.controller;
 
 import static java.util.Collections.singletonList;
-import static org.folio.support.TestUtils.linksDto;
-import static org.folio.support.TestUtils.linksDtoCollection;
-import static org.folio.support.TestUtils.stats;
+import static org.folio.support.TestDataUtils.linksDto;
+import static org.folio.support.TestDataUtils.linksDtoCollection;
+import static org.folio.support.TestDataUtils.stats;
 import static org.folio.support.base.TestConstants.linksInstanceEndpoint;
 import static org.folio.support.base.TestConstants.linksStatsInstanceEndpoint;
 import static org.hamcrest.Matchers.contains;
@@ -33,7 +33,8 @@ import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.exception.type.ErrorCode;
 import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
-import org.folio.support.TestUtils;
+import org.folio.support.DatabaseHelper;
+import org.folio.support.TestDataUtils;
 import org.folio.support.base.IntegrationTestBase;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -43,7 +44,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @IntegrationTest
-@DatabaseCleanup(tables = "instance_authority_link")
+@DatabaseCleanup(tables = DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE)
 class LinksStatisticsInstanceIT extends IntegrationTestBase {
 
   private static final List<UUID> INSTANCE_IDS = List.of(
@@ -64,7 +65,7 @@ class LinksStatisticsInstanceIT extends IntegrationTestBase {
   void getLinkedBibUpdateStats_positive_noStatsFoundForStatus() throws Exception {
     var instanceId = INSTANCE_IDS.get(0);
     var links = linksDtoCollection(linksDto(instanceId,
-      TestUtils.Link.of(0, 0), TestUtils.Link.of(1, 1)));
+      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
     doPut(linksInstanceEndpoint(), links, instanceId);
 
     var toDate = OffsetDateTime.now();
@@ -78,7 +79,7 @@ class LinksStatisticsInstanceIT extends IntegrationTestBase {
   void getLinkedBibUpdateStats_positive() throws Exception {
     var instanceId = INSTANCE_IDS.get(0);
     var links = linksDtoCollection(linksDto(instanceId,
-      TestUtils.Link.of(0, 0), TestUtils.Link.of(1, 1)));
+      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
     doPut(linksInstanceEndpoint(), links, instanceId);
 
     var stats = stats(links.getLinks(), null, null, INSTANCE_TITLES.get(0));
@@ -93,7 +94,7 @@ class LinksStatisticsInstanceIT extends IntegrationTestBase {
   void getLinkedBibUpdateStats_positive_noParams() throws Exception {
     var instanceId = INSTANCE_IDS.get(0);
     var links = linksDtoCollection(linksDto(instanceId,
-      TestUtils.Link.of(0, 0), TestUtils.Link.of(1, 1)));
+      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
     doPut(linksInstanceEndpoint(), links, instanceId);
 
     var stats = stats(links.getLinks(), null, null, INSTANCE_TITLES.get(0));
@@ -109,9 +110,9 @@ class LinksStatisticsInstanceIT extends IntegrationTestBase {
     var instanceId1 = INSTANCE_IDS.get(0);
     var instanceId2 = INSTANCE_IDS.get(1);
     var links1 = linksDtoCollection(linksDto(instanceId1,
-      TestUtils.Link.of(0, 0), TestUtils.Link.of(1, 1)));
+      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
     var links2 = linksDtoCollection(linksDto(instanceId2,
-      TestUtils.Link.of(0, 0), TestUtils.Link.of(1, 1)));
+      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
     doPut(linksInstanceEndpoint(), links1, instanceId1);
     doPut(linksInstanceEndpoint(), links2, instanceId2);
 
@@ -131,7 +132,7 @@ class LinksStatisticsInstanceIT extends IntegrationTestBase {
   void getLinkedBibUpdateStats_positive_withSkippedAndNext() throws Exception {
     var instanceId1 = INSTANCE_IDS.get(0);
     var links1 = linksDtoCollection(linksDto(instanceId1,
-      TestUtils.Link.of(0, 0), TestUtils.Link.of(1, 1)));
+      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
     doPut(linksInstanceEndpoint(), links1, instanceId1);
 
     final var fromDate = OffsetDateTime.now();
@@ -139,14 +140,14 @@ class LinksStatisticsInstanceIT extends IntegrationTestBase {
 
     var instanceId2 = INSTANCE_IDS.get(1);
     var links2 = linksDtoCollection(linksDto(instanceId2,
-      TestUtils.Link.of(0, 0), TestUtils.Link.of(1, 1)));
+      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
     doPut(linksInstanceEndpoint(), links2, instanceId2);
 
     ThreadUtils.sleep(Duration.ofSeconds(1));
 
     var instanceId3 = INSTANCE_IDS.get(2);
     var links3 = linksDtoCollection(linksDto(instanceId3,
-      TestUtils.Link.of(0, 0), TestUtils.Link.of(1, 1)));
+      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
     doPut(linksInstanceEndpoint(), links3, instanceId3);
     var toDate = OffsetDateTime.now();
 
@@ -172,7 +173,7 @@ class LinksStatisticsInstanceIT extends IntegrationTestBase {
   void getLinkedBibUpdateStats_positive_onlyOneDateAndLinksSkipped() throws Exception {
     var instanceId1 = INSTANCE_IDS.get(0);
     var links1 = linksDtoCollection(linksDto(instanceId1,
-      TestUtils.Link.of(0, 0), TestUtils.Link.of(1, 1)));
+      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
     doPut(linksInstanceEndpoint(), links1, instanceId1);
 
     ThreadUtils.sleep(Duration.ofSeconds(1));
@@ -180,7 +181,7 @@ class LinksStatisticsInstanceIT extends IntegrationTestBase {
     var fromDate = OffsetDateTime.now();
     var instanceId2 = INSTANCE_IDS.get(1);
     var links2 = linksDtoCollection(linksDto(instanceId2,
-      TestUtils.Link.of(0, 0), TestUtils.Link.of(1, 1)));
+      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
     doPut(linksInstanceEndpoint(), links2, instanceId2);
 
     var stats = stats(links2.getLinks(), null, OffsetDateTime.now(), INSTANCE_TITLES.get(1));
@@ -211,10 +212,7 @@ class LinksStatisticsInstanceIT extends IntegrationTestBase {
 
   private MockHttpServletRequestBuilder getStatsRequest(LinkStatus status,
                                                         OffsetDateTime fromDate, OffsetDateTime toDate) {
-    return get(linksStatsInstanceEndpoint())
-      .param("fromDate", fromDate.toString())
-      .param("toDate", toDate.toString())
-      .param("status", status.getValue());
+    return get(linksStatsInstanceEndpoint(status, fromDate, toDate));
   }
 
   private ResultMatcher nextMatch(OffsetDateTime next) {

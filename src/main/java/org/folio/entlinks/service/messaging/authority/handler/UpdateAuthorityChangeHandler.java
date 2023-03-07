@@ -185,8 +185,10 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   private SubfieldChange getSubfield0Value(String naturalId, UUID sourceFileId) {
     String subfield0Value = "";
     if (sourceFileId != null) {
-      var baseUrl = sourceFilesService.fetchAuthoritySourceUrls().get(sourceFileId);
-      subfield0Value = StringUtils.appendIfMissing(baseUrl, "/");
+      var sourceFile = sourceFilesService.fetchAuthoritySources().get(sourceFileId);
+      if (sourceFile != null) {
+        subfield0Value = StringUtils.appendIfMissing(sourceFile.baseUrl(), "/");
+      }
     }
     return new SubfieldChange().code("0").value(subfield0Value + naturalId);
   }

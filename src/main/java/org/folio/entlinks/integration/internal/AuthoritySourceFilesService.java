@@ -25,7 +25,7 @@ public class AuthoritySourceFilesService {
   @Cacheable(cacheNames = AUTHORITY_SOURCE_FILES_CACHE,
              key = "@folioExecutionContext.tenantId",
              unless = "#result.isEmpty()")
-  public Map<UUID, String> fetchAuthoritySourceUrls() throws FolioIntegrationException {
+  public Map<UUID, AuthoritySourceFile> fetchAuthoritySources() throws FolioIntegrationException {
     log.info("Fetching authority source files");
     var authoritySourceFiles = fetchAuthoritySourceFiles();
     if (authoritySourceFiles.isEmpty()) {
@@ -34,7 +34,7 @@ public class AuthoritySourceFilesService {
 
     return authoritySourceFiles.stream()
       .filter(file -> nonNull(file.id()) && nonNull(file.baseUrl()))
-      .collect(Collectors.toMap(AuthoritySourceFile::id, AuthoritySourceFile::baseUrl));
+      .collect(Collectors.toMap(AuthoritySourceFile::id, file -> file));
   }
 
   private List<AuthoritySourceFile> fetchAuthoritySourceFiles() {

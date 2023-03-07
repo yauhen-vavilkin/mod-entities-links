@@ -26,7 +26,7 @@ import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolder;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
 import org.folio.spring.test.type.UnitTest;
-import org.folio.support.TestUtils;
+import org.folio.support.TestDataUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -66,9 +66,9 @@ class DeleteAuthorityChangeHandlerTest {
     var instanceId1 = UUID.randomUUID();
     var instanceId2 = UUID.randomUUID();
     var instanceId3 = UUID.randomUUID();
-    var link1 = TestUtils.Link.of(1, 1);
-    var link2 = TestUtils.Link.of(0, 2);
-    var link3 = TestUtils.Link.of(2, 1);
+    var link1 = TestDataUtils.Link.of(1, 1);
+    var link2 = TestDataUtils.Link.of(0, 2);
+    var link3 = TestDataUtils.Link.of(2, 1);
 
     doNothing().when(linkingService).deleteByAuthorityIdIn(anySet());
     when(properties.getNumPartitions()).thenReturn(1);
@@ -109,7 +109,7 @@ class DeleteAuthorityChangeHandlerTest {
     assertThat(actual).isEmpty();
   }
 
-  private ChangeTarget changeTarget(UUID instanceId, TestUtils.Link link) {
+  private ChangeTarget changeTarget(UUID instanceId, TestDataUtils.Link link) {
     return new ChangeTarget().field(link.tag()).links(
       Collections.singletonList(new ChangeTargetLink().instanceId(instanceId)));
   }

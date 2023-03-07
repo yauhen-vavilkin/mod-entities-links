@@ -1,32 +1,41 @@
 package org.folio.entlinks.controller.delegate;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.controller.converter.AuthorityDataStatMapper;
 import org.folio.entlinks.domain.dto.AuthorityChangeStatDtoCollection;
 import org.folio.entlinks.domain.dto.AuthorityDataStatActionDto;
 import org.folio.entlinks.domain.dto.Metadata;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
+import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.utils.DateUtils;
 import org.folio.spring.tools.client.UsersClient;
 import org.folio.spring.tools.model.ResultList;
 import org.springframework.stereotype.Component;
 
+@Log4j2
 @Component
 @RequiredArgsConstructor
 public class InstanceAuthorityStatServiceDelegate {
 
+  private static final String NOT_SPECIFIED_SOURCE_FILE = "Not specified";
   private final AuthorityDataStatService dataStatService;
+  private final AuthoritySourceFilesService sourceFilesService;
   private final AuthorityDataStatMapper dataStatMapper;
   private final UsersClient usersClient;
 
   public AuthorityChangeStatDtoCollection fetchAuthorityLinksStats(OffsetDateTime fromDate, OffsetDateTime toDate,
-    AuthorityDataStatActionDto action, Integer limit) {
+                                                                   AuthorityDataStatActionDto action, Integer limit) {
     List<AuthorityDataStat> dataStatList = dataStatService.fetchDataStats(fromDate, toDate, action, limit + 1);
 
     Optional<AuthorityDataStat> last = Optional.empty();
@@ -37,12 +46,19 @@ public class InstanceAuthorityStatServiceDelegate {
 
     String query = getUsersQueryString(dataStatList);
     ResultList<UsersClient.User> userResultList =
-            query.isEmpty() ? ResultList.of(0, Collections.emptyList()) : usersClient.query(query);
+      query.isEmpty() ? ResultList.of(0, Collections.emptyList()) : usersClient.query(query);
     var stats = dataStatList.stream()
       .map(source -> {
         Metadata metadata = getMetadata(userResultList, source);
         var authorityDataStatDto = dataStatMapper.convertToDto(source);
-        authorityDataStatDto.setMetadata(metadata);
+
+        if (authorityDataStatDto != null) {
+          var sourceFileIdOld = authorityDataStatDto.getSourceFileOld();
+          var sourceFileIdNew = authorityDataStatDto.getSourceFileNew();
+          authorityDataStatDto.setSourceFileOld(getSourceFileName(sourceFileIdOld));
+          authorityDataStatDto.setSourceFileNew(getSourceFileName(sourceFileIdNew));
+          authorityDataStatDto.setMetadata(metadata);
+        }
         return authorityDataStatDto;
       })
       .toList();
@@ -53,39 +69,46 @@ public class InstanceAuthorityStatServiceDelegate {
         .orElse(null));
   }
 
-  private static Metadata getMetadata(ResultList<UsersClient.User> userResultList, AuthorityDataStat source) {
-    if (userResultList == null) {
-      return null;
+  private Metadata getMetadata(ResultList<UsersClient.User> userResultList, AuthorityDataStat source) {
+    UUID startedByUserId = source.getStartedByUserId();
+    Metadata metadata = new Metadata();
+    metadata.setStartedByUserId(startedByUserId);
+    metadata.setStartedAt(DateUtils.fromTimestamp(source.getStartedAt()));
+    metadata.setCompletedAt(DateUtils.fromTimestamp(source.getCompletedAt()));
+    if (userResultList == null || userResultList.getResult() == null) {
+      return metadata;
     }
 
     var user = userResultList.getResult()
       .stream()
-      .filter(u -> UUID.fromString(u.id()).equals(source.getStartedByUserId()))
+      .filter(u -> UUID.fromString(u.id()).equals(startedByUserId))
       .findFirst().orElse(null);
     if (user == null) {
-      return null;
+      return metadata;
     }
 
-    Metadata metadata = new Metadata();
     metadata.setStartedByUserFirstName(user.personal().firstName());
     metadata.setStartedByUserLastName(user.personal().lastName());
-    metadata.setStartedByUserId(UUID.fromString(user.id()));
-    metadata.setStartedAt(DateUtils.fromTimestamp(source.getStartedAt()));
-    metadata.setCompletedAt(DateUtils.fromTimestamp(source.getCompletedAt()));
     return metadata;
   }
 
-  private static String getUsersQueryString(List<AuthorityDataStat> dataStatList) {
-    List<UUID> userIds = dataStatList.stream().map(AuthorityDataStat::getStartedByUserId).toList();
-    if (userIds.isEmpty()) {
-      return "";
-    }
+  private String getUsersQueryString(List<AuthorityDataStat> dataStatList) {
+    var userIds = dataStatList.stream()
+      .map(AuthorityDataStat::getStartedByUserId)
+      .filter(Objects::nonNull)
+      .map(UUID::toString)
+      .distinct()
+      .collect(Collectors.joining(" or "));
+    return userIds.isEmpty() ? "" : "id=(" + userIds + ")";
+  }
 
-    var querySb = new StringBuilder();
-    querySb.append("id==").append(userIds.get(0));
-    for (int i = 1; i < userIds.size(); i++) {
-      querySb.append(" or id==").append(userIds.get(i));
+  private String getSourceFileName(String uuid) {
+    if (isNotBlank(uuid)) {
+      var sourceFile = sourceFilesService.fetchAuthoritySources().get(UUID.fromString(uuid));
+      if (sourceFile != null) {
+        return sourceFile.name();
+      }
     }
-    return querySb.toString();
+    return NOT_SPECIFIED_SOURCE_FILE;
   }
 }

@@ -1,4 +1,16 @@
-## 1.0.0-SNAPSHOT
+## 1.0.1
+### Bug fixes
+* Change system-user lastname to "Automated linking update" ([MODELINKS-52](https://issues.folio.org/browse/MODELINKS-52))
+* Return only authority stats that are related to actual authority ([MODELINKS-57](https://issues.folio.org/browse/MODELINKS-57))
+* Update authority linking rules for 600/610/611/630/650/651/655 ([MODELINKS-58](https://issues.folio.org/browse/MODELINKS-58))
+* Respond with authorSourceFile name instead od ID in statistics endpoint ([MODELINKS-59](https://issues.folio.org/browse/MODELINKS-59))
+* Respond with metadata even if user was deleted in statistics endpoint ([MODELINKS-64](https://issues.folio.org/browse/MODELINKS-64))
+* Respond with "Not specified" when source file name is empty in statistics endpoint ([MODELINKS-65](https://issues.folio.org/browse/MODELINKS-65))
+
+### Dependencies
+* Bump `folio-service-tools` from `3.0.0` to `3.0.2`
+
+## 1.0.0
 ### APIs versions
 * Provides `instance-authority-links v1.0`
 * Provides `instance-authority-links-statistics v1.0`

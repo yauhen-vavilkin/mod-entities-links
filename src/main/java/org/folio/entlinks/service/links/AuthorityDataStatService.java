@@ -55,11 +55,8 @@ public class AuthorityDataStatService {
   public List<AuthorityDataStat> fetchDataStats(OffsetDateTime fromDate, OffsetDateTime toDate,
                                                 AuthorityDataStatActionDto action, int limit) {
     Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc("startedAt")));
-    return statRepository.findByActionAndStartedAtGreaterThanEqualAndStartedAtLessThanEqual(
-      AuthorityDataStatAction.valueOf(action.getValue()),
-      DateUtils.toTimestamp(fromDate),
-      DateUtils.toTimestamp(toDate),
-      pageable);
+    return statRepository.findActualByActionAndDate(AuthorityDataStatAction.valueOf(action.getValue()),
+      DateUtils.toTimestamp(fromDate), DateUtils.toTimestamp(toDate), pageable);
   }
 
   @Transactional

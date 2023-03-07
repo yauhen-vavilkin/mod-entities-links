@@ -1,8 +1,8 @@
 package org.folio.entlinks.integration.kafka;
 
 import static java.util.Collections.singletonList;
-import static org.folio.support.TestUtils.mockBatchFailedHandling;
-import static org.folio.support.TestUtils.mockBatchSuccessHandling;
+import static org.folio.support.MockingTestUtils.mockBatchFailedHandling;
+import static org.folio.support.MockingTestUtils.mockBatchSuccessHandling;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -18,7 +18,7 @@ import org.folio.entlinks.service.messaging.authority.InstanceAuthorityLinkUpdat
 import org.folio.spring.test.type.UnitTest;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
 import org.folio.spring.tools.systemuser.SystemUserScopedExecutionService;
-import org.folio.support.TestUtils;
+import org.folio.support.TestDataUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,7 +59,7 @@ class AuthorityInventoryEventListenerTest {
     var authId = UUID.randomUUID();
     var newRecord = new AuthorityInventoryRecord().id(authId);
     var oldRecord = new AuthorityInventoryRecord().id(authId);
-    var event = TestUtils.authorityEvent(type, newRecord, oldRecord);
+    var event = TestDataUtils.authorityEvent(type, newRecord, oldRecord);
 
     mockBatchSuccessHandling(messageBatchProcessor);
     when(consumerRecord.key()).thenReturn(authId.toString());
@@ -78,7 +78,7 @@ class AuthorityInventoryEventListenerTest {
     var meta = new AuthorityInventoryRecordMetadata().updatedByUserId(updatedByUserId);
     var newRecord = new AuthorityInventoryRecord().id(authId).metadata(meta);
     var oldRecord = new AuthorityInventoryRecord().id(authId).metadata(meta.updatedByUserId(updatedByUserId));
-    var event = TestUtils.authorityEvent(type, newRecord, oldRecord);
+    var event = TestDataUtils.authorityEvent(type, newRecord, oldRecord);
 
     mockBatchSuccessHandling(messageBatchProcessor);
     when(consumerRecord.key()).thenReturn(authId.toString());
@@ -94,7 +94,7 @@ class AuthorityInventoryEventListenerTest {
     var authId = UUID.randomUUID();
     var newRecord = new AuthorityInventoryRecord().id(authId);
     var oldRecord = new AuthorityInventoryRecord().id(authId);
-    var event = TestUtils.authorityEvent("UPDATE", newRecord, oldRecord);
+    var event = TestDataUtils.authorityEvent("UPDATE", newRecord, oldRecord);
 
     mockBatchFailedHandling(messageBatchProcessor, new RuntimeException("test message"));
     when(consumerRecord.key()).thenReturn(authId.toString());

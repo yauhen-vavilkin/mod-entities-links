@@ -5,4 +5,5 @@
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
 
   <include file="/changes/v1.0/initial_schema.xml" relativeToChangelogFile="true"/>
+  <include file="/changes/v1.0/update_authority_control_mapping.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
