@@ -4,6 +4,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -32,7 +33,7 @@ class AuthoritySourceFilesServiceTest {
     var e2 = new AuthoritySourceFile(UUID.randomUUID(), "url2", "source-file-name-2");
     var sourceFiles = List.of(e1, e2);
 
-    when(client.fetchAuthoritySourceFiles()).thenReturn(new AuthoritySourceFiles(sourceFiles));
+    when(client.fetchAuthoritySourceFiles(anyInt())).thenReturn(new AuthoritySourceFiles(sourceFiles));
 
     var actual = service.fetchAuthoritySources();
 
@@ -50,7 +51,7 @@ class AuthoritySourceFilesServiceTest {
     var validSourceFiles = List.of(e1, e3);
     var sourceFiles = List.of(e1, e2, e3, e4);
 
-    when(client.fetchAuthoritySourceFiles()).thenReturn(new AuthoritySourceFiles(sourceFiles));
+    when(client.fetchAuthoritySourceFiles(anyInt())).thenReturn(new AuthoritySourceFiles(sourceFiles));
 
     var actual = service.fetchAuthoritySources();
 
@@ -61,7 +62,7 @@ class AuthoritySourceFilesServiceTest {
 
   @Test
   void fetchAuthoritySourceUrls_negative_emptyResponse() {
-    when(client.fetchAuthoritySourceFiles()).thenReturn(new AuthoritySourceFiles(emptyList()));
+    when(client.fetchAuthoritySourceFiles(anyInt())).thenReturn(new AuthoritySourceFiles(emptyList()));
 
     assertThatThrownBy(() -> service.fetchAuthoritySources())
       .isInstanceOf(FolioIntegrationException.class)
@@ -71,7 +72,7 @@ class AuthoritySourceFilesServiceTest {
   @Test
   void fetchAuthoritySourceUrls_negative_clientException() {
     var cause = new IllegalArgumentException("test message");
-    when(client.fetchAuthoritySourceFiles()).thenThrow(cause);
+    when(client.fetchAuthoritySourceFiles(anyInt())).thenThrow(cause);
 
     assertThatThrownBy(() -> service.fetchAuthoritySources())
       .isInstanceOf(FolioIntegrationException.class)
