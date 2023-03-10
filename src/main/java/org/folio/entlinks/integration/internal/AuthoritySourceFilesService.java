@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class AuthoritySourceFilesService {
-
+  private static final int SOURCE_FILES_LIMIT = 100;
   private final AuthoritySourceFileClient client;
 
   @Cacheable(cacheNames = AUTHORITY_SOURCE_FILES_CACHE,
@@ -39,7 +39,9 @@ public class AuthoritySourceFilesService {
 
   private List<AuthoritySourceFile> fetchAuthoritySourceFiles() {
     try {
-      return client.fetchAuthoritySourceFiles().authoritySourceFiles();
+      return client
+        .fetchAuthoritySourceFiles(SOURCE_FILES_LIMIT)
+        .authoritySourceFiles();
     } catch (Exception e) {
       throw new FolioIntegrationException("Failed to fetch authority source files", e);
     }

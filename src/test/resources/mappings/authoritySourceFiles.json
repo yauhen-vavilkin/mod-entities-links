@@ -3,7 +3,7 @@
     {
       "request": {
         "method": "GET",
-        "url": "/authority-source-files"
+        "url": "/authority-source-files?limit=100"
       },
       "response": {
         "status": 200,
