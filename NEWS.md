@@ -1,3 +1,7 @@
+## 1.0.2
+### Bug fixes
+* Retrieve first 100 authority source-files instead of only 10  ([MODELINKS-69](https://issues.folio.org/browse/MODELINKS-69))
+
 ## 1.0.1
 ### Bug fixes
 * Change system-user lastname to "Automated linking update" ([MODELINKS-52](https://issues.folio.org/browse/MODELINKS-52))
