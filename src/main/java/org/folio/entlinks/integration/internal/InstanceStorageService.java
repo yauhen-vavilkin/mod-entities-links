@@ -10,8 +10,8 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.client.InstanceStorageClient;
 import org.folio.entlinks.client.InstanceStorageClient.InventoryInstanceDto;
 import org.folio.entlinks.client.InstanceStorageClient.InventoryInstanceDtoCollection;
+import org.folio.entlinks.config.properties.InstanceStorageProperties;
 import org.folio.entlinks.exception.FolioIntegrationException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -21,16 +21,14 @@ public class InstanceStorageService {
 
   private static final String CQL_TEMPLATE = "id==(%s)";
   private static final String CQL_DELIMITER = " or ";
-
-  @Value("${folio.instance-storage.batch-size:100}")
-  private int instanceBatchSize;
-
+  private final InstanceStorageProperties instanceStorageProperties;
   private final InstanceStorageClient client;
 
   public Map<String, String> getInstanceTitles(List<String> instanceIds) {
-    log.info("Fetching instance titles [count: {}, with batch size: {}]", instanceIds.size(), instanceBatchSize);
+    int batchSize = instanceStorageProperties.getBatchSize();
+    log.info("Fetching instance titles [count: {}, with batch size: {}]", instanceIds.size(), batchSize);
     log.trace("Fetching instance titles for [instance ids: {}]", instanceIds);
-    return Lists.partition(instanceIds, instanceBatchSize).stream()
+    return Lists.partition(instanceIds, batchSize).stream()
       .map(ids -> fetchInstances(buildCql(ids), ids.size()).instances())
       .flatMap(Collection::stream)
       .collect(Collectors.toMap(InventoryInstanceDto::id, InventoryInstanceDto::title));

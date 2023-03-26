@@ -80,7 +80,7 @@ folio:
     change:
       numPartitions: ${KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS:100}
   instance-storage:
-    batch-size: ${INSTANCE_STORAGE_QUERY_BATCH_SIZE:100}
+    batch-size: ${INSTANCE_STORAGE_QUERY_BATCH_SIZE:50}
 
   retry:
     enabled: true

@@ -14,6 +14,7 @@ import java.util.UUID;
 import org.folio.entlinks.client.InstanceStorageClient;
 import org.folio.entlinks.client.InstanceStorageClient.InventoryInstanceDto;
 import org.folio.entlinks.client.InstanceStorageClient.InventoryInstanceDtoCollection;
+import org.folio.entlinks.config.properties.InstanceStorageProperties;
 import org.folio.entlinks.exception.FolioIntegrationException;
 import org.folio.spring.test.type.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,18 +23,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @UnitTest
 @ExtendWith(MockitoExtension.class)
 class InstanceStorageServiceTest {
 
   private @Mock InstanceStorageClient client;
+  private @Mock InstanceStorageProperties instanceStorageProperties;
   private @InjectMocks InstanceStorageService service;
 
   @BeforeEach
   public void setUp() {
-    ReflectionTestUtils.setField(service, "instanceBatchSize", 2);
+    when(instanceStorageProperties.getBatchSize()).thenReturn(2);
   }
 
   @Test
