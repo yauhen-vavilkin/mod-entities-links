@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.folio.entlinks.controller.converter.DataStatsMapper;
 import org.folio.entlinks.controller.converter.InstanceAuthorityLinkMapper;
-import org.folio.entlinks.controller.converter.LinkedBibUpdateStatsMapper;
 import org.folio.entlinks.domain.dto.BibStatsDtoCollection;
 import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
 import org.folio.entlinks.domain.dto.LinkStatus;
@@ -52,7 +52,7 @@ class LinkingServiceDelegateTest {
   private @Mock InstanceAuthorityLinkingService linkingService;
   private @Mock InstanceAuthorityLinkMapper mapper;
   private @Mock InstanceStorageService instanceService;
-  private @Mock LinkedBibUpdateStatsMapper statsMapper;
+  private @Mock DataStatsMapper statsMapper;
 
   private @InjectMocks LinkingServiceDelegate delegate;
 
@@ -138,7 +138,7 @@ class LinkingServiceDelegateTest {
     var limit = 2;
 
     var exception = Assertions.assertThrows(RequestBodyValidationException.class,
-      () -> delegate.getLinkedBibUpdateStats(status, fromDate, toDate, limit));
+      () -> delegate.getLinkedBibUpdateStats(fromDate, toDate, status, limit));
 
     assertThat(exception)
       .hasMessage("'to' date should be not less than 'from' date.")
@@ -230,25 +230,25 @@ class LinkingServiceDelegateTest {
     var fromDate = OffsetDateTime.now();
     var toDate = fromDate.plus(1, ChronoUnit.DAYS);
     var limit = 2;
-    var stats = stats(linksForStats);
+    var expectedStats = stats(linksForStats);
 
     when(linkingService.getLinks(status, fromDate, toDate, limit + 1))
       .thenReturn(linksMock);
     when(statsMapper.convertToDto(linksForStats))
-      .thenReturn(stats);
+      .thenReturn(expectedStats);
     when(instanceService.getInstanceTitles(instanceIds))
       .thenReturn(instanceTitles);
 
-    stats.forEach(bibStatsDto -> {
+    expectedStats.forEach(bibStatsDto -> {
       var instanceId = bibStatsDto.getInstanceId();
       bibStatsDto.setInstanceTitle(instanceTitles.get(instanceId.toString()));
     });
 
-    var actual = delegate.getLinkedBibUpdateStats(status, fromDate, toDate, limit);
+    var actual = delegate.getLinkedBibUpdateStats(fromDate, toDate, status, limit);
 
     assertThat(actual)
       .isEqualTo(new BibStatsDtoCollection()
-        .stats(stats)
+        .stats(expectedStats)
         .next(next));
   }
 }

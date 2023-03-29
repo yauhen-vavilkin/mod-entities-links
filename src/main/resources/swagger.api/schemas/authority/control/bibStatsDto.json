@@ -5,8 +5,6 @@
   "properties": {
     "instanceId": {
       "description": "Linked instance id, UUID",
-      "$schema": "http://json-schema.org/draft-04/schema#",
-      "id": "uuid.schema",
       "type": "string",
       "format": "uuid"
     },

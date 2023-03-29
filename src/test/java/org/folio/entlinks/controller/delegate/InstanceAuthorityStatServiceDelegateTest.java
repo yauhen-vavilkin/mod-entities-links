@@ -17,9 +17,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import org.folio.entlinks.client.AuthoritySourceFileClient.AuthoritySourceFile;
-import org.folio.entlinks.controller.converter.AuthorityDataStatMapper;
-import org.folio.entlinks.domain.dto.AuthorityDataStatActionDto;
-import org.folio.entlinks.domain.dto.AuthorityDataStatDto;
+import org.folio.entlinks.controller.converter.DataStatsMapper;
+import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
+import org.folio.entlinks.domain.dto.AuthorityStatsDto;
+import org.folio.entlinks.domain.dto.LinkAction;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
@@ -47,12 +48,12 @@ class InstanceAuthorityStatServiceDelegateTest {
   private static final LocalDateTime NOW = LocalDateTime.now();
   private static final OffsetDateTime FROM_DATE = OffsetDateTime.of(NOW.with(LocalTime.MIN), ZoneOffset.UTC);
   private static final OffsetDateTime TO_DATE = OffsetDateTime.of(NOW.with(LocalTime.MAX), ZoneOffset.UTC);
-  private static final AuthorityDataStatActionDto DATA_STAT_ACTION_DTO = AuthorityDataStatActionDto.UPDATE_HEADING;
+  private static final LinkAction DATA_STAT_ACTION = LinkAction.UPDATE_HEADING;
   private static final int LIMIT_SIZE = 2;
 
   private @Mock AuthorityDataStatService statService;
   private @Mock AuthoritySourceFilesService sourceFilesService;
-  private @Mock AuthorityDataStatMapper mapper;
+  private @Mock DataStatsMapper mapper;
   private @Mock UsersClient usersClient;
   private @InjectMocks InstanceAuthorityStatServiceDelegate delegate;
 
@@ -66,7 +67,7 @@ class InstanceAuthorityStatServiceDelegateTest {
     );
     var users = TestDataUtils.usersList(List.of(USER_ID_1, USER_ID_2));
 
-    when(statService.fetchDataStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION_DTO, 3)).thenReturn(statData);
+    when(statService.fetchDataStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION, 3)).thenReturn(statData);
     when(usersClient.query(anyString())).thenReturn(users);
 
     AuthorityDataStat authorityDataStat1 = statData.get(0);
@@ -88,14 +89,14 @@ class InstanceAuthorityStatServiceDelegateTest {
     //  WHEN
     when(sourceFilesService.fetchAuthoritySources()).thenReturn(expectedMap);
     var authorityChangeStatDtoCollection = delegate
-      .fetchAuthorityLinksStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION_DTO, LIMIT_SIZE);
+      .fetchAuthorityLinksStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION, LIMIT_SIZE);
 
     //  THEN
     assertNotNull(authorityChangeStatDtoCollection);
     assertNotNull(authorityChangeStatDtoCollection.getStats());
     assertEquals(LIMIT_SIZE, authorityChangeStatDtoCollection.getStats().size());
     var resultStatDtos = authorityChangeStatDtoCollection.getStats();
-    for (AuthorityDataStatDto statDto : resultStatDtos) {
+    for (AuthorityStatsDto statDto : resultStatDtos) {
       assertNotNull(statDto.getAction());
       assertNotNull(statDto.getAuthorityId());
       assertNotNull(statDto.getHeadingNew());
@@ -119,8 +120,8 @@ class InstanceAuthorityStatServiceDelegateTest {
 
     var resultUserIds = authorityChangeStatDtoCollection.getStats()
       .stream()
-      .map(org.folio.entlinks.domain.dto.AuthorityDataStatDto::getMetadata)
-      .map(org.folio.entlinks.domain.dto.Metadata::getStartedByUserId)
+      .map(AuthorityStatsDto::getMetadata)
+      .map(AuthorityControlMetadata::getStartedByUserId)
       .toList();
     assertNull(authorityChangeStatDtoCollection.getNext());
     assertThat(List.of(USER_ID_1, USER_ID_2)).containsAll(resultUserIds);
@@ -137,14 +138,14 @@ class InstanceAuthorityStatServiceDelegateTest {
     when(sourceFilesService.fetchAuthoritySources()).thenReturn(expectedMap);
     when(usersClient.query(anyString())).thenReturn(ResultList.of(0, null));
     var authorityChangeStatDtoCollection = delegate
-      .fetchAuthorityLinksStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION_DTO, LIMIT_SIZE);
+      .fetchAuthorityLinksStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION, LIMIT_SIZE);
 
     //  THEN
     assertNotNull(authorityChangeStatDtoCollection);
     assertNotNull(authorityChangeStatDtoCollection.getStats());
     assertEquals(LIMIT_SIZE, authorityChangeStatDtoCollection.getStats().size());
     var resultStatDtos = authorityChangeStatDtoCollection.getStats();
-    for (AuthorityDataStatDto statDto : resultStatDtos) {
+    for (AuthorityStatsDto statDto  : resultStatDtos) {
       assertNotNull(statDto.getAction());
       assertNotNull(statDto.getAuthorityId());
       assertNotNull(statDto.getHeadingNew());
@@ -175,7 +176,7 @@ class InstanceAuthorityStatServiceDelegateTest {
     //  WHEN
     when(sourceFilesService.fetchAuthoritySources()).thenReturn(expectedMap);
     var authorityChangeStatDtoCollection = delegate
-      .fetchAuthorityLinksStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION_DTO, LIMIT_SIZE);
+      .fetchAuthorityLinksStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION, LIMIT_SIZE);
 
     //  THEN
     assertNotNull(authorityChangeStatDtoCollection);
@@ -184,8 +185,8 @@ class InstanceAuthorityStatServiceDelegateTest {
 
     var resultUserIds = authorityChangeStatDtoCollection.getStats()
       .stream()
-      .map(org.folio.entlinks.domain.dto.AuthorityDataStatDto::getMetadata)
-      .map(org.folio.entlinks.domain.dto.Metadata::getStartedByUserId)
+      .map(AuthorityStatsDto::getMetadata)
+      .map(AuthorityControlMetadata::getStartedByUserId)
       .toList();
     assertNull(authorityChangeStatDtoCollection.getNext());
     assertThat(List.of(USER_ID_1, USER_ID_2)).containsAll(resultUserIds);
@@ -197,7 +198,7 @@ class InstanceAuthorityStatServiceDelegateTest {
     //  WHEN
     when(usersClient.query(anyString())).thenReturn(null);
     var authorityChangeStatDtoCollection = delegate
-      .fetchAuthorityLinksStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION_DTO, LIMIT_SIZE);
+      .fetchAuthorityLinksStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION, LIMIT_SIZE);
 
     //  THEN
     assertNotNull(authorityChangeStatDtoCollection);
@@ -206,9 +207,9 @@ class InstanceAuthorityStatServiceDelegateTest {
 
     var resultUserIds = authorityChangeStatDtoCollection.getStats()
       .stream()
-      .map(org.folio.entlinks.domain.dto.AuthorityDataStatDto::getMetadata)
+      .map(AuthorityStatsDto::getMetadata)
       .filter(Objects::nonNull)
-      .map(org.folio.entlinks.domain.dto.Metadata::getStartedByUserId)
+      .map(AuthorityControlMetadata::getStartedByUserId)
       .toList();
 
     assertNull(authorityChangeStatDtoCollection.getNext());

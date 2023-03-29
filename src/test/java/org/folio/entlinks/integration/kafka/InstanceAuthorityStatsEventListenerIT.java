@@ -28,8 +28,8 @@ import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.ThreadUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.folio.entlinks.domain.dto.AuthorityDataStatActionDto;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
+import org.folio.entlinks.domain.dto.LinkAction;
 import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
@@ -139,7 +139,7 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
       .andExpect(jsonPath("$.stats[0].errorCause", is(failCause)));
 
     doGet(authorityStatsEndpoint(
-      AuthorityDataStatActionDto.UPDATE_HEADING, OffsetDateTime.now().minusDays(1), OffsetDateTime.now(), 1))
+      LinkAction.UPDATE_HEADING, OffsetDateTime.now().minusDays(1), OffsetDateTime.now(), 1))
       .andExpect(status().is2xxSuccessful())
       .andExpect(jsonPath("$.stats[0].lbFailed", is(1)))
       .andExpect(jsonPath("$.stats[0].lbFailed", is(1)))

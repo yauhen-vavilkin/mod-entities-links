@@ -1,0 +1,9 @@
+{
+  "type": "string",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Link status",
+  "enum": [
+    "ACTUAL",
+    "ERROR"
+  ]
+}

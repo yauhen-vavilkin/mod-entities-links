@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Describe changes to authority that are related to links",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Stat ID"
+    },
+    "authorityId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Authority ID"
+    },
+    "action": {
+      "type": "object",
+      "description": "Type of change",
+      "$ref": "linkAction.json"
+    },
+    "naturalIdOld": {
+      "type": "string",
+      "description": "Old natural ID"
+    },
+    "naturalIdNew": {
+      "type": "string",
+      "description": "New natural ID"
+    },
+    "headingOld": {
+      "type": "string",
+      "description": "Old heading"
+    },
+    "headingNew": {
+      "type": "string",
+      "description": "New heading"
+    },
+    "headingTypeOld": {
+      "type": "string",
+      "description": "Old heading type"
+    },
+    "headingTypeNew": {
+      "type": "string",
+      "description": "New heading type"
+    },
+    "sourceFileOld": {
+      "type": "string",
+      "description": "Old source file ID"
+    },
+    "sourceFileNew": {
+      "type": "string",
+      "description": "New source file ID"
+    },
+    "lbTotal": {
+      "type": "integer",
+      "description": "Amount of linked bib fields"
+    },
+    "lbUpdated": {
+      "type": "integer",
+      "description": "Amount of linked bib fields that was successfully updated during authority update"
+    },
+    "lbFailed": {
+      "type": "integer",
+      "description": "Amount of linked bib fields that was failed to update during authority update"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Statistics metadata",
+      "$ref": "authorityControlMetadata.json"
+    }
+  }
+}

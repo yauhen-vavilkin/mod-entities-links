@@ -25,13 +25,11 @@
       * [Examples](#examples-1)
         * [Retrieve instance to authority linking rules collection:](#retrieve-instance-to-authority-linking-rules-collection-)
     * [API instance-authority-links-statistics](#api-instance-authority-links-statistics)
-      * [Instance to Authority linking rule parameters](#instance-to-authority-linking-rule-parameters-1)
       * [Examples](#examples-2)
         * [Retrieve instance to authority links statistics collection:](#retrieve-instance-to-authority-links-statistics-collection-)
-    * [API linked-bib-update-statistics](#api-linked-bib-update-statistics)
-      * [Linked bib updates statistics parameters](#linked-bib-updates-statistics-parameters)
-      * [Examples](#examples-3)
+          * [Instance to Authority links statistics parameters](#instance-to-authority-links-statistics-parameters)
         * [Retrieve linked bib updates statistics collection:](#retrieve-linked-bib-updates-statistics-collection-)
+          * [Linked bib updates statistics parameters](#linked-bib-updates-statistics-parameters)
 <!-- TOC -->
 
 ## Compiling
@@ -154,6 +152,7 @@ reflected on them.
 <a name="retrieve-instance-links"></a>
 
 ##### Retrieve all links by the given instance id:
+
 `GET /links/instances/b2658a84-912b-4ed9-83d7-e8201f4d27ec`
 
 Response:
@@ -176,8 +175,11 @@ Response:
   "totalRecords": 1
 }
 ```
+
 <a name='modify-instance-links'></a>
+
 ##### Modify links by the given instance id:
+
 `PUT /links/instances/b2658a84-912b-4ed9-83d7-e8201f4d27ec`
 
 ```json
@@ -222,10 +224,10 @@ The API enables possibility to retrieve default linking rules.
 * `authoritySubfields` - Array of authority subfields that can be linked to instance subfields. Should match instance
   subfields (in exceptions use `subfieldModifications`)
 * `subfieldModifications` - Array of subfield modifications
-  * `source` - Authority subfield, which would be linked to `target`
-  * `target` - Instance subfield, which would be controlled by `source`
+    * `source` - Authority subfield, which would be linked to `target`
+    * `target` - Instance subfield, which would be controlled by `source`
 * `validation` - Linking rule validations that should be verified before linking
-  * `existence` - Map <char, boolean>. Validate if subfield have to exist or not
+    * `existence` - Map <char, boolean>. Validate if subfield have to exist or not
 
 #### Examples
 
@@ -275,113 +277,103 @@ Response:
 
 ### API instance-authority-links-statistics
 
-The API enables possibility to retrieve default linking rules.
+The API provides statistics for instance to authority links statistics
 
 | METHOD | URL                      | Required permissions                                           | DESCRIPTION                                                     |
 |:-------|:-------------------------|:---------------------------------------------------------------|:----------------------------------------------------------------|
-| GET    | `/links/authority/stats` | `instance-authority-links.authority-statistics.collection.get` | Get Instance to Authority links authority-statistics collection |
+| GET    | `/links/stats/authority` | `instance-authority-links.authority-statistics.collection.get` | Get Instance to Authority links authority-statistics collection |
+| GET    | `/links/stats/instance`  | `instance-authority-links.instance-statistics.collection.get`  | Get linked bib update statistics collection                     |
 
-#### Instance to Authority linking rule parameters
+#### Examples
+
+<a name="retrieve-instance-authority-links-statistics"></a>
+<a name="retrieve-linked-bib-update-statistics"></a>
+
+##### Retrieve instance to authority links statistics collection:
+
+`GET /links/stats/authority`
+
+###### Instance to Authority links statistics parameters
 
 * `fromDate` - Start date to seek from
 * `toDate` - End date to seek from
 * `action` - Action to filter by
 * `limit` - Max number of items in collection
 
-#### Examples
-
-<a name="retrieve-instance-authority-links-statistics"></a>
-
-##### Retrieve instance to authority links statistics collection:
-
-`GET /links/authority/stats`
-
 Response:
 
 ```json
 [
-  { 
-    "next" : "2000-01-23T04:56:07.000+00:00",
-    "stats" : [
-      { 
-        "lbTotal" : 0,
-        "metadata" : {
-          "completedAt" : "2000-01-23T04:56:07.000+00:00",
-          "startedByUserFirstName" : "startedByUserFirstName",
-          "startedByUserId" : "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
-          "startedAt" : "2000-01-23T04:56:07.000+00:00",
-          "startedByUserLastName" : "startedByUserLastName"
+  {
+    "next": "2000-01-23T04:56:07.000+00:00",
+    "stats": [
+      {
+        "lbTotal": 0,
+        "metadata": {
+          "completedAt": "2000-01-23T04:56:07.000+00:00",
+          "startedByUserFirstName": "startedByUserFirstName",
+          "startedByUserId": "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+          "startedAt": "2000-01-23T04:56:07.000+00:00",
+          "startedByUserLastName": "startedByUserLastName"
         },
-        "headingOld" : "headingOld",
-        "sourceFileNew" : "sourceFileNew",
-        "naturalIdOld" : "naturalIdOld",
-        "lbFailed" : 1,
-        "authorityId" : "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
-        "headingTypeNew" : "headingTypeNew",
-        "lbUpdated" : 6,
-        "naturalIdNew" : "naturalIdNew",
-        "id" : "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
-        "headingTypeOld" : "headingTypeOld",
-        "sourceFileOld" : "sourceFileOld",
-        "headingNew" : "headingNew"
+        "headingOld": "headingOld",
+        "sourceFileNew": "sourceFileNew",
+        "naturalIdOld": "naturalIdOld",
+        "lbFailed": 1,
+        "authorityId": "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+        "headingTypeNew": "headingTypeNew",
+        "lbUpdated": 6,
+        "naturalIdNew": "naturalIdNew",
+        "id": "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+        "headingTypeOld": "headingTypeOld",
+        "sourceFileOld": "sourceFileOld",
+        "headingNew": "headingNew"
       },
       {
-        "lbTotal" : 0,
-        "metadata" : {
-          "completedAt" : "2000-01-23T04:56:07.000+00:00",
-          "startedByUserFirstName" : "startedByUserFirstName",
-          "startedByUserId" : "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
-          "startedAt" : "2000-01-23T04:56:07.000+00:00",
-          "startedByUserLastName" : "startedByUserLastName"
+        "lbTotal": 0,
+        "metadata": {
+          "completedAt": "2000-01-23T04:56:07.000+00:00",
+          "startedByUserFirstName": "startedByUserFirstName",
+          "startedByUserId": "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+          "startedAt": "2000-01-23T04:56:07.000+00:00",
+          "startedByUserLastName": "startedByUserLastName"
         },
-        "headingOld" : "headingOld",
-        "sourceFileNew" : "sourceFileNew",
-        "naturalIdOld" : "naturalIdOld",
-        "lbFailed" : 1,
-        "authorityId" : "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
-        "headingTypeNew" : "headingTypeNew",
-        "lbUpdated" : 6,
-        "naturalIdNew" : "naturalIdNew",
-        "id" : "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
-        "headingTypeOld" : "headingTypeOld",
-        "sourceFileOld" : "sourceFileOld",
-        "headingNew" : "headingNew"
+        "headingOld": "headingOld",
+        "sourceFileNew": "sourceFileNew",
+        "naturalIdOld": "naturalIdOld",
+        "lbFailed": 1,
+        "authorityId": "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+        "headingTypeNew": "headingTypeNew",
+        "lbUpdated": 6,
+        "naturalIdNew": "naturalIdNew",
+        "id": "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
+        "headingTypeOld": "headingTypeOld",
+        "sourceFileOld": "sourceFileOld",
+        "headingNew": "headingNew"
       }
     ]
   }
 ]
 ```
 
-### API linked-bib-update-statistics
+##### Retrieve linked bib updates statistics collection:
 
-The API provides statistics for linked bib updates.
+`GET /links/stats/instance`
 
-| METHOD | URL                     | Required permissions                                          | DESCRIPTION                                           |
-|:-------|:------------------------|:--------------------------------------------------------------|:------------------------------------------------------|
-| GET    | `/links/stats/instance` | `instance-authority-links.instance-statistics.collection.get` | Get linked bib update statistics collection           |
-
-#### Linked bib updates statistics parameters
+###### Linked bib updates statistics parameters
 
 * `fromDate` - Start date to seek from
 * `toDate` - End date to seek to
 * `status` - Link status to filter by
 * `limit` - Max number of items in collection
 
-#### Examples
-
-<a name="retrieve-linked-bib-update-statistics"></a>
-
-##### Retrieve linked bib updates statistics collection:
-
-`GET /links/stats/instance`
-
 Response:
 
 ```json
 [
-  { 
-    "next" : "2000-01-23T04:56:07.000+00:00",
-    "stats" : [
+  {
+    "next": "2000-01-23T04:56:07.000+00:00",
+    "stats": [
       {
         "instanceId": "046b6c7f-0b8a-43b9-b35d-6489e6daee91",
         "instanceTitle": "Some title",

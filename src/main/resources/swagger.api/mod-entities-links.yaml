@@ -28,7 +28,7 @@ paths:
               $ref: "#/components/schemas/instanceLinkDtoCollection"
         required: true
       responses:
-        "202":
+        '202':
           description: The links were updated
         '400':
           $ref: '#/components/responses/badRequestResponse'
@@ -49,7 +49,7 @@ paths:
           schema:
             $ref: "#/components/schemas/uuid"
       responses:
-        "200":
+        '200':
           description: The links collection related to Instance
           content:
             application/json:
@@ -73,7 +73,7 @@ paths:
               $ref: "#/components/schemas/uuidCollection"
         required: true
       responses:
-        "200":
+        '200':
           description: The links collection related to Instance
           content:
             application/json:
@@ -91,7 +91,7 @@ paths:
       tags:
         - linking-rules
       responses:
-        "200":
+        '200':
           description: The authority linking rules collection
           content:
             application/json:
@@ -106,7 +106,7 @@ paths:
         '500':
           $ref: '#/components/responses/serverErrorResponse'
 
-  /links/authority/stats:
+  /links/stats/authority:
     get:
       description: Retrieve authority updates (related to links) statistics
       operationId: getAuthorityLinksStats
@@ -132,22 +132,23 @@ paths:
           required: false
           description: Action to filter by
           schema:
-            $ref: "#/components/schemas/authorityDataStatActionDto"
+            $ref: "#/components/schemas/linkAction"
         - name: limit
           in: query
           required: false
           description: Max number of items in collection
           schema:
             type: integer
+            minimum: 1
             default: 100
       responses:
-        "200":
+        '200':
           description: The authority updates statistics collection
           content:
             application/json:
               schema:
                 description: Collection of authority updates statistics
-                $ref: '#/components/schemas/authorityChangeStatDtoCollection'
+                $ref: '#/components/schemas/authorityStatsDtoCollection'
         '400':
           $ref: '#/components/responses/badRequestResponse'
         '500':
@@ -158,7 +159,7 @@ paths:
       description: Retrieve linked bib update statistics
       operationId: getLinkedBibUpdateStats
       tags:
-        - linked-bib-update-statistics
+        - instance-authority-links-statistics
       parameters:
         - name: fromDate
           in: query
@@ -187,9 +188,9 @@ paths:
           schema:
             type: integer
             minimum: 1
-            default: 99
+            default: 100
       responses:
-        "200":
+        '200':
           description: The linked bib update statistics collection
           content:
             application/json:
@@ -372,6 +373,12 @@ components:
     sourceRecord:
       $ref: schemas/sourceRecord.json
 
+    linkAction:
+      $ref: schemas/authority/control/linkAction.json
+
+    linkStatus:
+      $ref: schemas/authority/control/linkStatus.json
+
     linksChangeEvent:
       type: object
       description: Links change event body
@@ -457,65 +464,21 @@ components:
           description: Subfield value. If empty - then remove
           type: string
 
-    authorityDataStatActionDto:
-      description: Type of change
-      type: string
-      enum:
-        - DELETE
-        - UPDATE_NATURAL_ID
-        - UPDATE_HEADING
-
-    authorityDataStatDto:
+    bibStatsDtoCollection:
+      description: Collection of changes statistic
       type: object
-      description: Describe changes to authority that are related to links
       properties:
-        id:
-          description: Stat ID
-          $ref: "#/components/schemas/uuid"
-        authorityId:
-          description: Authority ID
-          $ref: "#/components/schemas/uuid"
-        action:
-          description: Type of change
-          $ref: "#/components/schemas/authorityDataStatActionDto"
-        naturalIdOld:
-          description: Old natural ID
+        stats:
+          description: Changes statistic
+          type: array
+          items:
+            $ref: schemas/authority/control/bibStatsDto.json
+        next:
+          description: Next response item date to seek by
           type: string
-        naturalIdNew:
-          description: New natural ID
-          type: string
-        headingOld:
-          description: Old heading
-          type: string
-        headingNew:
-          description: New heading
-          type: string
-        headingTypeOld:
-          description: Old heading type
-          type: string
-        headingTypeNew:
-          description: New heading type
-          type: string
-        sourceFileOld:
-          description: Old source file ID
-          type: string
-        sourceFileNew:
-          description: New source file ID
-          type: string
-        lbTotal:
-          description: Amount of linked bib fields
-          type: integer
-        lbUpdated:
-          description: Amount of linked bib fields that was successfully updated during authority update
-          type: integer
-        lbFailed:
-          description: Amount of linked bib fields that was failed to update during authority update
-          type: integer
-        metadata:
-          description: Statistics metadata
-          $ref: '#/components/schemas/metadata'
+          format: date-time
 
-    authorityChangeStatDtoCollection:
+    authorityStatsDtoCollection:
       description: Collection of authority changes statistic
       type: object
       properties:
@@ -523,33 +486,11 @@ components:
           description: Authority changes statistic
           type: array
           items:
-            $ref: "#/components/schemas/authorityDataStatDto"
+            $ref: schemas/authority/control/authorityStatsDto.json
         next:
           description: Next response item date to seek by
           type: string
           format: date-time
-
-    metadata:
-      description: Meta data for authorityDataStatDto
-      type: object
-      properties:
-        startedAt:
-          description: Date-time when authority update was registered
-          type: string
-          format: date-time
-        completedAt:
-          description: Date-time when update of all related links was completed
-          type: string
-          format: date-time
-        startedByUserId:
-          description: User's ID that triggers record
-          $ref: "#/components/schemas/uuid"
-        startedByUserFirstName:
-          description: User's first name that triggers record
-          type: string
-        startedByUserLastName:
-          description: User's last name that triggers record
-          type: string
 
     linkUpdateReport:
       description: Link update report
@@ -584,25 +525,6 @@ components:
         ts:
           description: Timestamp
           type: string
-
-    linkStatus:
-      type: string
-      enum:
-        - ACTUAL
-        - ERROR
-
-    bibStatsDtoCollection:
-      description: Collection of linked bibs update statistics
-      type: object
-      properties:
-        stats:
-          type: array
-          items:
-            $ref: schemas/bibStatsDto.json
-        next:
-          description: Next response item date to seek by
-          type: string
-          format: date-time
 
   responses:
     badRequestResponse:

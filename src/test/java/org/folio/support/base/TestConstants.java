@@ -4,7 +4,7 @@ import static org.folio.support.KafkaTestUtils.fullTopicName;
 
 import java.time.OffsetDateTime;
 import lombok.experimental.UtilityClass;
-import org.folio.entlinks.domain.dto.AuthorityDataStatActionDto;
+import org.folio.entlinks.domain.dto.LinkAction;
 import org.folio.entlinks.domain.dto.LinkStatus;
 
 @UtilityClass
@@ -23,7 +23,7 @@ public class TestConstants {
   private static final String AUTHORITY_LINKS_COUNT_ENDPOINT_PATH = "/links/authorities/bulk/count";
   private static final String LINKS_STATS_INSTANCE_ENDPOINT_PATH = "/links/stats/instance";
   private static final String LINKS_STATS_INSTANCE_ENDPOINT_PARAMS = "?status=%s&fromDate=%s&toDate=%s";
-  private static final String AUTH_STATS_ENDPOINT_PATH_PATTERN = "/links/authority/stats";
+  private static final String AUTH_STATS_ENDPOINT_PATH_PATTERN = "/links/stats/authority";
   private static final String AUTH_STATS_ENDPOINT_PARAMS = "?action=%s&fromDate=%s&toDate=%s&limit=%d";
   private static final String LINKING_RULES_ENDPOINT = "/linking-rules/instance-authority";
 
@@ -61,7 +61,7 @@ public class TestConstants {
       + LINKS_STATS_INSTANCE_ENDPOINT_PARAMS.formatted(status, fromDate, toDate);
   }
 
-  public static String authorityStatsEndpoint(AuthorityDataStatActionDto action, OffsetDateTime fromDate,
+  public static String authorityStatsEndpoint(LinkAction action, OffsetDateTime fromDate,
                                               OffsetDateTime toDate, int limit) {
     return AUTH_STATS_ENDPOINT_PATH_PATTERN + AUTH_STATS_ENDPOINT_PARAMS.formatted(action, fromDate, toDate, limit);
   }

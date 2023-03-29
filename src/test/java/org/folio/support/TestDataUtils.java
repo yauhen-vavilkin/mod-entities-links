@@ -19,16 +19,16 @@ import java.util.stream.Stream;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
-import org.folio.entlinks.domain.dto.AuthorityDataStatActionDto;
-import org.folio.entlinks.domain.dto.AuthorityDataStatDto;
+import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
+import org.folio.entlinks.domain.dto.AuthorityStatsDto;
 import org.folio.entlinks.domain.dto.BibStatsDto;
 import org.folio.entlinks.domain.dto.BibStatsDtoCollection;
 import org.folio.entlinks.domain.dto.InstanceLinkDto;
 import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
 import org.folio.entlinks.domain.dto.InventoryEvent;
+import org.folio.entlinks.domain.dto.LinkAction;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
-import org.folio.entlinks.domain.dto.Metadata;
 import org.folio.entlinks.domain.entity.AuthorityData;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
@@ -191,11 +191,11 @@ public class TestDataUtils {
     ));
   }
 
-  public static AuthorityDataStatDto getStatDataDto(AuthorityDataStat dataStat, UsersClient.User user) {
-    AuthorityDataStatDto dto = new AuthorityDataStatDto();
+  public static AuthorityStatsDto getStatDataDto(AuthorityDataStat dataStat, UsersClient.User user) {
+    AuthorityStatsDto dto = new AuthorityStatsDto();
     dto.setId(dataStat.getId());
     dto.setAuthorityId(dataStat.getAuthorityData().getId());
-    dto.setAction(AuthorityDataStatActionDto.fromValue(dataStat.getAction().name()));
+    dto.setAction(LinkAction.fromValue(dataStat.getAction().name()));
     dto.setHeadingNew(dataStat.getHeadingNew());
     dto.setHeadingOld(dataStat.getHeadingOld());
     dto.setHeadingTypeNew(dataStat.getHeadingTypeNew());
@@ -205,7 +205,7 @@ public class TestDataUtils {
     dto.setLbTotal(dataStat.getLbTotal());
     dto.setNaturalIdNew(dataStat.getAuthorityNaturalIdNew());
     dto.setNaturalIdOld(dataStat.getAuthorityNaturalIdOld());
-    Metadata metadata = new Metadata();
+    AuthorityControlMetadata metadata = new AuthorityControlMetadata();
     metadata.setStartedByUserId(dataStat.getStartedByUserId());
     metadata.setStartedByUserFirstName(user.personal().firstName());
     metadata.setStartedByUserLastName(user.personal().lastName());

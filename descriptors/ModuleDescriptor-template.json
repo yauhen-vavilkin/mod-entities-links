@@ -113,26 +113,20 @@
     },
     {
       "id": "instance-authority-links-statistics",
-      "version": "1.0",
+      "version": "2.0",
       "handlers": [
         {
           "methods": [
             "GET"
           ],
-          "pathPattern": "/links/authority/stats",
+          "pathPattern": "/links/stats/authority",
           "permissionsRequired": [
             "instance-authority-links.authority-statistics.collection.get"
-           ],
+          ],
           "modulePermissions": [
-             "users.collection.get"
+            "users.collection.get"
           ]
-        }
-      ]
-    },
-    {
-      "id": "linked-bib-update-statistics",
-      "version": "1.0",
-      "handlers": [
+        },
         {
           "methods": [
             "GET"
@@ -140,7 +134,7 @@
           "pathPattern": "/links/stats/instance",
           "permissionsRequired": [
             "instance-authority-links.instance-statistics.collection.get"
-           ],
+          ],
           "modulePermissions": [
             "inventory-storage.instances.collection.get"
           ]
@@ -170,12 +164,12 @@
       "description": "Get instance-authority linking rules"
     },
     {
-      "permissionName":"instance-authority-links.authority-statistics.collection.get",
+      "permissionName": "instance-authority-links.authority-statistics.collection.get",
       "displayName": "Entities Authority Links Statistics - get instance-authority links statistics",
       "description": "Get instance-authority links statistics"
     },
     {
-      "permissionName":"instance-authority-links.instance-statistics.collection.get",
+      "permissionName": "instance-authority-links.instance-statistics.collection.get",
       "displayName": "Entities Instance Links Statistics - get instance-authority links statistics",
       "description": "Get instance-authority links (Instance) statistics"
     },
@@ -327,6 +321,7 @@
         "name": "KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS",
         "value": "100",
         "description": "Number of instance-authority links `links.instance-authority` event contains while processing authority link source change."
-      }    ]
+      }
+    ]
   }
 }

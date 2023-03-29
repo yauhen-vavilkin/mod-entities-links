@@ -1,6 +1,6 @@
 package org.folio.entlinks.controller;
 
-import static org.folio.entlinks.domain.dto.AuthorityDataStatActionDto.UPDATE_HEADING;
+import static org.folio.entlinks.domain.dto.LinkAction.UPDATE_HEADING;
 import static org.folio.support.TestDataUtils.Link.TAGS;
 import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;

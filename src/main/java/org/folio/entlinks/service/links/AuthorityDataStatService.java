@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.folio.entlinks.domain.dto.AuthorityDataStatActionDto;
+import org.folio.entlinks.domain.dto.LinkAction;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
@@ -53,7 +53,7 @@ public class AuthorityDataStatService {
   }
 
   public List<AuthorityDataStat> fetchDataStats(OffsetDateTime fromDate, OffsetDateTime toDate,
-                                                AuthorityDataStatActionDto action, int limit) {
+                                                LinkAction action, int limit) {
     Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.desc("startedAt")));
     return statRepository.findActualByActionAndDate(AuthorityDataStatAction.valueOf(action.getValue()),
       DateUtils.toTimestamp(fromDate), DateUtils.toTimestamp(toDate), pageable);
@@ -146,7 +146,6 @@ public class AuthorityDataStatService {
     return switch (report.getStatus()) {
       case SUCCESS -> InstanceAuthorityLinkStatus.ACTUAL;
       case FAIL -> InstanceAuthorityLinkStatus.ERROR;
-      default -> throw new IllegalArgumentException("Unknown link update report status.");
     };
   }
 

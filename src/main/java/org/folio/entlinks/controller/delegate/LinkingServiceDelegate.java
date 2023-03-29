@@ -12,8 +12,8 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.entlinks.controller.converter.DataStatsMapper;
 import org.folio.entlinks.controller.converter.InstanceAuthorityLinkMapper;
-import org.folio.entlinks.controller.converter.LinkedBibUpdateStatsMapper;
 import org.folio.entlinks.domain.dto.BibStatsDto;
 import org.folio.entlinks.domain.dto.BibStatsDtoCollection;
 import org.folio.entlinks.domain.dto.InstanceLinkDto;
@@ -36,20 +36,21 @@ public class LinkingServiceDelegate {
   private final InstanceAuthorityLinkingService linkingService;
   private final InstanceStorageService instanceService;
   private final InstanceAuthorityLinkMapper mapper;
-  private final LinkedBibUpdateStatsMapper statsMapper;
+  private final DataStatsMapper statsMapper;
 
   public InstanceLinkDtoCollection getLinks(UUID instanceId) {
     var links = linkingService.getLinksByInstanceId(instanceId);
     return mapper.convertToDto(links);
   }
 
-  public BibStatsDtoCollection getLinkedBibUpdateStats(LinkStatus status, OffsetDateTime fromDate,
-                                        OffsetDateTime toDate, int limit) {
+  public BibStatsDtoCollection getLinkedBibUpdateStats(OffsetDateTime fromDate, OffsetDateTime toDate,
+                                                       LinkStatus status, int limit) {
     validateDateRange(fromDate, toDate);
 
     var bibStatsCollection = new BibStatsDtoCollection();
     var links = linkingService.getLinks(status, fromDate, toDate, limit + 1);
     log.debug("Retrieved links count {}", links.size());
+
     if (links.size() > limit) {
       var nextDate = fromTimestamp(links.get(limit).getUpdatedAt());
       bibStatsCollection.setNext(nextDate);

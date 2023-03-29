@@ -1,0 +1,10 @@
+{
+  "type": "string",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Type of change",
+  "enum": [
+    "DELETE",
+    "UPDATE_NATURAL_ID",
+    "UPDATE_HEADING"
+  ]
+}
