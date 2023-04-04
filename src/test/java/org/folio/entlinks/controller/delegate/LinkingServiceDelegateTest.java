@@ -188,24 +188,6 @@ class LinkingServiceDelegateTest {
   }
 
   @Test
-  void updateLinks_negative_whenInvalidSubfieldCodes() {
-    var incomingLinks = linksDtoCollection(linksDto(INSTANCE_ID,
-      TestDataUtils.Link.of(0, 2),
-      TestDataUtils.Link.of(3, 2)
-    ));
-    incomingLinks.getLinks().get(0).addBibRecordSubfieldsItem("abc");
-    incomingLinks.getLinks().get(1).addBibRecordSubfieldsItem("12");
-
-    var exception = Assertions.assertThrows(RequestBodyValidationException.class,
-      () -> delegate.updateLinks(INSTANCE_ID, incomingLinks));
-
-    assertThat(exception)
-      .hasMessage("Max Bib record subfield length is 1")
-      .extracting(RequestBodyValidationException::getInvalidParameters)
-      .returns(2, from(List::size));
-  }
-
-  @Test
   void countLinksByAuthorityIds_positive() {
     var ids = List.of(randomUUID(), randomUUID(), randomUUID());
 

@@ -23,6 +23,7 @@ public interface DataStatsMapper {
   AuthorityStatsDto convertToDto(AuthorityDataStat source);
 
   @Mapping(target = "authorityNaturalId", source = "authorityData.naturalId")
+  @Mapping(target = "bibRecordTag", source = "linkingRule.bibField")
   BibStatsDto convertToDto(InstanceAuthorityLink source);
 
   default List<BibStatsDto> convertToDto(List<InstanceAuthorityLink> source) {

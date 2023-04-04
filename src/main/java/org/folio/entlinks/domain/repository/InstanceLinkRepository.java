@@ -29,12 +29,6 @@ public interface InstanceLinkRepository extends JpaRepository<InstanceAuthorityL
   List<LinkCountView> countLinksByAuthorityIds(@Param("authorityIds") Set<UUID> authorityIds);
 
   @Modifying
-  @Query("update InstanceAuthorityLink l SET l.bibRecordSubfields = :subfields "
-    + "where l.authorityData.id = :authorityId and l.bibRecordTag = :tag")
-  void updateSubfieldsByAuthorityIdAndTag(@Param("subfields") char[] subfields, @Param("authorityId") UUID authorityId,
-                                          @Param("tag") String tag);
-
-  @Modifying
   @Query("""
     update InstanceAuthorityLink i set i.status = :status, i.errorCause = :errorCause
     where i.authorityData.id = :authorityId""")

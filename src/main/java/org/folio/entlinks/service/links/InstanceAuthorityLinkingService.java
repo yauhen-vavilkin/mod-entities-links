@@ -98,12 +98,6 @@ public class InstanceAuthorityLinkingService {
   }
 
   @Transactional
-  public void updateSubfields(char[] subfields, UUID authorityId, String tag) {
-    log.info("Update links [authority id: {}, tag: {}, subfields: {}]", authorityId, tag, subfields);
-    instanceLinkRepository.updateSubfieldsByAuthorityIdAndTag(subfields, authorityId, tag);
-  }
-
-  @Transactional
   public void updateStatus(UUID authorityId, InstanceAuthorityLinkStatus status, String errorCause) {
     log.info("Update links [authority id: {}, status: {}, errorCause: {}]", authorityId, status, errorCause);
     instanceLinkRepository.updateStatusAndErrorCauseByAuthorityId(status, trimToNull(errorCause), authorityId);
@@ -156,10 +150,9 @@ public class InstanceAuthorityLinkingService {
   private void updateLinksData(List<InstanceAuthorityLink> incomingLinks, List<InstanceAuthorityLink> linksToUpdate) {
     linksToUpdate
       .forEach(link -> incomingLinks.stream().filter(l -> l.isSameLink(link)).findFirst()
-        .ifPresent(l -> {
-          link.getAuthorityData().setNaturalId(l.getAuthorityData().getNaturalId());
-          link.setBibRecordSubfields(l.getBibRecordSubfields());
-        }));
+        .ifPresent(l ->
+          link.getAuthorityData().setNaturalId(l.getAuthorityData().getNaturalId())
+        ));
   }
 
   private List<InstanceAuthorityLink> subtract(Collection<InstanceAuthorityLink> source,

@@ -9,10 +9,10 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,6 +34,7 @@ import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.domain.entity.AuthorityDataStatStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
+import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.spring.tools.client.UsersClient;
 import org.folio.spring.tools.model.ResultList;
 
@@ -75,7 +76,9 @@ public class TestDataUtils {
         var link = InstanceAuthorityLink.builder()
           .id((long) RandomUtils.nextInt())
           .instanceId(UUID.randomUUID())
-          .bibRecordTag("100")
+          .linkingRule(InstanceAuthorityLinkingRule.builder()
+            .bibField("100")
+            .build())
           .authorityData(AuthorityData.builder()
             .naturalId("naturalId")
             .build())
@@ -122,7 +125,7 @@ public class TestDataUtils {
     return links.stream()
       .map(link -> new BibStatsDto()
         .instanceId(link.getInstanceId())
-        .bibRecordTag(link.getBibRecordTag())
+        .bibRecordTag(link.getLinkingRule().getBibField())
         .authorityNaturalId(link.getAuthorityData().getNaturalId())
         .updatedAt(fromTimestamp(link.getUpdatedAt()))
         .errorCause(link.getErrorCause()))
@@ -134,7 +137,7 @@ public class TestDataUtils {
     var stats = links.stream()
       .map(link -> new BibStatsDto()
         .instanceId(link.getInstanceId())
-        .bibRecordTag(link.getBibRecordTag())
+        .bibRecordTag(Link.RULE_IDS_TO_TAGS.get(link.getLinkingRuleId()))
         .authorityNaturalId(link.getAuthorityNaturalId())
         .instanceTitle(instanceTitle)
         .updatedAt(OffsetDateTime.now())
@@ -221,10 +224,24 @@ public class TestDataUtils {
                      char[] subfields, int linkingRuleId) {
 
     public static final UUID[] AUTH_IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID(), randomUUID()};
-    public static final String[] TAGS = new String[] {"100", "101", "700", "710"};
+    public static final String[] TAGS = new String[] {"100", "240", "700", "710"};
+    public static final Map<String, Integer> TAGS_TO_RULE_IDS = Map.of(
+      TAGS[0], 1,
+      TAGS[1], 5,
+      TAGS[2], 15,
+      TAGS[3], 16
+    );
+    public static final Map<Integer, String> RULE_IDS_TO_TAGS = TAGS_TO_RULE_IDS.entrySet().stream()
+      .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+    public static final Map<String, String> TAGS_TO_SUBFIELDS = Map.of(
+      TAGS[0], "abcdjq",
+      TAGS[1], "fghklmnoprsa",
+      TAGS[2], "abcdjqfhklmnoprstg",
+      TAGS[3], "abcfhklmoprstdgn"
+    );
 
     public Link(UUID authorityId, String tag) {
-      this(authorityId, tag, authorityId.toString(), new char[] {'a', 'b'});
+      this(authorityId, tag, authorityId.toString(), TAGS_TO_SUBFIELDS.get(tag).toCharArray());
     }
 
     public Link(UUID authorityId, String tag, String naturalId, char[] subfields) {
@@ -235,8 +252,9 @@ public class TestDataUtils {
       return new Link(AUTH_IDS[authIdNum], TAGS[tagNum]);
     }
 
-    public static Link of(int authIdNum, int tagNum, String naturalId, char[] subfields) {
-      return new Link(AUTH_IDS[authIdNum], TAGS[tagNum], naturalId, subfields);
+    public static Link of(int authIdNum, int tagNum, String naturalId) {
+      var tag = TAGS[tagNum];
+      return new Link(AUTH_IDS[authIdNum], tag, naturalId, TAGS_TO_SUBFIELDS.get(tag).toCharArray());
     }
 
     public InstanceLinkDto toDto(UUID instanceId) {
@@ -244,9 +262,7 @@ public class TestDataUtils {
         .instanceId(instanceId)
         .authorityId(authorityId)
         .authorityNaturalId(naturalId)
-        .bibRecordSubfields(toStringList(subfields))
-        .bibRecordTag(tag)
-        .linkingRuleId(1);
+        .linkingRuleId(TAGS_TO_RULE_IDS.get(tag));
     }
 
     public InstanceAuthorityLink toEntity(UUID instanceId) {
@@ -256,18 +272,11 @@ public class TestDataUtils {
           .id(authorityId)
           .naturalId(naturalId)
           .build())
-        .bibRecordSubfields(subfields)
-        .bibRecordTag(tag)
-        .linkingRuleId(1L)
+        .linkingRule(InstanceAuthorityLinkingRule.builder()
+          .id((long) TAGS_TO_RULE_IDS.get(tag))
+          .bibField(tag)
+          .build())
         .build();
-    }
-
-    private List<String> toStringList(char[] subfields) {
-      List<String> result = new ArrayList<>();
-      for (char subfield : subfields) {
-        result.add(Character.toString(subfield));
-      }
-      return result;
     }
   }
 }

@@ -87,20 +87,6 @@ public class LinkingServiceDelegate {
 
   private void validateLinks(UUID instanceId, List<InstanceLinkDto> links) {
     validateInstanceId(instanceId, links);
-    validateSubfields(links);
-  }
-
-  private void validateSubfields(List<InstanceLinkDto> links) {
-    var invalidSubfields = links.stream()
-      .map(InstanceLinkDto::getBibRecordSubfields)
-      .flatMap(List::stream)
-      .filter(subfield -> subfield.length() != 1)
-      .map(invalidSubfield -> new Parameter().key("bibRecordSubfields").value(invalidSubfield))
-      .toList();
-
-    if (!invalidSubfields.isEmpty()) {
-      throw new RequestBodyValidationException("Max Bib record subfield length is 1", invalidSubfields);
-    }
   }
 
   private void validateInstanceId(UUID instanceId, List<InstanceLinkDto> links) {

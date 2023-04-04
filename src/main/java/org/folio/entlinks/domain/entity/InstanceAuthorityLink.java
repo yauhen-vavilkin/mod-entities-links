@@ -3,7 +3,6 @@ package org.folio.entlinks.domain.entity;
 import io.hypersistence.utils.hibernate.type.basic.PostgreSQLEnumType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -23,7 +22,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.folio.entlinks.domain.entity.converter.StringToCharArrayConverter;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Type;
 
@@ -54,15 +52,10 @@ public class InstanceAuthorityLink extends AuditableEntity {
   @Column(name = "instance_id", nullable = false)
   private UUID instanceId;
 
-  @Column(name = "bib_record_tag", length = 3)
-  private String bibRecordTag;
-
-  @Column(name = "bib_record_subfields", length = 30)
-  @Convert(converter = StringToCharArrayConverter.class)
-  private char[] bibRecordSubfields;
-
-  @Column(name = "linking_rule_id", nullable = false)
-  private Long linkingRuleId;
+  @ToString.Exclude
+  @ManyToOne
+  @JoinColumn(name = "linking_rule_id")
+  private InstanceAuthorityLinkingRule linkingRule;
 
   @Builder.Default
   @Enumerated(EnumType.STRING)
@@ -93,6 +86,6 @@ public class InstanceAuthorityLink extends AuditableEntity {
   public boolean isSameLink(InstanceAuthorityLink link) {
     return authorityData.getId().equals(link.getAuthorityData().getId())
       && instanceId.equals(link.instanceId)
-      && bibRecordTag.equals(link.bibRecordTag);
+      && linkingRule.equals(link.getLinkingRule());
   }
 }

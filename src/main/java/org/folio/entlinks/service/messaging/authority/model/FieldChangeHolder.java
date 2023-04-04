@@ -38,15 +38,6 @@ public class FieldChangeHolder {
     }
   }
 
-  public char[] getBibSubfieldCodes() {
-    var authoritySubfields = linkingRule.getAuthoritySubfields();
-    var bibSubfieldCodes = new char[authoritySubfields.length];
-    for (int i = 0; i < authoritySubfields.length; i++) {
-      bibSubfieldCodes[i] = getCode(authoritySubfields[i]);
-    }
-    return bibSubfieldCodes;
-  }
-
   public FieldChange toFieldChange() {
     var subfieldChanges = toSubfieldsChange();
     if (!extraSubfieldChanges.isEmpty()) {

@@ -15,6 +15,7 @@ public interface InstanceAuthorityLinkMapper {
 
   @Mapping(target = "authorityId", source = "authorityData.id")
   @Mapping(target = "authorityNaturalId", source = "authorityData.naturalId")
+  @Mapping(target = "linkingRuleId", source = "linkingRule.id")
   InstanceLinkDto convertToDto(InstanceAuthorityLink source);
 
   default InstanceLinkDtoCollection convertToDto(List<InstanceAuthorityLink> source) {
@@ -27,6 +28,7 @@ public interface InstanceAuthorityLinkMapper {
 
   @Mapping(target = "authorityData.id", source = "authorityId")
   @Mapping(target = "authorityData.naturalId", source = "authorityNaturalId")
+  @Mapping(target = "linkingRule.id", source = "linkingRuleId")
   InstanceAuthorityLink convertDto(InstanceLinkDto source);
 
   List<InstanceAuthorityLink> convertDto(List<InstanceLinkDto> source);

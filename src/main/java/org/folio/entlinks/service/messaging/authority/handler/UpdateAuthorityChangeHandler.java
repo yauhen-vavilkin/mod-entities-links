@@ -38,7 +38,6 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   private final AuthorityMappingRulesProcessingService mappingRulesProcessingService;
   private final AuthoritySourceRecordService sourceRecordService;
   private final InstanceAuthorityLinkingRulesService linkingRulesService;
-  private final InstanceAuthorityLinkingService linkingService;
   private final AuthorityDataService authorityDataService;
   private final EventProducer<LinkUpdateReport> eventProducer;
 
@@ -55,7 +54,6 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
     this.mappingRulesProcessingService = mappingRulesProcessingService;
     this.sourceRecordService = sourceRecordService;
     this.linkingRulesService = linkingRulesService;
-    this.linkingService = linkingService;
     this.authorityDataService = authorityDataService;
     this.eventProducer = eventProducer;
   }
@@ -119,7 +117,7 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   private List<FieldChange> getFieldChangesForNaturalId(SubfieldChange subfield0Change,
                                                         List<InstanceAuthorityLink> instanceLinks) {
     return instanceLinks.stream()
-      .map(InstanceAuthorityLink::getBibRecordTag)
+      .map(link -> link.getLinkingRule().getBibField())
       .distinct()
       .map(tag -> new FieldChange().field(tag).subfields(singletonList(subfield0Change)))
       .toList();
@@ -138,7 +136,7 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
       .ifPresent(subfield0Change -> fieldChangeHolders
         .forEach(fieldChangeHolder -> fieldChangeHolder.addExtraSubfieldChange(subfield0Change)));
 
-    updateLinksAccordingToChange(changeHolder, authorityId, fieldChangeHolders);
+    updateAuthorityDataAccordingToChange(changeHolder, authorityId, fieldChangeHolders);
 
     var fieldChanges = fieldChangeHolders.stream()
       .map(FieldChangeHolder::toFieldChange)
@@ -149,13 +147,11 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
     );
   }
 
-  private void updateLinksAccordingToChange(AuthorityChangeHolder changeHolder, UUID authorityId,
-                                            List<FieldChangeHolder> fieldChangeHolders) {
+  private void updateAuthorityDataAccordingToChange(AuthorityChangeHolder changeHolder, UUID authorityId,
+                                                    List<FieldChangeHolder> fieldChangeHolders) {
     fieldChangeHolders.forEach(fieldChangeHolder -> {
-      var subfieldCodes = fieldChangeHolder.getBibSubfieldCodes();
       var naturalId = changeHolder.getNewNaturalId();
       authorityDataService.updateNaturalId(naturalId, authorityId);
-      linkingService.updateSubfields(subfieldCodes, authorityId, fieldChangeHolder.getBibField());
     });
   }
 

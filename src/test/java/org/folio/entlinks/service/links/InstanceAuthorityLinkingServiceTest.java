@@ -68,7 +68,7 @@ class InstanceAuthorityLinkingServiceTest {
 
     assertThat(result)
       .hasSize(existedLinks.size())
-      .extracting(InstanceAuthorityLink::getBibRecordTag)
+      .extracting(link -> link.getLinkingRule().getBibField())
       .containsOnly(Link.TAGS[0], Link.TAGS[1], Link.TAGS[2], Link.TAGS[3]);
   }
 
@@ -100,7 +100,7 @@ class InstanceAuthorityLinkingServiceTest {
 
     assertThat(result)
       .hasSize(links.size())
-      .extracting(InstanceAuthorityLink::getBibRecordTag)
+      .extracting(link -> link.getLinkingRule().getBibField())
       .containsOnly(Link.TAGS[0], Link.TAGS[1]);
   }
 
@@ -140,7 +140,7 @@ class InstanceAuthorityLinkingServiceTest {
     verify(instanceLinkRepository).deleteAllInBatch(deleteCaptor.capture());
 
     assertThat(saveCaptor.getValue()).hasSize(2)
-      .extracting(InstanceAuthorityLink::getBibRecordTag)
+      .extracting(link -> link.getLinkingRule().getBibField())
       .containsOnly(Link.TAGS[0], Link.TAGS[1]);
 
     assertThat(deleteCaptor.getValue()).isEmpty();
@@ -166,7 +166,7 @@ class InstanceAuthorityLinkingServiceTest {
     assertThat(saveCaptor.getValue()).isEmpty();
 
     assertThat(deleteCaptor.getValue()).hasSize(2)
-      .extracting(InstanceAuthorityLink::getBibRecordTag)
+      .extracting(link -> link.getLinkingRule().getBibField())
       .containsOnly(Link.TAGS[0], Link.TAGS[1]);
   }
 
@@ -199,11 +199,11 @@ class InstanceAuthorityLinkingServiceTest {
     verify(instanceLinkRepository).deleteAllInBatch(deleteCaptor.capture());
 
     assertThat(saveCaptor.getValue()).hasSize(4)
-      .extracting(InstanceAuthorityLink::getBibRecordTag)
+      .extracting(link -> link.getLinkingRule().getBibField())
       .containsOnly(Link.TAGS[0], Link.TAGS[1], Link.TAGS[2], Link.TAGS[3]);
 
     assertThat(deleteCaptor.getValue()).hasSize(4)
-      .extracting(InstanceAuthorityLink::getBibRecordTag)
+      .extracting(link -> link.getLinkingRule().getBibField())
       .containsOnly(Link.TAGS[0], Link.TAGS[1], Link.TAGS[2], Link.TAGS[3]);
   }
 
@@ -234,7 +234,7 @@ class InstanceAuthorityLinkingServiceTest {
     verify(instanceLinkRepository).deleteAllInBatch(deleteCaptor.capture());
 
     assertThat(saveCaptor.getValue()).hasSize(4)
-      .extracting(InstanceAuthorityLink::getBibRecordTag)
+      .extracting(link -> link.getLinkingRule().getBibField())
       .containsOnly(Link.TAGS[0], Link.TAGS[1], Link.TAGS[2], Link.TAGS[3]);
 
     assertThat(deleteCaptor.getValue()).isEmpty();
@@ -269,11 +269,11 @@ class InstanceAuthorityLinkingServiceTest {
     verify(instanceLinkRepository).deleteAllInBatch(deleteCaptor.capture());
 
     assertThat(saveCaptor.getValue()).hasSize(4)
-      .extracting(InstanceAuthorityLink::getBibRecordTag)
+      .extracting(link -> link.getLinkingRule().getBibField())
       .containsOnly(Link.TAGS[0], Link.TAGS[1], Link.TAGS[2], Link.TAGS[3]);
 
     assertThat(deleteCaptor.getValue()).hasSize(2)
-      .extracting(InstanceAuthorityLink::getBibRecordTag)
+      .extracting(link -> link.getLinkingRule().getBibField())
       .containsOnly(Link.TAGS[2], Link.TAGS[3]);
   }
 
@@ -295,17 +295,6 @@ class InstanceAuthorityLinkingServiceTest {
     assertThat(result)
       .hasSize(2)
       .contains(entry(authorityId1, 10), entry(authorityId2, 15));
-  }
-
-  @Test
-  void updateSubfields_positive() {
-    var subfields = new char[] {'a', 'b'};
-    var authorityId = randomUUID();
-    var tag = "100";
-
-    service.updateSubfields(subfields, authorityId, tag);
-
-    verify(instanceLinkRepository).updateSubfieldsByAuthorityIdAndTag(subfields, authorityId, tag);
   }
 
   @Test

@@ -23,24 +23,6 @@ class FieldChangeHolderTest {
   }
 
   @Test
-  void getBibSubfieldCodes_positive_modificationsExists() {
-    var dataField = new DataFieldImpl("100", '0', '0');
-    dataField.addSubfield(new SubfieldImpl('a', "a-data"));
-    dataField.addSubfield(new SubfieldImpl('d', "d-data"));
-    dataField.addSubfield(new SubfieldImpl('h', "h-data"));
-    dataField.addSubfield(new SubfieldImpl('t', "t-data"));
-    var linkingRule = new InstanceAuthorityLinkingRule();
-    linkingRule.setAuthorityField("100");
-    linkingRule.setBibField("240");
-    linkingRule.setAuthoritySubfields(new char[] {'f', 'g', 'h', 'k', 'l', 'm', 'n', 'o', 'p', 'r', 's', 't'});
-    linkingRule.setSubfieldModifications(List.of(new SubfieldModification().source("t").target("a")));
-
-    var fieldChangeHolder = new FieldChangeHolder(dataField, linkingRule);
-
-    assertThat(fieldChangeHolder.getBibSubfieldCodes()).containsExactly('a', 'h');
-  }
-
-  @Test
   void toFieldChange_positive_modificationsExists() {
     var dataField = new DataFieldImpl("100", '0', '0');
     dataField.addSubfield(new SubfieldImpl('a', "a-data"));

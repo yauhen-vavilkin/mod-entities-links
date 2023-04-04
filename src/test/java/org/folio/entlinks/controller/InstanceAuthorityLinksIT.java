@@ -53,31 +53,21 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
       arguments("instanceId",
         new InstanceLinkDto()
           .authorityId(randomUUID()).authorityNaturalId("id")
-          .bibRecordTag("100").bibRecordSubfields(List.of("a"))
           .linkingRuleId(1)
       ),
       arguments("authorityId",
         new InstanceLinkDto().instanceId(randomUUID())
           .authorityNaturalId("id")
-          .bibRecordTag("100").bibRecordSubfields(List.of("a"))
           .linkingRuleId(1)
       ),
       arguments("authorityNaturalId",
         new InstanceLinkDto().instanceId(randomUUID())
           .authorityId(randomUUID())
-          .bibRecordTag("100").bibRecordSubfields(List.of("a"))
-          .linkingRuleId(1)
-      ),
-      arguments("bibRecordTag",
-        new InstanceLinkDto().instanceId(randomUUID())
-          .authorityId(randomUUID()).authorityNaturalId("id")
-          .bibRecordSubfields(List.of("a"))
           .linkingRuleId(1)
       ),
       arguments("linkingRuleId",
         new InstanceLinkDto().instanceId(randomUUID())
           .authorityId(randomUUID()).authorityNaturalId("id")
-          .bibRecordTag("100").bibRecordSubfields(List.of("a"))
       )
     );
   }
@@ -184,14 +174,14 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
   void updateInstanceLinks_positive_updateExistedLinks() {
     var instanceId = randomUUID();
     var existedLinks = linksDtoCollection(linksDto(instanceId,
-      Link.of(0, 0, "12345", new char[] {'a', 'b'}),
-      Link.of(1, 1, "7890", new char[] {'c'})
+      Link.of(0, 0, "12345"),
+      Link.of(1, 1, "7890")
     ));
     doPut(linksInstanceEndpoint(), existedLinks, instanceId);
 
     var incomingLinks = linksDtoCollection(linksDto(instanceId,
-      Link.of(0, 0, "12345-updated", new char[] {'x'}),
-      Link.of(1, 1, "7890-updated", new char[] {'c'})
+      Link.of(0, 0, "12345-updated"),
+      Link.of(1, 1, "7890-updated")
     ));
     doPut(linksInstanceEndpoint(), incomingLinks, instanceId);
 
@@ -271,47 +261,6 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
       .andExpect(errorTypeMatch(is("HttpMessageNotReadableException")))
       .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())))
       .andExpect(errorMessageMatch(containsString("Required request body is missing")));
-  }
-
-  @Test
-  @SneakyThrows
-  void updateInstanceLinks_negative_whenBibRecordSubfieldsIsEmpty() {
-    var instanceId = randomUUID();
-
-    var incomingLinks = linksDtoCollection(List.of(new InstanceLinkDto()
-      .instanceId(randomUUID()).authorityId(randomUUID())
-      .authorityNaturalId("id").bibRecordTag("100")
-      .linkingRuleId(1)
-    ));
-
-    tryPut(linksInstanceEndpoint(), incomingLinks, instanceId)
-      .andExpect(status().isUnprocessableEntity())
-      .andExpect(errorTotalMatch(1))
-      .andExpect(errorTypeMatch(is("MethodArgumentNotValidException")))
-      .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())))
-      .andExpect(errorMessageMatch(containsString("size must be between 1 and 100")))
-      .andExpect(errorParameterMatch(is("links[0].bibRecordSubfields")));
-  }
-
-  @Test
-  @SneakyThrows
-  void updateInstanceLinks_negative_whenBibRecordSubfieldsValuesHaveMoreThenOneChar() {
-    var instanceId = randomUUID();
-
-    var incomingLinks = linksDtoCollection(List.of(new InstanceLinkDto()
-      .instanceId(instanceId).authorityId(randomUUID())
-      .authorityNaturalId("id").bibRecordTag("100")
-      .bibRecordSubfields(List.of("aa", "bb", "11"))
-      .linkingRuleId(1)
-    ));
-
-    tryPut(linksInstanceEndpoint(), incomingLinks, instanceId)
-      .andExpect(status().isUnprocessableEntity())
-      .andExpect(errorTotalMatch(1))
-      .andExpect(errorTypeMatch(is("RequestBodyValidationException")))
-      .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())))
-      .andExpect(errorMessageMatch(containsString("Max Bib record subfield length is 1")))
-      .andExpect(errorParameterMatch(is("bibRecordSubfields")));
   }
 
   @SneakyThrows
@@ -429,8 +378,6 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
         return Objects.equals(expectedLink.getAuthorityId().toString(), actualLink.get("authorityId"))
           && Objects.equals(expectedLink.getAuthorityNaturalId(), actualLink.get("authorityNaturalId"))
           && Objects.equals(expectedLink.getInstanceId().toString(), actualLink.get("instanceId"))
-          && Objects.equals(expectedLink.getBibRecordTag(), actualLink.get("bibRecordTag"))
-          && Objects.equals(expectedLink.getBibRecordSubfields(), actualLink.get("bibRecordSubfields"))
           && Objects.equals(expectedLink.getLinkingRuleId(), actualLink.get("linkingRuleId"));
       }
 

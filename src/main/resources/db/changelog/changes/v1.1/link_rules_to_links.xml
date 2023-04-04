@@ -1,0 +1,40 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
+
+  <changeSet id="MODELINKS-47@@add_linking_rule_foreign_key" author="Viacheslav_Kolesnyk">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <tableExists tableName="instance_authority_link"/>
+        <tableExists tableName="instance_authority_linking_rule"/>
+        <not>
+          <foreignKeyConstraintExists foreignKeyName="fk_instance_authority_link_linking_rule_id"
+                                      schemaName="${database.defaultSchemaName}"
+                                      foreignKeyTableName="instance_authority_linking_rule"/>
+        </not>
+      </and>
+    </preConditions>
+
+    <comment>Add FK for linking_rule_id in instance_authority_link referenced to instance_authority_linking_rule.id</comment>
+
+    <addForeignKeyConstraint baseTableName="instance_authority_link"
+                             baseColumnNames="linking_rule_id"
+                             referencedTableName="instance_authority_linking_rule"
+                             referencedColumnNames="id"
+                             constraintName="fk_instance_authority_link_linking_rule_id"/>
+  </changeSet>
+
+  <changeSet id="MODELINKS-47@@remove-bib-record-columns" author="Viacheslav_Kolesnyk">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="instance_authority_link"/>
+    </preConditions>
+
+    <comment>Drop bib_record_tag, bib_record_subfields columns in instance_authority_link</comment>
+
+    <dropColumn tableName="instance_authority_link" columnName="bib_record_tag"/>
+    <dropColumn tableName="instance_authority_link" columnName="bib_record_subfields"/>
+  </changeSet>
+
+</databaseChangeLog>

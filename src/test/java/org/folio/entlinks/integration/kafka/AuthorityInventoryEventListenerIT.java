@@ -11,7 +11,6 @@ import static org.folio.support.base.TestConstants.UPDATE_TYPE;
 import static org.folio.support.base.TestConstants.inventoryAuthorityTopic;
 import static org.folio.support.base.TestConstants.linksInstanceAuthorityTopic;
 import static org.folio.support.base.TestConstants.linksInstanceEndpoint;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -366,14 +365,6 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
     assertions.then(value.getTs()).as("Timestamp").isNotNull();
 
     assertions.assertAll();
-
-    // check that links were updated according to authority changes
-    doGet(linksInstanceEndpoint(), instanceId1)
-      .andExpect(jsonPath("$.links[0].bibRecordSubfields",
-        containsInAnyOrder("a", "b", "c", "d", "j", "q")));
-    doGet(linksInstanceEndpoint(), instanceId2)
-      .andExpect(jsonPath("$.links[0].bibRecordSubfields",
-        containsInAnyOrder("f", "g", "h", "k", "l", "m", "n", "o", "p", "r", "s", "a")));
   }
 
   @NotNull

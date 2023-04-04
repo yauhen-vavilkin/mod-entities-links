@@ -55,7 +55,7 @@ public abstract class AbstractAuthorityChangeHandler implements AuthorityChangeH
 
   private List<ChangeTarget> toChangeTargets(List<InstanceAuthorityLink> partition) {
     return partition.stream()
-      .collect(Collectors.groupingBy(InstanceAuthorityLink::getBibRecordTag))
+      .collect(Collectors.groupingBy(link -> link.getLinkingRule().getBibField()))
       .entrySet().stream()
       .map(e -> new ChangeTarget().field(e.getKey())
         .links(e.getValue().stream().map(AbstractAuthorityChangeHandler::toChangeTargetLink).toList()))
