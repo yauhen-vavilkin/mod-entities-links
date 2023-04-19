@@ -264,6 +264,7 @@ class AuthorityChangeHolderTest {
 
     var actual = holder.toAuthorityDataStat();
 
+    assertTrue(actual.getAuthorityData().isDeleted());
     assertThat(actual)
       .extracting(STAT_OBJ_PROPERTIES)
       .containsExactly(AuthorityDataStatAction.DELETE, "o", null, "100", "100", "o", null, null, null, 1, null);

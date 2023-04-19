@@ -116,6 +116,12 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
       .andExpect(jsonPath("$.links", hasSize(0)));
     doGet(linksInstanceEndpoint(), instanceId3)
       .andExpect(jsonPath("$.links", hasSize(0)));
+
+    // checking authorityData state field for deleting
+    var authorityData = databaseHelper.getAuthority(link1.authorityId());
+    assertions.then(authorityData.getId()).as("Id").isEqualTo(link1.authorityId());
+    assertions.then(authorityData.getId()).as("Natural Id").isEqualTo("oldNaturalId");
+    assertions.then(authorityData.isDeleted()).as("State").isTrue();
   }
 
   @SneakyThrows
