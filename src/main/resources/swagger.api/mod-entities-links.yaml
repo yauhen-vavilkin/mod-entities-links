@@ -106,6 +106,57 @@ paths:
         '500':
           $ref: '#/components/responses/serverErrorResponse'
 
+  /linking-rules/instance-authority/{ruleId}:
+    parameters:
+      - name: ruleId
+        in: path
+        required: true
+        description: ID of the instance-authority linking rule
+        schema:
+          type: integer
+    get:
+      description: Retrieve instance-authority linking rule by ID
+      operationId: getInstanceAuthorityLinkingRuleById
+      tags:
+        - linking-rules
+      responses:
+        '200':
+          description: The authority linking rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/linkingRuleDto'
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+        '500':
+          $ref: '#/components/responses/serverErrorResponse'
+    patch:
+      description: Partially update instance-authority linking rule by ID
+      operationId: patchInstanceAuthorityLinkingRuleById
+      tags:
+        - linking-rules
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/linkingRulePatchRequest"
+        required: true
+      responses:
+        '202':
+          description: The authority linking rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/linkingRuleDto'
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+        '500':
+          $ref: '#/components/responses/serverErrorResponse'
+
   /links/stats/authority:
     get:
       description: Retrieve authority updates (related to links) statistics
@@ -302,6 +353,8 @@ components:
             $ref: '#/components/schemas/subfieldModification'
         validation:
           $ref: '#/components/schemas/subfieldValidation'
+        autoLinkingEnabled:
+          type: boolean
 
     subfieldModification:
       type: object
@@ -327,6 +380,16 @@ components:
             type: string
             additionalProperties:
               type: boolean
+
+    linkingRulePatchRequest:
+      type: object
+      title: Linking rule PATCH request
+      description: Linking rule PATCH request
+      properties:
+        id:
+          type: integer
+        autoLinkingEnabled:
+          type: boolean
 
     uuid:
       type: string
@@ -523,6 +586,12 @@ components:
           schema:
             $ref: "#/components/schemas/errorResponse"
     unprocessableEntityResponse:
+      description: Validation error for the request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorResponse'
+    notFoundResponse:
       description: Validation error for the request.
       content:
         application/json:

@@ -273,7 +273,7 @@ public class TestDataUtils {
           .naturalId(naturalId)
           .build())
         .linkingRule(InstanceAuthorityLinkingRule.builder()
-          .id((long) TAGS_TO_RULE_IDS.get(tag))
+          .id(TAGS_TO_RULE_IDS.get(tag))
           .bibField(tag)
           .build())
         .build();

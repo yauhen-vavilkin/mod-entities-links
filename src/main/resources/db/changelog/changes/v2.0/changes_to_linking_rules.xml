@@ -1,0 +1,73 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
+
+  <changeSet id="MODELINKS-80@@change_instance_authority_linking_rule_id_type" author="Pavlo_Smahin">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="instance_authority_linking_rule"/>
+    </preConditions>
+
+    <comment>Change instance_authority_linking_rule.id type to integer</comment>
+
+    <modifyDataType tableName="instance_authority_linking_rule" columnName="id" newDataType="integer"/>
+  </changeSet>
+
+  <changeSet id="MODELINKS-80@@change_instance_authority_link_linking_rule_id_type" author="Pavlo_Smahin">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="instance_authority_link"/>
+    </preConditions>
+
+    <comment>Change instance_authority_link.linking_rule_id type to integer</comment>
+
+    <modifyDataType tableName="instance_authority_link" columnName="linking_rule_id" newDataType="integer"/>
+  </changeSet>
+
+  <changeSet id="MODELINKS-80@@add_instance_authority_linking_rule_auto_linking_enabled_column" author="Pavlo_Smahin">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <tableExists tableName="instance_authority_linking_rule"/>
+        <not>
+          <columnExists tableName="instance_authority_linking_rule" columnName="auto_linking_enabled"/>
+        </not>
+      </and>
+    </preConditions>
+
+    <comment>Add auto_linking_enabled column to instance_authority_linking_rule</comment>
+
+    <addColumn tableName="instance_authority_linking_rule">
+      <column name="auto_linking_enabled" type="BOOLEAN" defaultValueBoolean="true"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="MODELINKS-80@@set_auto_linking_enabled" author="Pavlo_Smahin">
+    <preConditions>
+      <tableExists tableName="instance_authority_linking_rule"/>
+    </preConditions>
+
+    <comment>Set auto_linking_enabled in instance_authority_linking_rule</comment>
+
+    <sql>
+      UPDATE instance_authority_linking_rule
+      SET auto_linking_enabled = 'false'
+      WHERE bib_field in ('600', '610', '611', '630', '650', '651', '655')
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODELINKS-80@@add_auto_linking_enabled_not_null_constraint" author="Pavlo_Smahin">
+    <preConditions>
+      <and>
+        <tableExists tableName="instance_authority_linking_rule"/>
+        <columnExists tableName="instance_authority_linking_rule" columnName="auto_linking_enabled"/>
+      </and>
+    </preConditions>
+
+    <comment>Add not null constraint to auto_linking_enabled in instance_authority_linking_rule</comment>
+
+    <addNotNullConstraint tableName="instance_authority_linking_rule"
+                          columnName="auto_linking_enabled"
+                          defaultNullValue="true"/>
+  </changeSet>
+
+</databaseChangeLog>

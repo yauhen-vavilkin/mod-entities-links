@@ -47,6 +47,10 @@ public class TestConstants {
     return LINKING_RULES_ENDPOINT;
   }
 
+  public static String linkingRulesEndpoint(Integer id) {
+    return LINKING_RULES_ENDPOINT + "/" + id;
+  }
+
   public static String authoritiesLinksCountEndpoint() {
     return AUTHORITY_LINKS_COUNT_ENDPOINT_PATH;
   }

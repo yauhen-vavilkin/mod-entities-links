@@ -67,7 +67,7 @@
     },
     {
       "id": "instance-authority-linking-rules",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": [
@@ -76,6 +76,54 @@
           "pathPattern": "/linking-rules/instance-authority",
           "permissionsRequired": [
             "instance-authority.linking-rules.collection.get"
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/linking-rules/instance-authority/{linkId}",
+          "permissionsRequired": [
+            "instance-authority.linking-rules.item.get"
+          ]
+        },
+        {
+          "methods": [
+            "PATCH"
+          ],
+          "pathPattern": "/linking-rules/instance-authority/{linkId}",
+          "permissionsRequired": [
+            "instance-authority.linking-rules.item.patch"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "instance-authority-links-statistics",
+      "version": "2.0",
+      "handlers": [
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/links/stats/authority",
+          "permissionsRequired": [
+            "instance-authority-links.authority-statistics.collection.get"
+          ],
+          "modulePermissions": [
+            "users.collection.get"
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/links/stats/instance",
+          "permissionsRequired": [
+            "instance-authority-links.instance-statistics.collection.get"
+          ],
+          "modulePermissions": [
+            "inventory-storage.instances.collection.get"
           ]
         }
       ]
@@ -110,36 +158,6 @@
           "permissionsRequired": []
         }
       ]
-    },
-    {
-      "id": "instance-authority-links-statistics",
-      "version": "2.0",
-      "handlers": [
-        {
-          "methods": [
-            "GET"
-          ],
-          "pathPattern": "/links/stats/authority",
-          "permissionsRequired": [
-            "instance-authority-links.authority-statistics.collection.get"
-          ],
-          "modulePermissions": [
-            "users.collection.get"
-          ]
-        },
-        {
-          "methods": [
-            "GET"
-          ],
-          "pathPattern": "/links/stats/instance",
-          "permissionsRequired": [
-            "instance-authority-links.instance-statistics.collection.get"
-          ],
-          "modulePermissions": [
-            "inventory-storage.instances.collection.get"
-          ]
-        }
-      ]
     }
   ],
   "permissionSets": [
@@ -164,6 +182,16 @@
       "description": "Get instance-authority linking rules"
     },
     {
+      "permissionName": "instance-authority.linking-rules.item.get",
+      "displayName": "Entities Links - get instance-authority linking rule",
+      "description": "Get instance-authority linking rule"
+    },
+    {
+      "permissionName": "instance-authority.linking-rules.item.patch",
+      "displayName": "Entities Links - patch instance-authority linking rule",
+      "description": "Patch instance-authority linking rule"
+    },
+    {
       "permissionName": "instance-authority-links.authority-statistics.collection.get",
       "displayName": "Entities Authority Links Statistics - get instance-authority links statistics",
       "description": "Get instance-authority links statistics"
@@ -182,6 +210,8 @@
         "instance-authority-links.instances.collection.put",
         "instance-authority-links.authorities.bulk.post",
         "instance-authority.linking-rules.collection.get",
+        "instance-authority.linking-rules.item.get",
+        "instance-authority.linking-rules.item.patch",
         "instance-authority-links.authority-statistics.collection.get",
         "instance-authority-links.instance-statistics.collection.get"
       ]
@@ -321,6 +351,11 @@
         "name": "KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS",
         "value": "100",
         "description": "Number of instance-authority links `links.instance-authority` event contains while processing authority link source change."
+      },
+      {
+        "name": "INSTANCE_STORAGE_QUERY_BATCH_SIZE",
+        "value": "50",
+        "description": "Number of instances to retrieve from inventory storage per one request (Max 90 - based on maximum URI length)"
       }
     ]
   }

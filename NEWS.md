@@ -2,10 +2,12 @@
 ### APIs versions
 * Provides `instance-authority-links-statistics v2.0`
 * Provides `instance-authority-links v2.0`
+* Provides `instance-authority-linking-rules v1.1`
 * Removes `linked-bib-update-statistics v1.0`
 
 ### Features
 * Remove field and subfields from links endpoint, use linking rule ([MODELINKS-47](https://issues.folio.org/browse/MODELINKS-47))
+* Add PATCH and GET instance-authority linking rule endpoints ([MODELINKS-80](https://issues.folio.org/browse/MODELINKS-80))
 
 ## v1.0.0 Released 2023-02-21
 ### APIs versions

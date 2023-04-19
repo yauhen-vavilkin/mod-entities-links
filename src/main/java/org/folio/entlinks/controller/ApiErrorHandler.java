@@ -7,6 +7,7 @@ import static org.folio.entlinks.exception.type.ErrorCode.UNKNOWN_ERROR;
 import static org.folio.entlinks.exception.type.ErrorCode.VALIDATION_ERROR;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
 import jakarta.validation.ConstraintViolationException;
@@ -15,6 +16,7 @@ import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Level;
 import org.folio.entlinks.exception.RequestBodyValidationException;
+import org.folio.entlinks.exception.ResourceNotFoundException;
 import org.folio.entlinks.exception.type.ErrorCode;
 import org.folio.tenant.domain.dto.Error;
 import org.folio.tenant.domain.dto.Errors;
@@ -38,7 +40,7 @@ public class ApiErrorHandler {
       .errors(List.of(new Error()
         .message(e.getMessage())
         .type(e.getClass().getSimpleName())
-        .code(code.getValue())))
+        .code(code != null ? code.getValue() : null)))
       .totalRecords(1);
     return buildResponseEntity(errors, status);
   }
@@ -64,6 +66,11 @@ public class ApiErrorHandler {
   public ResponseEntity<Errors> handleGlobalExceptions(Exception e) {
     logException(WARN, e);
     return buildResponseEntity(e, INTERNAL_SERVER_ERROR, UNKNOWN_ERROR);
+  }
+
+  @ExceptionHandler(ResourceNotFoundException.class)
+  public ResponseEntity<Errors> handleNotFoundException(ResourceNotFoundException e) {
+    return buildResponseEntity(e, NOT_FOUND, ErrorCode.NOT_FOUND_ERROR);
   }
 
   @ExceptionHandler(RequestBodyValidationException.class)

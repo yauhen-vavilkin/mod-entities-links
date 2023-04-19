@@ -38,7 +38,7 @@ public class InstanceAuthorityLinkingRule {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
-  private Long id;
+  private Integer id;
 
   @Column(name = "bib_field", nullable = false, length = 3)
   private String bibField;
@@ -51,12 +51,15 @@ public class InstanceAuthorityLinkingRule {
   private char[] authoritySubfields;
 
   @Type(JsonBinaryType.class)
-  @Column(name = "subfieldModifications", columnDefinition = "jsonb")
+  @Column(name = "subfield_modifications", columnDefinition = "jsonb")
   private List<SubfieldModification> subfieldModifications;
 
   @Type(JsonBinaryType.class)
-  @Column(name = "subfieldsExistenceValidations", columnDefinition = "jsonb")
+  @Column(name = "subfields_existence_validations", columnDefinition = "jsonb")
   private Map<String, Boolean> subfieldsExistenceValidations;
+
+  @Column(name = "auto_linking_enabled", nullable = false)
+  private Boolean autoLinkingEnabled;
 
   @Override
   public int hashCode() {

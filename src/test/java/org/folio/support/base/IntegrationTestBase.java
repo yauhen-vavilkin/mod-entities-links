@@ -11,6 +11,7 @@ import static org.folio.support.base.TestConstants.USER_ID;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
@@ -18,7 +19,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.WireMockServer;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.SneakyThrows;
@@ -33,6 +33,7 @@ import org.folio.spring.test.extension.impl.OkapiConfiguration;
 import org.folio.support.DatabaseHelper;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.hamcrest.Matcher;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -104,10 +105,6 @@ public class IntegrationTestBase {
     return httpHeaders;
   }
 
-  protected static WireMockServer getWireMock() {
-    return okapi.wireMockServer();
-  }
-
   //use if params contain special characters that should be encoded
   @SneakyThrows
   protected static ResultActions perform(MockHttpServletRequestBuilder rb) {
@@ -130,10 +127,7 @@ public class IntegrationTestBase {
 
   @SneakyThrows
   protected static ResultActions tryPut(String uri, Object body, Object... args) {
-    return mockMvc.perform(put(uri, args)
-        .content(body == null ? "" : asJson(body, objectMapper))
-        .headers(defaultHeaders()))
-      .andDo(log());
+    return tryDoHttpMethod(put(uri, args), body);
   }
 
   @SneakyThrows
@@ -142,9 +136,24 @@ public class IntegrationTestBase {
   }
 
   @SneakyThrows
+  protected static ResultActions tryPatch(String uri, Object body, Object... args) {
+    return tryDoHttpMethod(patch(uri, args), body);
+  }
+
+  @SneakyThrows
+  protected static ResultActions doPatch(String uri, Object body, Object... args) {
+    return tryPatch(uri, body, args).andExpect(status().is2xxSuccessful());
+  }
+
+  @SneakyThrows
   protected static ResultActions tryPost(String uri, Object body, Object... args) {
-    return mockMvc.perform(post(uri, args)
-        .content(asJson(body, objectMapper))
+    return tryDoHttpMethod(post(uri, args), body);
+  }
+
+  @NotNull
+  private static ResultActions tryDoHttpMethod(MockHttpServletRequestBuilder builder, Object body) throws Exception {
+    return mockMvc.perform(builder
+        .content(body == null ? "" : asJson(body, objectMapper))
         .headers(defaultHeaders()))
       .andDo(log());
   }
@@ -160,13 +169,12 @@ public class IntegrationTestBase {
     awaitUntilAsserted(() -> Assertions.assertTrue(future.isDone(), "Message was not sent"));
   }
 
-
   protected static void awaitUntilAsserted(ThrowingRunnable throwingRunnable) {
     await().pollInterval(ONE_SECOND).atMost(TEN_SECONDS).untilAsserted(throwingRunnable);
   }
 
-  protected ResultMatcher errorParameterMatch(Matcher<String> errorMessageMatcher) {
-    return jsonPath("$.errors.[0].parameters.[0].key", errorMessageMatcher);
+  protected ResultMatcher errorParameterMatch(Matcher<String> errorParameterKeyMatcher) {
+    return jsonPath("$.errors.[0].parameters.[0].key", errorParameterKeyMatcher);
   }
 
   protected ResultMatcher errorTypeMatch(Matcher<String> errorMessageMatcher) {

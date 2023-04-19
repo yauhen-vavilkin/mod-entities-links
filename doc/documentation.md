@@ -18,17 +18,18 @@
   * [APIs](#apis)
     * [API instance-authority-links](#api-instance-authority-links)
       * [Examples](#examples)
-        * [Retrieve all links by the given instance id:](#retrieve-all-links-by-the-given-instance-id-)
-        * [Modify links by the given instance id:](#modify-links-by-the-given-instance-id-)
+        * [Retrieve all links by the given instance id:](#retrieve-all-links-by-the-given-instance-id)
+        * [Modify links by the given instance id:](#modify-links-by-the-given-instance-id)
     * [API instance-authority-linking-rules](#api-instance-authority-linking-rules)
       * [Instance to Authority linking rule parameters](#instance-to-authority-linking-rule-parameters)
       * [Examples](#examples-1)
-        * [Retrieve instance to authority linking rules collection:](#retrieve-instance-to-authority-linking-rules-collection-)
+        * [Retrieve instance to authority linking rules collection:](#retrieve-instance-to-authority-linking-rules-collection)
+        * [Change auto-linking flag in instance to authority linking rule:](#change-auto-linking-flag-in-instance-to-authority-linking-rule)
     * [API instance-authority-links-statistics](#api-instance-authority-links-statistics)
       * [Examples](#examples-2)
-        * [Retrieve instance to authority links statistics collection:](#retrieve-instance-to-authority-links-statistics-collection-)
+        * [Retrieve instance to authority links statistics collection:](#retrieve-instance-to-authority-links-statistics-collection)
           * [Instance to Authority links statistics parameters](#instance-to-authority-links-statistics-parameters)
-        * [Retrieve linked bib updates statistics collection:](#retrieve-linked-bib-updates-statistics-collection-)
+        * [Retrieve linked bib updates statistics collection:](#retrieve-linked-bib-updates-statistics-collection)
           * [Linked bib updates statistics parameters](#linked-bib-updates-statistics-parameters)
 <!-- TOC -->
 
@@ -93,7 +94,7 @@ docker run -t -i -p 8081:8081 mod-entities-links
 | KAFKA_AUTHORITIES_CONSUMER_CONCURRENCY                  | 1                  | Number of kafka concurrent threads for `inventory.authority` message consuming                                                                                                        |
 | KAFKA_INSTANCE_AUTHORITY_STATS_CONSUMER_CONCURRENCY     | 1                  | Number of kafka concurrent threads for `links.instance-authority-stats` message consuming                                                                                             |
 | KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS              | 100                | Number of instance-authority links `links.instance-authority` event contains while processing authority link source change.                                                           |
-| INSTANCE_STORAGE_QUERY_BATCH_SIZE                       | 50                 | Number of instances to retrieve from inventory storage per one request (Max 90 - based on maximum URI length)                                                                         |
+| INSTANCE_STORAGE_QUERY_BATCH_SIZE                       | 50                 | Number of instances to retrieve from inventory storage per one request (Max 90 - based on maximum URI length).                                                                        |
 
 ### Configuring spring-boot
 
@@ -118,6 +119,7 @@ documentation [Spring Boot Externalized Configuration](https://docs.spring.io/sp
 | mod-source-record-manager | mapping-rules-provider        | For fetching MARC bibliographic-to-Instance mapping rules |
 | mod-source-record-storage | source-storage-source-records | For fetching Authority source records in MARC format      |
 | mod-inventory-storage     | authority-source-files        | For fetching Authority source file reference data         |
+| mod-inventory-storage     | instance-storage              | For fetching Instance data for statistic                  |
 
 ### Consuming Kafka messages
 
@@ -165,11 +167,7 @@ Response:
       "authorityId": "0794f296-4094-4243-b9af-bb4bf51cbfae",
       "authorityNaturalId": "n92099941",
       "instanceId": "b2658a84-912b-4ed9-83d7-e8201f4d27ec",
-      "bibRecordTag": "100",
-      "bibRecordSubfields": [
-        "a",
-        "b"
-      ]
+      "linkingRuleId": 1
     }
   ],
   "totalRecords": 1
@@ -182,6 +180,7 @@ Response:
 
 `PUT /links/instances/b2658a84-912b-4ed9-83d7-e8201f4d27ec`
 
+Request body:
 ```json
 {
   "links": [
@@ -189,21 +188,13 @@ Response:
       "authorityId": "875e86cf-599d-4293-b966-b34ac6a6d19e",
       "authorityNaturalId": "no50047988",
       "instanceId": "b2658a84-912b-4ed9-83d7-e8201f4d27ec",
-      "bibRecordTag": "700",
-      "bibRecordSubfields": [
-        "a",
-        "b"
-      ]
+      "linkingRuleId": 2
     },
     {
       "authorityId": "77398964-ee2d-4b28-ba2b-e30851d5d963",
       "authorityNaturalId": "mp96352145",
       "instanceId": "b2658a84-912b-4ed9-83d7-e8201f4d27ec",
-      "bibRecordTag": "710",
-      "bibRecordSubfields": [
-        "a",
-        "b"
-      ]
+      "linkingRuleId": 1
     }
   ]
 }
@@ -213,12 +204,15 @@ Response:
 
 The API enables possibility to retrieve default linking rules.
 
-| METHOD | URL                                 | Required permissions                              | DESCRIPTION                                        |
-|:-------|:------------------------------------|:--------------------------------------------------|:---------------------------------------------------|
-| GET    | `/linking-rules/instance-authority` | `instance-authority.linking-rules.collection.get` | Get Instance to Authority linking rules collection |
+| METHOD | URL                                          | Required permissions                              | DESCRIPTION                                               |
+|:-------|:---------------------------------------------|:--------------------------------------------------|:----------------------------------------------------------|
+| GET    | `/linking-rules/instance-authority`          | `instance-authority.linking-rules.collection.get` | Get Instance to Authority linking rules collection        |
+| GET    | `/linking-rules/instance-authority/{ruleId}` | `instance-authority.linking-rules.item.get`       | Get Instance to Authority linking rule by ID              |
+| PATCH  | `/linking-rules/instance-authority/{ruleId}` | `instance-authority.linking-rules.item.patch`     | Partially update Instance to Authority linking rule by ID |
 
 #### Instance to Authority linking rule parameters
 
+* `id` - Rule ID
 * `bibField` - Instance field which would be controlled by authority field
 * `authorityField` - Authority field which would be linked to instance field
 * `authoritySubfields` - Array of authority subfields that can be linked to instance subfields. Should match instance
@@ -228,6 +222,7 @@ The API enables possibility to retrieve default linking rules.
     * `target` - Instance subfield, which would be controlled by `source`
 * `validation` - Linking rule validations that should be verified before linking
     * `existence` - Map <char, boolean>. Validate if subfield have to exist or not
+* `autoLinkingEnabled` - Flag that indicates if the rule can be used for auto-linking
 
 #### Examples
 
@@ -242,6 +237,7 @@ Response:
 ```json
 [
   {
+    "id": 1,
     "bibField": "240",
     "authorityField": "100",
     "authoritySubfields": [
@@ -270,9 +266,23 @@ Response:
           "t": true
         }
       ]
-    }
+    },
+    "autoLinkingEnabled": true
   }
 ]
+```
+
+##### Change auto-linking flag in instance to authority linking rule:
+
+`PATCH /linking-rules/instance-authority/1`
+
+Request body:
+
+```json
+{
+  "id": 1,
+  "autoLinkingEnabled": false
+}
 ```
 
 ### API instance-authority-links-statistics

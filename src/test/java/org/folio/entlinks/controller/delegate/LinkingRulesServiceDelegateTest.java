@@ -33,7 +33,7 @@ class LinkingRulesServiceDelegateTest {
     var existence = Map.of("a", true);
 
     var rule = new InstanceAuthorityLinkingRule();
-    rule.setId(1L);
+    rule.setId(1);
     rule.setBibField("100");
     rule.setAuthorityField("100");
     rule.setAuthoritySubfields(new char[] {'a', 'b'});
