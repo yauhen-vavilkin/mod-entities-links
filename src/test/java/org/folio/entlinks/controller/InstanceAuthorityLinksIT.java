@@ -3,6 +3,11 @@ package org.folio.entlinks.controller;
 import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
 import static org.folio.support.JsonTestUtils.asJson;
+import static org.folio.support.MatchUtils.errorCodeMatch;
+import static org.folio.support.MatchUtils.errorMessageMatch;
+import static org.folio.support.MatchUtils.errorParameterMatch;
+import static org.folio.support.MatchUtils.errorTotalMatch;
+import static org.folio.support.MatchUtils.errorTypeMatch;
 import static org.folio.support.TestDataUtils.Link.TAGS;
 import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
@@ -29,6 +34,7 @@ import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
 import org.folio.entlinks.domain.dto.LinksCountDto;
 import org.folio.entlinks.domain.dto.LinksCountDtoCollection;
 import org.folio.entlinks.domain.dto.UuidCollection;
+import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.exception.type.ErrorCode;
 import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
@@ -219,6 +225,23 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
 
   @Test
   @SneakyThrows
+  void updateInstanceLinks_positive_ignoreReadOnlyFields() {
+    var instanceId = randomUUID();
+    var incomingLinks = linksDtoCollection(linksDto(instanceId,
+      Link.of(InstanceAuthorityLinkStatus.ERROR, "test")));
+    doPut(linksInstanceEndpoint(), incomingLinks, instanceId);
+
+    var expectedLinks = linksDtoCollection(linksDto(instanceId,
+      Link.of(InstanceAuthorityLinkStatus.ACTUAL, null)));
+
+    doGet(linksInstanceEndpoint(), instanceId)
+      .andExpect(linksMatch(hasSize(1)))
+      .andExpect(linksMatch(expectedLinks))
+      .andExpect(totalRecordsMatch(1));
+  }
+
+  @Test
+  @SneakyThrows
   void updateInstanceLinks_negative_whenInstanceIdIsNotSameForIncomingLinks() {
     var instanceId = randomUUID();
     var incomingLinks = linksDtoCollection(linksDto(randomUUID(),
@@ -378,7 +401,9 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
         return Objects.equals(expectedLink.getAuthorityId().toString(), actualLink.get("authorityId"))
           && Objects.equals(expectedLink.getAuthorityNaturalId(), actualLink.get("authorityNaturalId"))
           && Objects.equals(expectedLink.getInstanceId().toString(), actualLink.get("instanceId"))
-          && Objects.equals(expectedLink.getLinkingRuleId(), actualLink.get("linkingRuleId"));
+          && Objects.equals(expectedLink.getLinkingRuleId(), actualLink.get("linkingRuleId"))
+          && Objects.equals(expectedLink.getStatus(), actualLink.get("status"))
+          && Objects.equals(expectedLink.getErrorCause(), actualLink.get("errorCause"));
       }
 
       return false;

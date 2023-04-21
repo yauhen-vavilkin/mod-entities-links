@@ -2,6 +2,7 @@ package org.folio.support;
 
 import static java.util.UUID.randomUUID;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ACTUAL;
 import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 
@@ -34,6 +35,7 @@ import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.domain.entity.AuthorityDataStatStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
+import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.spring.tools.client.UsersClient;
 import org.folio.spring.tools.model.ResultList;
@@ -221,7 +223,8 @@ public class TestDataUtils {
   }
 
   public record Link(UUID authorityId, String tag, String naturalId,
-                     char[] subfields, int linkingRuleId) {
+                     char[] subfields, int linkingRuleId,
+                     InstanceAuthorityLinkStatus status, String errorCause) {
 
     public static final UUID[] AUTH_IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID(), randomUUID()};
     public static final String[] TAGS = new String[] {"100", "240", "700", "710"};
@@ -245,7 +248,7 @@ public class TestDataUtils {
     }
 
     public Link(UUID authorityId, String tag, String naturalId, char[] subfields) {
-      this(authorityId, tag, naturalId, subfields, RandomUtils.nextInt(1, 10));
+      this(authorityId, tag, naturalId, subfields, RandomUtils.nextInt(1, 10), ACTUAL, null);
     }
 
     public static Link of(int authIdNum, int tagNum) {
@@ -257,12 +260,19 @@ public class TestDataUtils {
       return new Link(AUTH_IDS[authIdNum], tag, naturalId, TAGS_TO_SUBFIELDS.get(tag).toCharArray());
     }
 
+    public static Link of(InstanceAuthorityLinkStatus status, String errorCause) {
+      return new Link(AUTH_IDS[0], TAGS[0], AUTH_IDS[0].toString(), TAGS_TO_SUBFIELDS.get(TAGS[0]).toCharArray(),
+        1, status, errorCause);
+    }
+
     public InstanceLinkDto toDto(UUID instanceId) {
       return new InstanceLinkDto()
         .instanceId(instanceId)
         .authorityId(authorityId)
         .authorityNaturalId(naturalId)
-        .linkingRuleId(TAGS_TO_RULE_IDS.get(tag));
+        .linkingRuleId(TAGS_TO_RULE_IDS.get(tag))
+        .status(status.toString())
+        .errorCause(errorCause);
     }
 
     public InstanceAuthorityLink toEntity(UUID instanceId) {
@@ -276,6 +286,8 @@ public class TestDataUtils {
           .id(TAGS_TO_RULE_IDS.get(tag))
           .bibField(tag)
           .build())
+        .status(status)
+        .errorCause(errorCause)
         .build();
     }
   }

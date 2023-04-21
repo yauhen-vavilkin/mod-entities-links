@@ -29,6 +29,8 @@ public interface InstanceAuthorityLinkMapper {
   @Mapping(target = "authorityData.id", source = "authorityId")
   @Mapping(target = "authorityData.naturalId", source = "authorityNaturalId")
   @Mapping(target = "linkingRule.id", source = "linkingRuleId")
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "errorCause", ignore = true)
   InstanceAuthorityLink convertDto(InstanceLinkDto source);
 
   List<InstanceAuthorityLink> convertDto(List<InstanceLinkDto> source);

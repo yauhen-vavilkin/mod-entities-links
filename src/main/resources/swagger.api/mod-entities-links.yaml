@@ -290,11 +290,20 @@ components:
         linkingRuleId:
           type: integer
           description: ID of linking rule by which link should be created
+        status:
+          type: string
+          readOnly: true
+          description: Status of the link
+        errorCause:
+          type: string
+          readOnly: true
+          description: Link update error cause (if present)
       required:
         - authorityId
         - authorityNaturalId
         - instanceId
         - linkingRuleId
+        - status
 
     uuidCollection:
       type: object

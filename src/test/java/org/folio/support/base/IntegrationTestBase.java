@@ -8,14 +8,12 @@ import static org.awaitility.Durations.TEN_SECONDS;
 import static org.folio.support.JsonTestUtils.asJson;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
-import static org.hamcrest.Matchers.is;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,7 +30,6 @@ import org.folio.spring.test.extension.EnablePostgres;
 import org.folio.spring.test.extension.impl.OkapiConfiguration;
 import org.folio.support.DatabaseHelper;
 import org.folio.tenant.domain.dto.TenantAttributes;
-import org.hamcrest.Matcher;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -53,7 +50,6 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @EnableKafka
@@ -171,26 +167,6 @@ public class IntegrationTestBase {
 
   protected static void awaitUntilAsserted(ThrowingRunnable throwingRunnable) {
     await().pollInterval(ONE_SECOND).atMost(TEN_SECONDS).untilAsserted(throwingRunnable);
-  }
-
-  protected ResultMatcher errorParameterMatch(Matcher<String> errorParameterKeyMatcher) {
-    return jsonPath("$.errors.[0].parameters.[0].key", errorParameterKeyMatcher);
-  }
-
-  protected ResultMatcher errorTypeMatch(Matcher<String> errorMessageMatcher) {
-    return jsonPath("$.errors.[0].type", errorMessageMatcher);
-  }
-
-  protected ResultMatcher errorCodeMatch(Matcher<String> errorMessageMatcher) {
-    return jsonPath("$.errors.[0].code", errorMessageMatcher);
-  }
-
-  protected ResultMatcher errorMessageMatch(Matcher<String> errorMessageMatcher) {
-    return jsonPath("$.errors.[0].message", errorMessageMatcher);
-  }
-
-  protected ResultMatcher errorTotalMatch(int errorTotal) {
-    return jsonPath("$.total_records", is(errorTotal));
   }
 
   @TestConfiguration

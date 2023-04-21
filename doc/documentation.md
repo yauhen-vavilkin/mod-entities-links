@@ -167,7 +167,9 @@ Response:
       "authorityId": "0794f296-4094-4243-b9af-bb4bf51cbfae",
       "authorityNaturalId": "n92099941",
       "instanceId": "b2658a84-912b-4ed9-83d7-e8201f4d27ec",
-      "linkingRuleId": 1
+      "linkingRuleId": 1,
+      "status": "ERROR",
+      "errorCause": "Some error"
     }
   ],
   "totalRecords": 1
