@@ -8,6 +8,14 @@ servers:
   - url: https://localhost:8081
 
 paths:
+  /start-poc:
+    post:
+      operationId: startPoc
+      tags:
+        - instance-links
+      responses:
+        '200':
+          description: OK
   /links/instances/{instanceId}:
     put:
       description: Update links collection related to Instance

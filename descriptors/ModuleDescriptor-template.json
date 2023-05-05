@@ -47,6 +47,14 @@
         },
         {
           "methods": [
+            "POST"
+          ],
+          "pathPattern": "/start-poc",
+          "permissionsRequired": [
+          ]
+        },
+        {
+          "methods": [
             "PUT"
           ],
           "pathPattern": "/links/instances/{instanceId}",

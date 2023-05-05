@@ -45,11 +45,44 @@
     <maven-surefire-plugin.version>3.0.0</maven-surefire-plugin.version>
   </properties>
 
+
   <dependencies>
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-spring-base</artifactId>
       <version>${folio-spring-base.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>data-import-processing-core</artifactId>
+      <version>4.1.0-SNAPSHOT</version>
+      <exclusions>
+        <exclusion>
+          <groupId>io.vertx</groupId>
+          <artifactId>vertx-kafka-client</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.vertx</groupId>
+          <artifactId>vertx-web-client</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.folio</groupId>
+          <artifactId>domain-models-api-aspects</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-core</artifactId>
+      <version>4.3.7</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.minio</groupId>
+      <artifactId>minio</artifactId>
+      <version>8.5.2</version>
     </dependency>
 
     <dependency>
@@ -421,7 +454,6 @@
             <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
           </sourceDirectories>
           <failsOnError>true</failsOnError>
-          <encoding>UTF-8</encoding>
           <violationSeverity>warning</violationSeverity>
           <failOnViolation>true</failOnViolation>
           <logViolationsToConsole>true</logViolationsToConsole>
