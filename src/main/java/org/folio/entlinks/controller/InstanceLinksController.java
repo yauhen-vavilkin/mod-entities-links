@@ -7,7 +7,7 @@ import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
 import org.folio.entlinks.domain.dto.LinksCountDtoCollection;
 import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.rest.resource.InstanceLinksApi;
-import org.folio.entlinks.service.SourceReader;
+import org.folio.entlinks.service.ChunkPreparation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class InstanceLinksController implements InstanceLinksApi {
 
   private final LinkingServiceDelegate linkingServiceDelegate;
-  private final SourceReader sourceReader;
+  private final ChunkPreparation chunkPreparation;
 
   @Override
   public ResponseEntity<Void> startPoc(Integer chunkSize) {
-    sourceReader.readAndMap(chunkSize);
+    chunkPreparation.readAndMap(chunkSize);
     return ResponseEntity.ok().build();
   }
 

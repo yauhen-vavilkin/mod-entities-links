@@ -4,13 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-class SourceReaderTest {
+class ChunkPreparationTest {
 
   @Test
   void name() {
     Integer chunkSize = 10000;
     Integer totalRecords = 38456;
-
-    assertEquals(4, totalRecords / chunkSize);
+    var chunkAmount = ChunkPreparation.getChunkAmount(chunkSize, totalRecords);
+    assertEquals(4, chunkAmount);
   }
 }
