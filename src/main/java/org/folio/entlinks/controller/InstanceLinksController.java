@@ -19,8 +19,8 @@ public class InstanceLinksController implements InstanceLinksApi {
   private final SourceReader sourceReader;
 
   @Override
-  public ResponseEntity<Void> startPoc() {
-    sourceReader.readAndMap();
+  public ResponseEntity<Void> startPoc(Integer chunkSize) {
+    sourceReader.readAndMap(chunkSize);
     return ResponseEntity.ok().build();
   }
 

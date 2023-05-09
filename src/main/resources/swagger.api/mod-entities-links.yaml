@@ -11,6 +11,13 @@ paths:
   /start-poc:
     post:
       operationId: startPoc
+      parameters:
+        - name: chunkSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10000
       tags:
         - instance-links
       responses:
