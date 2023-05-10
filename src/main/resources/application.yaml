@@ -20,6 +20,7 @@ spring:
           batch_size: 20
         order_inserts: true
         order_updates: true
+    open-in-view: false
   jackson:
     default-property-inclusion: non_null
     deserialization:
