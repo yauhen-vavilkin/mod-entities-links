@@ -7,11 +7,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.folio.processing.mapping.defaultmapper.MarcToAuthorityMapper;
 import org.folio.processing.mapping.defaultmapper.processor.parameters.MappingParameters;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -35,38 +38,60 @@ public class SourceReader {
     }
     var sb = new StringBuilder(String.format("SELECT * FROM %s.marc_authority_view WHERE ", dbSchemaName));
     if (chunk.startFrom() != null) {
-      sb.append(String.format("marc_id >= '%s'", chunk.startFrom()));
+      sb.append(String.format("marc_id >= ?", chunk.startFrom()));
     }
     if (chunk.endBy() != null) {
       if (chunk.startFrom() != null) {
         sb.append(" AND ");
       }
-      sb.append(String.format("marc_id < '%s'", chunk.endBy()));
+      sb.append(String.format("marc_id < ?", chunk.endBy()));
     }
+
     log.info("retrieve and map authority records by query {}", sb.toString());
-    var lines = jdbcTemplate.queryForStream(sb.toString(),
-        (rs, rowNum) -> {
-          var authorityId = rs.getString("authority_id");
-          var version = rs.getInt("v");
-          var marc = rs.getObject("marc");
-          return new SourceData(authorityId, marc, version);
+    try (var lines = getResultStream(chunk, sb)) {
+      var list = lines
+        .map(sourceData -> {
+          var marcSource = new JsonObject(sourceData.marc().toString());
+          var authority = mapper.mapRecord(marcSource, mappingParameters, mappingRules);
+          authority.setId(sourceData.authorityId());
+          authority.setVersion(sourceData.version());
+          return authority;
         })
-      .map(sourceData -> {
-        var marcSource = new JsonObject(sourceData.marc().toString());
-        var authority = mapper.mapRecord(marcSource, mappingParameters, mappingRules);
-        authority.setId(sourceData.authorityId());
-        authority.setVersion(sourceData.version());
-        return authority;
-      })
-      .map(authority -> {
-        try {
-          return objectMapper.writeValueAsString(authority);
-        } catch (JsonProcessingException e) {
-          throw new RuntimeException(e);
+        .map(authority -> {
+          try {
+            return objectMapper.writeValueAsString(authority);
+          } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+          }
+        })
+        .toList();
+      writeToFile(list, file);
+    }
+
+  }
+
+  @NotNull
+  private Stream<SourceData> getResultStream(ChunkPreparation.Chunk chunk, StringBuilder sb) {
+    return jdbcTemplate.queryForStream(
+      con -> {
+        var ps = con.prepareStatement(sb.toString());
+        if (chunk.startFrom() != null) {
+          ps.setObject(1, UUID.fromString(chunk.startFrom()));
+          if (chunk.endBy() != null) {
+            ps.setObject(2, UUID.fromString(chunk.endBy()));
+          }
+        } else {
+          if (chunk.endBy() != null) {
+            ps.setObject(1, UUID.fromString(chunk.endBy()));
+          }
         }
-      })
-      .toList();
-    writeToFile(lines, file);
+        return ps;
+      }, (rs, rowNum) -> {
+        var authorityId = rs.getString("authority_id");
+        var version = rs.getInt("v");
+        var marc = rs.getObject("marc");
+        return new SourceData(authorityId, marc, version);
+      });
   }
 
   private void writeToFile(List<String> s, File file) {
