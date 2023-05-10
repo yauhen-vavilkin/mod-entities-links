@@ -8,13 +8,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.folio.processing.mapping.defaultmapper.MarcToAuthorityMapper;
 import org.folio.processing.mapping.defaultmapper.processor.parameters.MappingParameters;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -30,6 +28,7 @@ public class SourceReader {
   @Async
   public void doMapping(JsonObject mappingRules, MappingParameters mappingParameters, String dbSchemaName,
                         ObjectMapper objectMapper, ChunkPreparation.Chunk chunk) {
+    log.info("startChunk_{}", chunk.id());
     var file = new File(String.format("authorities_%s.txt", chunk.id()));
     try {
       file.createNewFile();
@@ -47,32 +46,33 @@ public class SourceReader {
       sb.append(String.format("marc_id < ?", chunk.endBy()));
     }
 
-    log.info("retrieve and map authority records by query {}", sb.toString());
-    try (var lines = getResultStream(chunk, sb)) {
-      var list = lines
-        .map(sourceData -> {
-          var marcSource = new JsonObject(sourceData.marc().toString());
-          var authority = mapper.mapRecord(marcSource, mappingParameters, mappingRules);
-          authority.setId(sourceData.authorityId());
-          authority.setVersion(sourceData.version());
-          return authority;
-        })
-        .map(authority -> {
-          try {
-            return objectMapper.writeValueAsString(authority);
-          } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-          }
-        })
-        .toList();
-      writeToFile(list, file);
-    }
-
+    log.info("start::retrieve authority records from {} to {}", chunk.startFrom(), chunk.endBy());
+    var resultStream = getResultStream(chunk, sb);
+    log.info("finish::retrieve authority records from {} to {}", chunk.startFrom(), chunk.endBy());
+    log.info("start::map authority records from {} to {}", chunk.startFrom(), chunk.endBy());
+    var list = resultStream.stream()
+      .map(sourceData -> {
+        var marcSource = new JsonObject(sourceData.marc().toString());
+        var authority = mapper.mapRecord(marcSource, mappingParameters, mappingRules);
+        authority.setId(sourceData.authorityId());
+        authority.setVersion(sourceData.version());
+        return authority;
+      })
+      .map(authority -> {
+        try {
+          return objectMapper.writeValueAsString(authority);
+        } catch (JsonProcessingException e) {
+          throw new RuntimeException(e);
+        }
+      })
+      .toList();
+    log.info("finish::map authority records from {} to {}", chunk.startFrom(), chunk.endBy());
+    writeToFile(list, file);
+    log.info("finishChunk_{}", chunk.id());
   }
 
-  @NotNull
-  private Stream<SourceData> getResultStream(ChunkPreparation.Chunk chunk, StringBuilder sb) {
-    return jdbcTemplate.queryForStream(
+  private List<SourceData> getResultStream(ChunkPreparation.Chunk chunk, StringBuilder sb) {
+    return jdbcTemplate.query(
       con -> {
         var ps = con.prepareStatement(sb.toString());
         if (chunk.startFrom() != null) {
