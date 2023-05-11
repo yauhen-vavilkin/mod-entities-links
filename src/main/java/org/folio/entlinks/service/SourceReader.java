@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -28,8 +29,9 @@ public class SourceReader {
   private final MarcToAuthorityMapper mapper;
 
   @Async
-  public void doMapping(JsonObject mappingRules, MappingParameters mappingParameters, String dbSchemaName,
-                        ObjectMapper objectMapper, ChunkPreparation.Chunk chunk) {
+  public CompletableFuture<Boolean> doMapping(JsonObject mappingRules, MappingParameters mappingParameters,
+                                              String dbSchemaName,
+                                              ObjectMapper objectMapper, ChunkPreparation.Chunk chunk) {
     log.info("startChunk_{}", chunk.id());
     var file = new File(String.format("authorities_%s.txt", chunk.id()));
     try {
@@ -73,6 +75,7 @@ public class SourceReader {
     writeToFile(list, file);
     list.clear();
     log.info("finishChunk_{}", chunk.id());
+    return CompletableFuture.completedFuture(true);
   }
 
   private List<SourceData> getResultStream(ChunkPreparation.Chunk chunk, StringBuilder sb) {

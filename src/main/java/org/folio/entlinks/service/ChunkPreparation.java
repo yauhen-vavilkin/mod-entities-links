@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.Authority;
@@ -38,11 +39,11 @@ public class ChunkPreparation {
     List<Chunk> chunks = getChunks(chunkSize, dbSchemaName);
 
     ObjectMapper objectMapper = getObjectMapper();
-    for (Chunk chunk : chunks) {
-      sourceReader.doMapping(mappingRules, mappingParameters, dbSchemaName, objectMapper, chunk);
-    }
-
-    log.info("End poc");
+    var futures = chunks.stream()
+      .map(chunk -> sourceReader.doMapping(mappingRules, mappingParameters, dbSchemaName, objectMapper, chunk))
+      .toArray(CompletableFuture[]::new);
+    CompletableFuture.allOf(futures)
+      .whenComplete((unused, throwable) -> log.info("End poc"));
   }
 
   public static int getChunkAmount(int chunkSize, Integer totalRecords) {
