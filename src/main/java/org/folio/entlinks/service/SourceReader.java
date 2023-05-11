@@ -8,9 +8,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.output.FileWriterWithEncoding;
+import org.folio.Authority;
 import org.folio.processing.mapping.defaultmapper.MarcToAuthorityMapper;
 import org.folio.processing.mapping.defaultmapper.processor.parameters.MappingParameters;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -56,6 +58,7 @@ public class SourceReader {
         var authority = mapper.mapRecord(marcSource, mappingParameters, mappingRules);
         authority.setId(sourceData.authorityId());
         authority.setVersion(sourceData.version());
+        authority.setSource(Authority.Source.MARC);
         return authority;
       })
       .map(authority -> {
@@ -65,9 +68,10 @@ public class SourceReader {
           throw new RuntimeException(e);
         }
       })
-      .toList();
+      .collect(Collectors.toList());
     log.info("finish::map authority records from {} to {}", chunk.startFrom(), chunk.endBy());
     writeToFile(list, file);
+    list.clear();
     log.info("finishChunk_{}", chunk.id());
   }
 
