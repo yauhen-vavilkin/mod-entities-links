@@ -22,8 +22,8 @@ public class EntityLinksApplication {
   @Bean(name = "threadPoolTaskExecutor")
   public Executor threadPoolTaskExecutor() {
     var threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
-    threadPoolTaskExecutor.setCorePoolSize(5);
-    threadPoolTaskExecutor.setMaxPoolSize(5);
+    threadPoolTaskExecutor.setCorePoolSize(10);
+    threadPoolTaskExecutor.setMaxPoolSize(10);
     return threadPoolTaskExecutor;
   }
 

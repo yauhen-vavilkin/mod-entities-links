@@ -67,7 +67,7 @@ public class SourceReader {
       resultStream
         .map(sourceData -> {
           var marcSource = new JsonObject(sourceData.marc().toString());
-          var authority = mapper.mapRecord(marcSource, mappingParameters, mappingRules);
+          var authority = new MarcToAuthorityMapper().mapRecord(marcSource, mappingParameters, mappingRules);
           authority.setId(sourceData.authorityId());
           authority.setVersion(sourceData.version());
           authority.setSource(Authority.Source.MARC);

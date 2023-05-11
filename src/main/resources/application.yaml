@@ -6,8 +6,8 @@ spring:
     password: ${DB_PASSWORD:folio_admin}
     username: ${DB_USERNAME:folio_admin}
     hikari:
-      minimum-idle: 10
-      maximum-pool-size: 10
+      minimum-idle: 20
+      maximum-pool-size: 20
       max-lifetime: 60000
       connection-timeout: 120000
   liquibase:
