@@ -1,0 +1,39 @@
+name: Add Comment to Pull Request
+
+on:
+  pull_request:
+    types:
+      - labeled
+
+jobs:
+  add_comment:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check if label is "dependencies"
+        run: |
+          if [ "${{ github.event.label.name }}" == "dependencies" ]; then
+            echo "::set-output name=dependencies::true"
+          else
+            echo "::set-output name=dependencies::false"
+          fi
+        id: check_label
+
+      - name: Add Comment
+        if: steps.check_label.outputs.dependencies == 'true'
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const context = github.context;
+            const owner = context.payload.repository.owner.login;
+            const repo = context.payload.repository.name;
+            const prNumber = context.payload.pull_request.number;
+            const commentBody = '@dependabot squash and merge';
+
+            github.issues.createComment({
+              owner: owner,
+              repo: repo,
+              issue_number: prNumber,
+              body: commentBody
+            });
