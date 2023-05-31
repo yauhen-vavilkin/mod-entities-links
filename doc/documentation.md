@@ -20,6 +20,7 @@
       * [Examples](#examples)
         * [Retrieve all links by the given instance id:](#retrieve-all-links-by-the-given-instance-id)
         * [Modify links by the given instance id:](#modify-links-by-the-given-instance-id)
+        * [Count number of links for each authority id:](#count-number-of-links-for-each-authority-id)
     * [API instance-authority-linking-rules](#api-instance-authority-linking-rules)
       * [Instance to Authority linking rule parameters](#instance-to-authority-linking-rule-parameters)
       * [Examples](#examples-1)
@@ -31,6 +32,9 @@
           * [Instance to Authority links statistics parameters](#instance-to-authority-links-statistics-parameters)
         * [Retrieve linked bib updates statistics collection:](#retrieve-linked-bib-updates-statistics-collection)
           * [Linked bib updates statistics parameters](#linked-bib-updates-statistics-parameters)
+    * [API instance-authority-links-suggestions](#api-instance-authority-links-suggestions)
+      * [Examples](#examples-3)
+        * [Retrieve links suggestions for marc records:](#retrieve-links-suggestions-for-marc-records)
 <!-- TOC -->
 
 ## Compiling
@@ -144,10 +148,11 @@ MARC authority field 1XX/4XX.
 Which means that the fields are not editable on bib side, instead manual edits to a MARC authority field 1XX/4XX are
 reflected on them.
 
-| METHOD | URL                             | Required permissions                      | DESCRIPTION                                 |
-|:-------|:--------------------------------|:------------------------------------------|:--------------------------------------------|
-| GET    | `/links/instances/{instanceId}` | `entities-links.instances.collection.get` | Get links collection related to Instance    |
-| PUT    | `/links/instances/{instanceId}` | `entities-links.instances.collection.put` | Update links collection related to Instance |
+| METHOD | URL                             | Required permissions                             | DESCRIPTION                                 |
+|:-------|:--------------------------------|:-------------------------------------------------|:--------------------------------------------|
+| GET    | `/links/instances/{instanceId}` | `entities-links.instances.collection.get`        | Get links collection related to Instance    |
+| PUT    | `/links/instances/{instanceId}` | `entities-links.instances.collection.put`        | Update links collection related to Instance |
+| POST   | `/links/authorities/bulk/count` | `instance-authority-links.authorities.bulk.post` | Retrieve number of links by authority IDs   |
 
 #### Examples
 
@@ -158,7 +163,6 @@ reflected on them.
 `GET /links/instances/b2658a84-912b-4ed9-83d7-e8201f4d27ec`
 
 Response:
-
 ```json
 {
   "links": [
@@ -202,6 +206,38 @@ Request body:
 }
 ```
 
+<a name='count-number-of-links-for-each-authority-id'></a>
+
+##### Count number of links for each authority id:
+
+`POST /links/authorities/bulk/count`
+
+Request body:
+```json
+{
+  "ids": [
+    "611d2938-9824-4817-a737-7ff26ab26d03",
+    "8e6a8a67-dd6b-4b40-899e-9b9167e9ad20"
+  ]
+}
+```
+
+Response:
+```json
+{
+  "links": [
+    {
+      "id": "8e6a8a67-dd6b-4b40-899e-9b9167e9ad20",
+      "totalLinks": 11
+    },
+    {
+      "id": "611d2938-9824-4817-a737-7ff26ab26d03",
+      "totalLinks": 0
+    }
+  ]
+}
+```
+
 ### API instance-authority-linking-rules
 
 The API enables possibility to retrieve default linking rules.
@@ -235,7 +271,6 @@ The API enables possibility to retrieve default linking rules.
 `GET /linking-rules/instance-authority`
 
 Response:
-
 ```json
 [
   {
@@ -279,7 +314,6 @@ Response:
 `PATCH /linking-rules/instance-authority/1`
 
 Request body:
-
 ```json
 {
   "id": 1,
@@ -313,7 +347,6 @@ The API provides statistics for instance to authority links statistics
 * `limit` - Max number of items in collection
 
 Response:
-
 ```json
 [
   {
@@ -380,7 +413,6 @@ Response:
 * `limit` - Max number of items in collection
 
 Response:
-
 ```json
 [
   {
@@ -405,4 +437,164 @@ Response:
     ]
   }
 ]
+```
+
+### API instance-authority-links-suggestions
+
+The API provides links suggestions for marc records
+
+| METHOD | URL                       | Required permissions                        | DESCRIPTION                                 |
+|:-------|:--------------------------|:--------------------------------------------|:--------------------------------------------|
+| POST   | `/links-suggestions/marc` | `instance-authority-links.suggestions.post` | Retrieve links suggestions for marc records |
+
+#### Examples
+
+<a name="retrieve-links-suggestions-for-marc-records"></a>
+
+##### Retrieve links suggestions for marc records:
+
+`POST /links-suggestions/marc`
+
+Request body:
+```json
+{
+  "records": [
+    {
+      "fields": [
+        {
+          "001": "393893"
+        },
+        {
+          "100": {
+            "ind1": "/",
+            "ind2": "/",
+            "subfields": [
+              {
+                "a": "Mozart, Wolfgang Amadeus"
+              },
+              {
+                "d": "1756-1791."
+              },
+              {
+                "0": "12345"
+              },
+              {
+                "9": "b9a5f035-de63-4e2c-92c2-07240c88b817"
+              }
+            ],
+            "linkDetails": {
+              "authorityId": "b9a5f035-de63-4e2c-92c2-07240c88b817",
+              "authorityNaturalId": "12345",
+              "linkingRuleId": 1,
+              "linkStatus": "ACTUAL"
+            }
+          }
+        },
+        {
+          "110": {
+            "ind1": "/",
+            "ind2": "/",
+            "subfields": [
+              {
+                "a": "Mozart"
+              }
+            ]
+          }
+        },
+        {
+          "130": {
+            "ind1": "/",
+            "ind2": "/",
+            "subfields": [
+              {
+                "a": "Wolfgang Amadeus"
+              }
+            ]
+          }
+        }
+      ],
+      "leader": "01706ccm a2200361   4500"
+    }
+  ]
+}
+```
+
+Response:
+```json
+{
+  "records": [
+    {
+      "fields": [
+        {
+          "001": "393893"
+        },
+        {
+          "100": {
+            "ind1": "/",
+            "ind2": "/",
+            "subfields": [
+              {
+                "a": "Mozart, Wolfgang Amadeus,"
+              },
+              {
+                "d": "1756-1791."
+              },
+              {
+                "0": "12345"
+              },
+              {
+                "9": "b9a5f035-de63-4e2c-92c2-07240c88b817"
+              }
+            ],
+            "linkDetails": {
+              "authorityId": "b9a5f035-de63-4e2c-92c2-07240c88b817",
+              "authorityNaturalId": "12345",
+              "linkingRuleId": 1,
+              "linkStatus": "ACTUAL"
+            }
+          }
+        },
+        {
+          "110": {
+            "ind1": "/",
+            "ind2": "/",
+            "subfields": [
+              {
+                "a": "Mozart"
+              },
+              {
+                "0": "12345"
+              },
+              {
+                "9": "b9a5f035-de63-4e2c-92c2-07240c88b817"
+              }
+            ],
+            "linkDetails": {
+              "authorityId": "b9a5f035-de63-4e2c-92c2-07240c88b817",
+              "authorityNaturalId": "12345",
+              "linkingRuleId": 1,
+              "linkStatus": "NEW"
+            }
+          }
+        },
+        {
+          "130": {
+            "ind1": "/",
+            "ind2": "/",
+            "subfields": [
+              {
+                "a": "Wolfgang Amadeus"
+              }
+            ],
+            "linkDetails": {
+              "linkStatus": "ERROR",
+              "errorStatusCode": "101"
+            }
+          }
+        }
+      ],
+      "leader": "01706ccm a2200361   4500"
+    }
+  ]
+} 
 ```

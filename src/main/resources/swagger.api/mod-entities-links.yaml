@@ -157,6 +157,30 @@ paths:
         '500':
           $ref: '#/components/responses/serverErrorResponse'
 
+  /links-suggestions/marc:
+    post:
+      description: Retrieve links suggestions for marc records
+      operationId: suggestLinksForMarcRecord
+      tags:
+        - links-suggestions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/parsedRecordContentCollection"
+        required: true
+      responses:
+        '200':
+          description: The marc records with links suggestion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/parsedRecordContentCollection"
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/serverErrorResponse'
+
   /links/stats/authority:
     get:
       description: Retrieve authority updates (related to links) statistics
@@ -432,13 +456,28 @@ components:
       $ref: schemas/authorityInventoryRecord.json
 
     sourceRecord:
-      $ref: schemas/sourceRecord.json
+      $ref: schemas/mod-source-record-storage/sourceRecord.json
+
+    strippedParsedRecordCollection:
+      $ref: schemas/mod-source-record-storage/strippedParsedRecordCollection.json
+
+    fetchParsedRecordsBatchRequest:
+      $ref: schemas/mod-source-record-storage/fetchParsedRecordsBatchRequest.json
+
+    parsedRecordContentCollection:
+      $ref: schemas/mod-source-record-storage/parsedRecordContentCollection.json
+
+    parsedRecordContent:
+      $ref: schemas/mod-source-record-storage/parsedRecordContent.json
 
     linkAction:
       $ref: schemas/authority/control/linkAction.json
 
     linkStatus:
       $ref: schemas/authority/control/linkStatus.json
+
+    authoritySearchResult:
+      $ref: schemas/mod-search/authoritySearchResult.json
 
     linksChangeEvent:
       type: object

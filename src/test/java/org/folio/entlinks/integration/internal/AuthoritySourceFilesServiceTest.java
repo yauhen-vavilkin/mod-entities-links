@@ -29,8 +29,8 @@ class AuthoritySourceFilesServiceTest {
 
   @Test
   void fetchAuthoritySourceUrls_positive() {
-    var e1 = new AuthoritySourceFile(UUID.randomUUID(), "url1", "source-file-name-1");
-    var e2 = new AuthoritySourceFile(UUID.randomUUID(), "url2", "source-file-name-2");
+    var e1 = new AuthoritySourceFile(UUID.randomUUID(), "url1", "source-file-name-1", codes("e1"));
+    var e2 = new AuthoritySourceFile(UUID.randomUUID(), "url2", "source-file-name-2", codes("e2"));
     var sourceFiles = List.of(e1, e2);
 
     when(client.fetchAuthoritySourceFiles(anyInt())).thenReturn(new AuthoritySourceFiles(sourceFiles));
@@ -44,10 +44,10 @@ class AuthoritySourceFilesServiceTest {
 
   @Test
   void fetchAuthoritySourceUrls_positive_ignoreNullValues() {
-    var e1 = new AuthoritySourceFile(UUID.randomUUID(), "url1", "source-file-name-1");
-    var e2 = new AuthoritySourceFile(null, "url2", "source-file-name-2");
-    var e3 = new AuthoritySourceFile(UUID.randomUUID(), "url3", "source-file-name-3");
-    var e4 = new AuthoritySourceFile(UUID.randomUUID(), null, null);
+    var e1 = new AuthoritySourceFile(UUID.randomUUID(), "url1", "source-file-name-1", codes("e1"));
+    var e2 = new AuthoritySourceFile(null, "url2", "source-file-name-2", codes("e2"));
+    var e3 = new AuthoritySourceFile(UUID.randomUUID(), "url3", "source-file-name-3", codes("e3"));
+    var e4 = new AuthoritySourceFile(UUID.randomUUID(), null, null, codes("e4"));
     var validSourceFiles = List.of(e1, e3);
     var sourceFiles = List.of(e1, e2, e3, e4);
 
@@ -66,7 +66,7 @@ class AuthoritySourceFilesServiceTest {
 
     assertThatThrownBy(() -> service.fetchAuthoritySources())
       .isInstanceOf(FolioIntegrationException.class)
-      .hasMessage("Authority source files are empty.");
+      .hasMessage("Authority source files are empty");
   }
 
   @Test
@@ -79,5 +79,9 @@ class AuthoritySourceFilesServiceTest {
       .hasCauseExactlyInstanceOf(cause.getClass())
       .hasMessage("Failed to fetch authority source files");
 
+  }
+
+  private List<String> codes(String... codes) {
+    return List.of(codes);
   }
 }

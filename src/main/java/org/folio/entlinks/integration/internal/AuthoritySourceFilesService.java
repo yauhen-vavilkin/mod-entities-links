@@ -23,18 +23,26 @@ public class AuthoritySourceFilesService {
   private final AuthoritySourceFileClient client;
 
   @Cacheable(cacheNames = AUTHORITY_SOURCE_FILES_CACHE,
-             key = "@folioExecutionContext.tenantId",
-             unless = "#result.isEmpty()")
+    key = "@folioExecutionContext.tenantId",
+    unless = "#result.isEmpty()")
   public Map<UUID, AuthoritySourceFile> fetchAuthoritySources() throws FolioIntegrationException {
     log.info("Fetching authority source files");
     var authoritySourceFiles = fetchAuthoritySourceFiles();
     if (authoritySourceFiles.isEmpty()) {
-      throw new FolioIntegrationException("Authority source files are empty.");
+      throw new FolioIntegrationException("Authority source files are empty");
     }
 
     return authoritySourceFiles.stream()
       .filter(file -> nonNull(file.id()) && nonNull(file.baseUrl()))
       .collect(Collectors.toMap(AuthoritySourceFile::id, file -> file));
+  }
+
+  public AuthoritySourceFile findAuthoritySourceFileByNaturalId(Map<UUID, AuthoritySourceFile> files,
+                                                                String naturalId) {
+    return files.values().stream()
+      .filter(file -> file.codes().stream().anyMatch(naturalId::startsWith))
+      .findFirst()
+      .orElse(null);
   }
 
   private List<AuthoritySourceFile> fetchAuthoritySourceFiles() {

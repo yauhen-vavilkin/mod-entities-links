@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Describes entity to fetch exact fields of parsed records by external IDs",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "conditions": {
+      "type": "object",
+      "title": "FetchConditions",
+      "description": "Conditions for fetching records by external IDs",
+      "additionalProperties": false,
+      "properties": {
+        "idType": {
+          "description": "External id type",
+          "$ref": "externalIdType.json"
+        },
+        "ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "List of external ids",
+          "items": {
+            "description": "External id",
+            "$ref": "../uuid.json"
+          }
+        }
+      }
+    },
+    "data": {
+      "description": "Array of requested fields",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "title": "FieldRange",
+        "description": "Field range to provide",
+        "additionalProperties": false,
+        "properties": {
+          "from": {
+            "description": "Segment tag to range from",
+            "type": "string"
+          },
+          "to": {
+            "description": "Segment tag to range to",
+            "type": "string"
+          }
+        },
+        "required": ["from", "to"]
+      }
+    },
+    "recordType": {
+      "description": "Type of record, e.g. MARC",
+      "type": "string",
+      "$ref": "recordType.json"
+    }
+  },
+  "required": [
+    "conditions",
+    "recordType",
+    "data"
+  ]
+}

@@ -4,6 +4,7 @@
   "description": "Link status",
   "enum": [
     "ACTUAL",
-    "ERROR"
+    "ERROR",
+    "NEW"
   ]
 }

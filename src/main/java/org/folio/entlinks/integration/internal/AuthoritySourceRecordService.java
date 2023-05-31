@@ -8,8 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.IOUtils;
 import org.folio.entlinks.client.SourceStorageClient;
+import org.folio.entlinks.domain.dto.SourceParsedRecord;
 import org.folio.entlinks.domain.dto.SourceRecord;
-import org.folio.entlinks.domain.dto.SourceRecordParsedRecord;
 import org.folio.entlinks.exception.FolioIntegrationException;
 import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
 import org.marc4j.MarcJsonReader;
@@ -39,7 +39,7 @@ public class AuthoritySourceRecordService {
     }
   }
 
-  private Record extractMarcRecord(SourceRecordParsedRecord parsedRecord) {
+  private Record extractMarcRecord(SourceParsedRecord parsedRecord) {
     try (var input = IOUtils.toInputStream(objectMapper.writeValueAsString(parsedRecord), UTF_8)) {
       return new MarcJsonReader(input).next();
     } catch (Exception e) {

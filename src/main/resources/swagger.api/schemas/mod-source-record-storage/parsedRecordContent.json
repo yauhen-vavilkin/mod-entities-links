@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Parsed record content, e.g. MARC record",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "fields": {
+      "description": "List of fields",
+      "type": "array",
+      "items": {
+        "description": "Map of marc fields",
+        "title": "FieldContent",
+        "type": "object",
+        "maxProperties": 1,
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "ind1": {
+              "description": "Identifier 1",
+              "type": "string"
+            },
+            "ind2": {
+              "description": "Identifier 2",
+              "type": "string"
+            },
+            "subfields": {
+              "description": "List of subfields",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "description": "Map of subfields",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
+            "linkDetails": {
+              "description": "Link details",
+              "$ref": "../authority/control/linkDetails.json"
+            }
+          }
+        }
+      }
+    },
+    "leader": {
+      "description": "Parsed record content, e.g. MARC record",
+      "type": "string"
+    }
+  },
+  "required": [
+    "fields",
+    "leader"
+  ]
+}

@@ -8,4 +8,5 @@
   <include file="/changes/v1.0/update_authority_control_mapping.xml" relativeToChangelogFile="true"/>
   <include file="/changes/v1.1/link_rules_to_links.xml" relativeToChangelogFile="true"/>
   <include file="/changes/v2.0/changes_to_linking_rules.xml" relativeToChangelogFile="true"/>
+  <include file="/changes/v2.0/create_natural_id_index.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

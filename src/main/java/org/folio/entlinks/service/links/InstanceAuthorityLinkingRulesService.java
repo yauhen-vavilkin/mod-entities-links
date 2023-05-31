@@ -19,15 +19,20 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class InstanceAuthorityLinkingRulesService {
 
+  private static final String MIN_AVAILABLE_AUTHORITY_FIELD = "100";
+  private static final String MAX_AVAILABLE_AUTHORITY_FIELD = "150";
   private final LinkingRulesRepository repository;
 
+  @Cacheable(cacheNames = AUTHORITY_LINKING_RULES_CACHE,
+    key = "@folioExecutionContext.tenantId",
+    unless = "#result.isEmpty()")
   public List<InstanceAuthorityLinkingRule> getLinkingRules() {
     log.info("Loading linking rules");
     return repository.findAll(Sort.by("id").ascending());
   }
 
   @Cacheable(cacheNames = AUTHORITY_LINKING_RULES_CACHE,
-             key = "@folioExecutionContext.tenantId + ':' + #authorityField", unless = "#result.isEmpty()")
+    key = "@folioExecutionContext.tenantId + ':' + #authorityField", unless = "#result.isEmpty()")
   public List<InstanceAuthorityLinkingRule> getLinkingRulesByAuthorityField(String authorityField) {
     log.info("Loading linking rules for [authorityField: {}]", authorityField);
     return repository.findByAuthorityField(authorityField);
@@ -50,5 +55,13 @@ public class InstanceAuthorityLinkingRulesService {
       existedLinkingRule.setAutoLinkingEnabled(linkingRulePatch.getAutoLinkingEnabled());
     }
     repository.save(existedLinkingRule);
+  }
+
+  public String getMinAuthorityField() {
+    return MIN_AVAILABLE_AUTHORITY_FIELD;
+  }
+
+  public String getMaxAuthorityField() {
+    return MAX_AVAILABLE_AUTHORITY_FIELD;
   }
 }

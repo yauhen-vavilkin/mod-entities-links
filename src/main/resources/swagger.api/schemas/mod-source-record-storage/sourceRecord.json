@@ -6,28 +6,22 @@
   "properties": {
     "recordId": {
       "description": "UUID",
-      "$schema": "http://json-schema.org/draft-04/schema#",
-      "id": "uuid.schema",
-      "type": "string",
-      "format": "uuid"
+      "$ref": "../uuid.json"
     },
     "snapshotId": {
-      "description": "Corresponding snapshot id, which is the same as jobExecutionId",
-      "$schema": "http://json-schema.org/draft-04/schema#",
-      "id": "uuid.schema",
-      "type": "string",
-      "format": "uuid"
+      "description": "UUID",
+      "$ref": "../uuid.json"
     },
     "parsedRecord": {
       "description": "Parsed record",
       "type": "object",
+      "title": "SourceParsedRecord",
       "$schema": "http://json-schema.org/draft-04/schema#",
       "additionalProperties": false,
       "properties": {
         "id": {
           "description": "UUID",
-          "type": "string",
-          "format": "uuid"
+          "$ref": "../uuid.json"
         },
         "content": {
           "description": "Parsed record content, e.g. MARC record"

@@ -21,6 +21,7 @@ public class TestConstants {
 
   private static final String INSTANCE_LINKS_ENDPOINT_PATH = "/links/instances/{id}";
   private static final String AUTHORITY_LINKS_COUNT_ENDPOINT_PATH = "/links/authorities/bulk/count";
+  private static final String LINKS_SUGGESTIONS_ENDPOINT = "/links-suggestions/marc";
   private static final String LINKS_STATS_INSTANCE_ENDPOINT_PATH = "/links/stats/instance";
   private static final String LINKS_STATS_INSTANCE_ENDPOINT_PARAMS = "?status=%s&fromDate=%s&toDate=%s";
   private static final String AUTH_STATS_ENDPOINT_PATH_PATTERN = "/links/stats/authority";
@@ -41,6 +42,10 @@ public class TestConstants {
 
   public static String linksInstanceEndpoint() {
     return INSTANCE_LINKS_ENDPOINT_PATH;
+  }
+
+  public static String linksSuggestionsEndpoint() {
+    return LINKS_SUGGESTIONS_ENDPOINT;
   }
 
   public static String linkingRulesEndpoint() {

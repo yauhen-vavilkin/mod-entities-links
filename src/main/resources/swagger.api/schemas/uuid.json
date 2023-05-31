@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "UUID",
+  "id": "uuid.schema",
+  "type": "string",
+  "format": "uuid"
+}

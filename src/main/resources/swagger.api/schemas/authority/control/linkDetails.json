@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of SRS records content",
+  "type": "object",
+  "properties": {
+    "authorityId": {
+      "description": "Authority ID",
+      "type": "string",
+      "format": "uuid"
+    },
+    "naturalId": {
+      "description": "Authority Natural ID",
+      "type": "string"
+    },
+    "linksStatus": {
+      "description": "Link status",
+      "$ref": "linkStatus.json"
+    },
+    "ruleId": {
+      "description": "Linking rule ID",
+      "type": "integer"
+    },
+    "errorStatusCode": {
+      "description": "Error status code",
+      "type": "string"
+    }
+  }
+}

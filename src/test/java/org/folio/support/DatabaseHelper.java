@@ -1,5 +1,6 @@
 package org.folio.support;
 
+import static java.lang.String.format;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 
 import java.sql.ResultSet;
@@ -38,7 +39,8 @@ public class DatabaseHelper {
   }
 
   public AuthorityData getAuthority(UUID id) {
-    var sql = "SELECT * FROM " + getTable(TENANT_ID, AUTHORITY_DATA_TABLE) + " WHERE id = ?";
+    var table = getTable(TENANT_ID, AUTHORITY_DATA_TABLE);
+    var sql = format("SELECT * FROM %s WHERE id = ?", table);
     return jdbcTemplate.query(sql, rs -> {
       rs.next();
       var data = new AuthorityData();
@@ -48,6 +50,4 @@ public class DatabaseHelper {
       return data;
     }, id);
   }
-
 }
-

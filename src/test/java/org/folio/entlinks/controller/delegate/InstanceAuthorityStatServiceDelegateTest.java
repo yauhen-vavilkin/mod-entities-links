@@ -82,7 +82,7 @@ class InstanceAuthorityStatServiceDelegateTest {
   @Test
   void fetchStats() {
     //  GIVEN
-    AuthoritySourceFile sourceFile = new AuthoritySourceFile(SOURCE_FILE_ID, BASE_URL, SOURCE_FILE_NAME);
+    AuthoritySourceFile sourceFile = new AuthoritySourceFile(SOURCE_FILE_ID, BASE_URL, SOURCE_FILE_NAME, codes("e1"));
     Map<UUID, AuthoritySourceFile> expectedMap = new HashMap<>();
     expectedMap.put(sourceFile.id(), sourceFile);
 
@@ -130,7 +130,7 @@ class InstanceAuthorityStatServiceDelegateTest {
   @Test
   void fetchStats_whenUpdatedUserIsNull() {
     //  GIVEN
-    AuthoritySourceFile sourceFile = new AuthoritySourceFile(SOURCE_FILE_ID, BASE_URL, SOURCE_FILE_NAME);
+    AuthoritySourceFile sourceFile = new AuthoritySourceFile(SOURCE_FILE_ID, BASE_URL, SOURCE_FILE_NAME, codes("e1"));
     Map<UUID, AuthoritySourceFile> expectedMap = new HashMap<>();
     expectedMap.put(sourceFile.id(), sourceFile);
 
@@ -214,5 +214,9 @@ class InstanceAuthorityStatServiceDelegateTest {
 
     assertNull(authorityChangeStatDtoCollection.getNext());
     assertThat(List.of(USER_ID_1, USER_ID_2)).containsAll(resultUserIds);
+  }
+
+  private List<String> codes(String... codes) {
+    return List.of(codes);
   }
 }
