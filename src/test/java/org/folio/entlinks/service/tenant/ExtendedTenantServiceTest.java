@@ -1,6 +1,7 @@
 package org.folio.entlinks.service.tenant;
 
 import static org.folio.support.base.TestConstants.TENANT_ID;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,6 +42,13 @@ class ExtendedTenantServiceTest {
     verify(prepareSystemUserService).setupSystemUser();
     verify(kafkaAdminService).createTopics(TENANT_ID);
     verify(kafkaAdminService).restartEventListeners();
+  }
+
+  @Test
+  void deleteTopicAfterTenantDeletion() {
+    when(context.getTenantId()).thenReturn(TENANT_ID);
+    tenantService.afterTenantDeletion(tenantAttributes());
+    verify(kafkaAdminService).deleteTopics(anyString());
   }
 
   private TenantAttributes tenantAttributes() {

@@ -39,4 +39,10 @@ public class ExtendedTenantService extends TenantService {
     kafkaAdminService.restartEventListeners();
     prepareSystemUserService.setupSystemUser();
   }
+
+  @Override
+  protected void afterTenantDeletion(TenantAttributes tenantAttributes) {
+    var tenantId = context.getTenantId();
+    kafkaAdminService.deleteTopics(tenantId);
+  }
 }
