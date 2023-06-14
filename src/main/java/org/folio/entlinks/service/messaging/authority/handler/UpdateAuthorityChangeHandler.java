@@ -1,6 +1,7 @@
 package org.folio.entlinks.service.messaging.authority.handler;
 
 import static java.util.Collections.singletonList;
+import static org.folio.entlinks.utils.FieldUtils.getSubfield0Value;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,7 +9,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.config.properties.InstanceAuthorityChangeProperties;
 import org.folio.entlinks.domain.dto.FieldChange;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
@@ -104,7 +104,7 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
     var naturalId = changeHolder.getNewNaturalId();
     authorityDataService.updateNaturalId(naturalId, authorityId);
 
-    var subfield0Change = getSubfield0Value(naturalId, changeHolder.getNewSourceFileId());
+    var subfield0Change = getSubfield0Change(naturalId, changeHolder.getNewSourceFileId());
 
     return handleLinksByPartitions(authorityId,
       instanceLinks -> {
@@ -173,20 +173,14 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
 
   private Optional<SubfieldChange> getSubfield0Change(AuthorityChangeHolder changeHolder) {
     if (changeHolder.isNaturalIdChanged()) {
-      return Optional.of(getSubfield0Value(changeHolder.getNewNaturalId(), changeHolder.getNewSourceFileId()));
+      return Optional.of(getSubfield0Change(changeHolder.getNewNaturalId(), changeHolder.getNewSourceFileId()));
     }
     return Optional.empty();
   }
 
-  private SubfieldChange getSubfield0Value(String naturalId, UUID sourceFileId) {
-    String subfield0Value = "";
-    if (sourceFileId != null) {
-      var sourceFile = sourceFilesService.fetchAuthoritySources().get(sourceFileId);
-      if (sourceFile != null) {
-        subfield0Value = StringUtils.appendIfMissing(sourceFile.baseUrl(), "/");
-      }
-    }
-    return new SubfieldChange().code("0").value(subfield0Value + naturalId);
+  private SubfieldChange getSubfield0Change(String naturalId, UUID sourceFileId) {
+    var sourceFile = sourceFilesService.fetchAuthoritySources().get(sourceFileId);
+    var subfield0Value = getSubfield0Value(naturalId, sourceFile);
+    return new SubfieldChange().code("0").value(subfield0Value);
   }
-
 }

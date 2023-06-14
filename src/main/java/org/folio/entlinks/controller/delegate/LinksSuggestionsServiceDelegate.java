@@ -9,11 +9,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.collections4.CollectionUtils;
 import org.folio.entlinks.client.SearchClient;
 import org.folio.entlinks.client.SourceStorageClient;
 import org.folio.entlinks.controller.converter.DataMapper;
@@ -27,6 +27,7 @@ import org.folio.entlinks.integration.dto.FieldParsedContent;
 import org.folio.entlinks.integration.dto.SourceParsedContent;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.LinksSuggestionService;
+import org.folio.entlinks.utils.FieldUtils;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -43,13 +44,16 @@ public class LinksSuggestionsServiceDelegate {
   private final DataMapper dataMapper;
 
   public ParsedRecordContentCollection suggestLinksForMarcRecords(ParsedRecordContentCollection contentCollection) {
+    log.info("Links suggestion started for {} bibs", contentCollection.getRecords().size());
     var rules = rulesToBibFieldMap(linkingRulesService.getLinkingRules());
     var marcBibsContent = contentMapper.convertToParsedContent(contentCollection);
     var naturalIds = extractNaturalIdsOfLinkableFields(marcBibsContent, rules);
+    log.info("{} natural ids was extracted", naturalIds.size());
 
     var authorities = findAuthoritiesByNaturalIds(naturalIds);
     var marcAuthorities = fetchAuthorityParsedRecords(authorities);
     var marcAuthoritiesContent = contentMapper.convertToAuthorityParsedContent(marcAuthorities, authorities);
+    log.info("{} marc authorities to suggest found", marcAuthorities.getTotalRecords());
 
     suggestionService.fillLinkDetailsWithSuggestedAuthorities(marcBibsContent, marcAuthoritiesContent, rules);
 
@@ -58,13 +62,17 @@ public class LinksSuggestionsServiceDelegate {
 
   private List<AuthorityData> findAuthoritiesByNaturalIds(Set<String> naturalIds) {
     var authorityData = dataRepository.findByNaturalIds(naturalIds);
+    log.info("{} authority data found by natural ids", authorityData.size());
     if (authorityData.size() != naturalIds.size()) {
       var existNaturalIds = authorityData.stream()
         .map(AuthorityData::getNaturalId)
         .collect(Collectors.toSet());
 
       var naturalIdsToSearch = new HashSet<>(removeAll(naturalIds, existNaturalIds));
-      authorityData.addAll(searchAndSaveAuthorities(naturalIdsToSearch));
+      var authoritiesFromSearch = searchAndSaveAuthorities(naturalIdsToSearch);
+      log.info("{} authority data was saved", authoritiesFromSearch.size());
+
+      authorityData.addAll(authoritiesFromSearch);
     }
     return authorityData;
   }
@@ -96,24 +104,30 @@ public class LinksSuggestionsServiceDelegate {
                                                         Map<String, List<InstanceAuthorityLinkingRule>> rules) {
     return contentCollection.stream()
       .flatMap(bibRecord -> bibRecord.getFields().entrySet().stream())
-      .filter(field -> isAutoLinkingEnabled(rules.get(field.getKey())))
-      .map(field -> extractNaturalIdFrom0Subfield(field.getValue()))
-      .filter(Objects::nonNull)
+      .filter(fields -> isAutoLinkingEnabled(rules.get(fields.getKey())))
+      .map(fields -> extractNaturalIds(fields.getValue()))
+      .filter(CollectionUtils::isNotEmpty)
+      .flatMap(Set::stream)
       .collect(Collectors.toSet());
   }
 
-  private String extractNaturalIdFrom0Subfield(FieldParsedContent fieldContent) {
-    var value0 = fieldContent.getSubfields().get("0");
-    if (nonNull(value0)) {
-      var slashIndex = value0.lastIndexOf('/');
-      if (slashIndex != -1) {
-        return value0.substring(slashIndex + 1);
-      }
-      return value0;
-    } else if (nonNull(fieldContent.getLinkDetails())) {
-      return fieldContent.getLinkDetails().getNaturalId();
-    }
-    return null;
+  private Set<String> extractNaturalIds(List<FieldParsedContent> fields) {
+    return fields.stream()
+      .map(field -> {
+        var naturalIds = new HashSet<String>();
+        var zeroValues = field.getSubfields().get("0");
+        if (isNotEmpty(zeroValues)) {
+          naturalIds.addAll(zeroValues.stream()
+            .map(FieldUtils::trimSubfield0Value)
+            .collect(Collectors.toSet()));
+        }
+        if (nonNull(field.getLinkDetails())) {
+          naturalIds.add(field.getLinkDetails().getAuthorityNaturalId());
+        }
+        return naturalIds;
+      })
+      .flatMap(Set::stream)
+      .collect(Collectors.toSet());
   }
 
   private boolean isAutoLinkingEnabled(List<InstanceAuthorityLinkingRule> rules) {

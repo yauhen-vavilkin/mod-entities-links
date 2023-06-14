@@ -3,6 +3,9 @@ package org.folio.entlinks.controller;
 import static org.folio.entlinks.domain.dto.LinkStatus.ACTUAL;
 import static org.folio.entlinks.domain.dto.LinkStatus.ERROR;
 import static org.folio.entlinks.domain.dto.LinkStatus.NEW;
+import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.DISABLED_AUTO_LINKING;
+import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.MORE_THEN_ONE_SUGGESTIONS;
+import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.NO_SUGGESTIONS;
 import static org.folio.support.JsonTestUtils.asJson;
 import static org.folio.support.base.TestConstants.linksSuggestionsEndpoint;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -26,8 +29,6 @@ class LinksSuggestionsIT extends IntegrationTestBase {
 
   private static final String BASE_URL = "id.loc.gov/authorities/names/";
   private static final String LINKABLE_AUTHORITY_ID = "417f3355-081c-4aae-9209-ccb305f25f7e";
-  private static final String MORE_THEN_ONE_SUGGESTION_ERROR_CODE = "102";
-  private static final String NO_SUGGESTIONS_ERROR_CODE = "101";
 
   @Test
   @SneakyThrows
@@ -70,7 +71,7 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     var givenSubfields = Map.of("0", "oneAuthority");
     var givenRecord = getRecord("110", null, givenSubfields);
 
-    var expectedLinkDetails = new LinkDetails().linksStatus(ERROR).errorStatusCode(NO_SUGGESTIONS_ERROR_CODE);
+    var expectedLinkDetails = new LinkDetails().status(ERROR).errorCause(NO_SUGGESTIONS.getErrorCode());
     var expectedSubfields = Map.of("0", "oneAuthority");
     var expectedRecord = getRecord("110", expectedLinkDetails, expectedSubfields);
 
@@ -83,11 +84,32 @@ class LinksSuggestionsIT extends IntegrationTestBase {
 
   @Test
   @SneakyThrows
+  void getAuthDataStat_shouldFillErrorDetails_whenAutoLinkingDisabled() {
+    var givenSubfields = Map.of("0", "oneAuthority");
+    var givenRecord = getRecord("100", null, givenSubfields);
+    var disabledAutoLinkingRecord = getRecord("600", null, givenSubfields);
+
+    var expectedErrorDetails = new LinkDetails().status(ERROR).errorCause(DISABLED_AUTO_LINKING.getErrorCode());
+    var expectedErrorRecord = getRecord("600", expectedErrorDetails, givenSubfields);
+
+    var expectedLinkDetails = getLinkDetails(NEW, "oneAuthority");
+    var expectedSubfields = Map.of("a", "new $a value", "0", BASE_URL + "oneAuthority", "9", LINKABLE_AUTHORITY_ID);
+    var expectedRecord = getRecord("100", expectedLinkDetails, expectedSubfields);
+
+    var requestBody = new ParsedRecordContentCollection().records(List.of(givenRecord, disabledAutoLinkingRecord));
+    doPost(linksSuggestionsEndpoint(), requestBody)
+      .andExpect(status().isOk())
+      .andExpect(content().json(asJson(new ParsedRecordContentCollection()
+        .records(List.of(expectedRecord, expectedErrorRecord)), objectMapper)));
+  }
+
+  @Test
+  @SneakyThrows
   void getAuthDataStat_shouldFillErrorDetails_whenTwoSuggestionsFound() {
     var givenSubfields = Map.of("0", "twoAuthority");
     var givenRecord = getRecord("100", null, givenSubfields);
 
-    var expectedLinkDetails = new LinkDetails().linksStatus(ERROR).errorStatusCode(MORE_THEN_ONE_SUGGESTION_ERROR_CODE);
+    var expectedLinkDetails = new LinkDetails().status(ERROR).errorCause(MORE_THEN_ONE_SUGGESTIONS.getErrorCode());
     var expectedSubfields = Map.of("0", "twoAuthority");
     var expectedRecord = getRecord("100", expectedLinkDetails, expectedSubfields);
 
@@ -109,9 +131,9 @@ class LinksSuggestionsIT extends IntegrationTestBase {
   }
 
   private LinkDetails getLinkDetails(LinkStatus linkStatus, String naturalId) {
-    return new LinkDetails().ruleId(1)
+    return new LinkDetails().linkingRuleId(1)
       .authorityId(UUID.fromString(LINKABLE_AUTHORITY_ID))
-      .naturalId(naturalId)
-      .linksStatus(linkStatus);
+      .authorityNaturalId(naturalId)
+      .status(linkStatus);
   }
 }

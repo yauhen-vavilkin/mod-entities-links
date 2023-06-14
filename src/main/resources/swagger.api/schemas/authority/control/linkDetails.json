@@ -8,19 +8,19 @@
       "type": "string",
       "format": "uuid"
     },
-    "naturalId": {
+    "authorityNaturalId": {
       "description": "Authority Natural ID",
       "type": "string"
     },
-    "linksStatus": {
+    "status": {
       "description": "Link status",
       "$ref": "linkStatus.json"
     },
-    "ruleId": {
+    "linkingRuleId": {
       "description": "Linking rule ID",
       "type": "integer"
     },
-    "errorStatusCode": {
+    "errorCause": {
       "description": "Error status code",
       "type": "string"
     }

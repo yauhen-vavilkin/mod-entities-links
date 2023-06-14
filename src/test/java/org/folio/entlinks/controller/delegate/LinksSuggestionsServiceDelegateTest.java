@@ -190,7 +190,7 @@ class LinksSuggestionsServiceDelegateTest {
   private ParsedRecordContent getRecord(String bibField, Map<String, String> subfields) {
     var field = new FieldContent();
     field.setSubfields(List.of(subfields));
-    field.setLinkDetails(new LinkDetails().naturalId(NATURAL_ID));
+    field.setLinkDetails(new LinkDetails().authorityNaturalId(NATURAL_ID));
 
     var fields = Map.of(bibField, field);
     return new ParsedRecordContent(List.of(fields), "default leader");

@@ -1,5 +1,8 @@
 package org.folio.entlinks.controller.converter;
 
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+
 import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
@@ -40,14 +43,13 @@ public interface SourceContentMapper {
 
   default SourceParsedContent convertToParsedContent(ParsedRecordContent content) {
     var fields = convertFieldsToOneMap(content.getFields());
-
     return new SourceParsedContent(UUID.randomUUID(), content.getLeader(), fields);
   }
 
   default List<AuthorityParsedContent> convertToAuthorityParsedContent(StrippedParsedRecordCollection recordCollection,
                                                                        List<AuthorityData> authorityData) {
     return recordCollection.getRecords().stream()
-      .map(r -> convertToAuthorityParsedContent(r, authorityData))
+      .map(parsedRecord -> convertToAuthorityParsedContent(parsedRecord, authorityData))
       .toList();
   }
 
@@ -61,29 +63,33 @@ public interface SourceContentMapper {
     return new AuthorityParsedContent(authorityId, naturalId, leader, fields);
   }
 
-  private List<Map<String, FieldContent>> convertFieldsToListOfMaps(Map<String, FieldParsedContent> fields) {
+  private List<Map<String, FieldContent>> convertFieldsToListOfMaps(Map<String, List<FieldParsedContent>> fields) {
     return fields.entrySet().stream()
-      .map(this::convertFieldParsedContent)
+      .map(this::convertParsedContent)
+      .flatMap(List::stream)
       .toList();
   }
 
-  private Map<String, FieldParsedContent> convertFieldsToOneMap(List<Map<String, FieldContent>> fields) {
+  private Map<String, List<FieldParsedContent>> convertFieldsToOneMap(List<Map<String, FieldContent>> fields) {
     return fields.stream()
-      .flatMap(m -> m.entrySet().stream())
+      .flatMap(map -> map.entrySet().stream())
       .map(this::convertFieldContent)
-      .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+      .collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, Collectors.toList())));
   }
 
-  private List<Map<String, String>> convertSubfieldsToListOfMaps(Map<String, String> subfields) {
+  private List<Map<String, String>> convertSubfieldsToListOfMaps(Map<String, List<String>> subfields) {
     return subfields.entrySet().stream()
-      .map(m -> Map.of(m.getKey(), m.getValue()))
+      .map(subfieldsByTag -> subfieldsByTag.getValue().stream()
+        .map(subfieldValue -> Map.of(subfieldsByTag.getKey(), subfieldValue))
+        .toList())
+      .flatMap(List::stream)
       .toList();
   }
 
-  private Map<String, String> convertSubfieldsToOneMap(List<Map<String, String>> subfields) {
+  private Map<String, List<String>> convertSubfieldsToOneMap(List<Map<String, String>> subfields) {
     return subfields.stream()
-      .flatMap(m -> m.entrySet().stream())
-      .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+      .flatMap(map -> map.entrySet().stream())
+      .collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, Collectors.toList())));
   }
 
   private Map.Entry<String, FieldParsedContent> convertFieldContent(Map.Entry<String, FieldContent> fieldContent) {
@@ -97,18 +103,19 @@ public interface SourceContentMapper {
     return new AbstractMap.SimpleEntry<>(fieldContent.getKey(), fieldParsedContent);
   }
 
-  private Map<String, FieldContent> convertFieldParsedContent(Map.Entry<String, FieldParsedContent> fieldContent) {
-    var ind1 = fieldContent.getValue().getInd1();
-    var ind2 = fieldContent.getValue().getInd2();
-    var linkDetails = fieldContent.getValue().getLinkDetails();
-    var subfields = convertSubfieldsToListOfMaps(fieldContent.getValue().getSubfields());
+  private List<Map<String, FieldContent>> convertParsedContent(Map.Entry<String, List<FieldParsedContent>> fields) {
+    return fields.getValue().stream().map(field -> {
+      var ind1 = field.getInd1();
+      var ind2 = field.getInd2();
+      var linkDetails = field.getLinkDetails();
+      var subfields = convertSubfieldsToListOfMaps(field.getSubfields());
 
-    var fieldParsedContent = new FieldContent()
-      .ind1(ind1).ind2(ind2)
-      .linkDetails(linkDetails)
-      .subfields(subfields);
+      var fieldContent = new FieldContent().ind1(ind1).ind2(ind2)
+        .linkDetails(linkDetails)
+        .subfields(subfields);
 
-    return Map.of(fieldContent.getKey(), fieldParsedContent);
+      return Map.of(fields.getKey(), fieldContent);
+    }).toList();
   }
 
   private String extractNaturalId(List<AuthorityData> authorityData, UUID authorityId) {
