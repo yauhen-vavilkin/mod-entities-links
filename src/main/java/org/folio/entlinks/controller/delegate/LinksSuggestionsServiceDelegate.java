@@ -62,12 +62,12 @@ public class LinksSuggestionsServiceDelegate {
 
   private List<AuthorityData> findAuthoritiesByNaturalIds(Set<String> naturalIds) {
     var authorityData = dataRepository.findByNaturalIds(naturalIds);
+    var existNaturalIds = authorityData.stream()
+      .map(AuthorityData::getNaturalId)
+      .collect(Collectors.toSet());
     log.info("{} authority data found by natural ids", authorityData.size());
-    if (authorityData.size() != naturalIds.size()) {
-      var existNaturalIds = authorityData.stream()
-        .map(AuthorityData::getNaturalId)
-        .collect(Collectors.toSet());
 
+    if (!existNaturalIds.containsAll(naturalIds)) {
       var naturalIdsToSearch = new HashSet<>(removeAll(naturalIds, existNaturalIds));
       var authoritiesFromSearch = searchAndSaveAuthorities(naturalIdsToSearch);
       log.info("{} authority data was saved", authoritiesFromSearch.size());
@@ -113,21 +113,23 @@ public class LinksSuggestionsServiceDelegate {
 
   private Set<String> extractNaturalIds(List<FieldParsedContent> fields) {
     return fields.stream()
-      .map(field -> {
-        var naturalIds = new HashSet<String>();
-        var zeroValues = field.getSubfields().get("0");
-        if (isNotEmpty(zeroValues)) {
-          naturalIds.addAll(zeroValues.stream()
-            .map(FieldUtils::trimSubfield0Value)
-            .collect(Collectors.toSet()));
-        }
-        if (nonNull(field.getLinkDetails())) {
-          naturalIds.add(field.getLinkDetails().getAuthorityNaturalId());
-        }
-        return naturalIds;
-      })
+      .map(this::extractNaturalIds)
       .flatMap(Set::stream)
       .collect(Collectors.toSet());
+  }
+
+  private Set<String> extractNaturalIds(FieldParsedContent field) {
+    var naturalIds = new HashSet<String>();
+    var zeroValues = field.getSubfields().get("0");
+    if (isNotEmpty(zeroValues)) {
+      naturalIds.addAll(zeroValues.stream()
+        .map(FieldUtils::trimSubfield0Value)
+        .collect(Collectors.toSet()));
+    }
+    if (nonNull(field.getLinkDetails())) {
+      naturalIds.add(field.getLinkDetails().getAuthorityNaturalId());
+    }
+    return naturalIds;
   }
 
   private boolean isAutoLinkingEnabled(List<InstanceAuthorityLinkingRule> rules) {

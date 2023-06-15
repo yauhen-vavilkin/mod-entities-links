@@ -47,66 +47,60 @@ public class LinksSuggestionService {
     if (isNotEmpty(marcAuthoritiesContent)) {
       marcBibsContent.stream()
         .flatMap(bibContent -> bibContent.getFields().entrySet().stream())
-        .forEach(bibFields -> suggestAuthorityForBibField(
-          bibFields.getValue(),
-          marcAuthoritiesContent,
-          rules.get(bibFields.getKey())));
+        .forEach(bibFields -> suggestAuthorityForBibFields(
+          bibFields.getValue(), marcAuthoritiesContent, rules.get(bibFields.getKey())
+        ));
     }
   }
 
-  private void suggestAuthorityForBibField(List<FieldParsedContent> bibFields,
-                                           List<AuthorityParsedContent> marcAuthoritiesContent,
-                                           List<InstanceAuthorityLinkingRule> rules) {
+  private void suggestAuthorityForBibFields(List<FieldParsedContent> bibFields,
+                                            List<AuthorityParsedContent> marcAuthoritiesContent,
+                                            List<InstanceAuthorityLinkingRule> rules) {
     if (isNotEmpty(rules) && isNotEmpty(bibFields)) {
       for (InstanceAuthorityLinkingRule rule : rules) {
-        if (suggestAuthorityForBibField(bibFields, marcAuthoritiesContent, rule)) {
-          break;
+        for (FieldParsedContent bibField : bibFields) {
+          if (isBibFieldLinkable(bibField)) {
+            suggestAuthorityForBibField(bibField, marcAuthoritiesContent, rule);
+          }
         }
       }
     }
   }
 
-  private boolean suggestAuthorityForBibField(List<FieldParsedContent> bibFields,
-                                              List<AuthorityParsedContent> marcAuthoritiesContent,
-                                              InstanceAuthorityLinkingRule rule) {
-    for (FieldParsedContent bibField : bibFields) {
-      if (isFalse(rule.getAutoLinkingEnabled())) {
-        var errorDetails = getErrorDetails(DISABLED_AUTO_LINKING);
-        bibField.setLinkDetails(errorDetails);
-        log.info("Field {}: auto linking feature is disabled", rule.getBibField());
-        return true;
-      }
+  private boolean isBibFieldLinkable(FieldParsedContent bibField) {
+    var linkDetails = bibField.getLinkDetails();
+    var zeroValues = bibField.getSubfields().get("0");
 
-      var suitableAuthorities = filterSuitableAuthorities(bibField, marcAuthoritiesContent, rule);
-      if (suitableAuthorities.isEmpty()) {
-        var errorDetails = getErrorDetails(NO_SUGGESTIONS);
-        bibField.setLinkDetails(errorDetails);
-        log.info("Field {}: No authorities to suggest", rule.getBibField());
-      } else if (suitableAuthorities.size() > 1) {
-        var errorDetails = getErrorDetails(MORE_THEN_ONE_SUGGESTIONS);
-        bibField.setLinkDetails(errorDetails);
-        log.info("Field {}: More then one authority to suggest", rule.getBibField());
-      } else {
-        var authority = suitableAuthorities.get(0);
-        var linkDetails = getLinkDetails(bibField, authority, rule);
-        actualizeBibSubfields(bibField, authority, rule);
-        bibField.setLinkDetails(linkDetails);
-        log.info("Field {}: Authority {} was suggested", rule.getBibField(), authority.getId());
-        return true;
-      }
+    return isNotEmpty(zeroValues) && (isNull(linkDetails) || linkDetails.getStatus() != NEW);
+  }
+
+  private void suggestAuthorityForBibField(FieldParsedContent bibField,
+                                           List<AuthorityParsedContent> marcAuthoritiesContent,
+                                           InstanceAuthorityLinkingRule rule) {
+    if (isFalse(rule.getAutoLinkingEnabled())) {
+      var errorDetails = getErrorDetails(DISABLED_AUTO_LINKING);
+      bibField.setLinkDetails(errorDetails);
+      log.info("Field {}: auto linking feature is disabled", rule.getBibField());
+      return;
     }
-    return false;
-  }
 
-  private List<AuthorityParsedContent> filterSuitableAuthorities(FieldParsedContent bibField,
-                                                                 List<AuthorityParsedContent> marcAuthoritiesContent,
-                                                                 InstanceAuthorityLinkingRule rule) {
-    return marcAuthoritiesContent.stream()
-      .filter(authorityContent -> validateZeroSubfields(authorityContent.getNaturalId(), bibField))
-      .filter(authorityContent -> validateAuthorityFields(authorityContent, rule))
-      .toList();
+    var suitableAuthorities = filterSuitableAuthorities(bibField, marcAuthoritiesContent, rule);
+    if (suitableAuthorities.isEmpty()) {
+      var errorDetails = getErrorDetails(NO_SUGGESTIONS);
+      bibField.setLinkDetails(errorDetails);
+      log.info("Field {}: No authorities to suggest", rule.getBibField());
+    } else if (suitableAuthorities.size() > 1) {
+      var errorDetails = getErrorDetails(MORE_THEN_ONE_SUGGESTIONS);
+      bibField.setLinkDetails(errorDetails);
+      log.info("Field {}: More then one authority to suggest", rule.getBibField());
+    } else {
+      var authority = suitableAuthorities.get(0);
+      var linkDetails = getLinkDetails(bibField, authority, rule);
+      actualizeBibSubfields(bibField, authority, rule);
+      bibField.setLinkDetails(linkDetails);
+      log.info("Field {}: Authority {} was suggested", rule.getBibField(), authority.getId());
+    }
   }
-
 
   private LinkDetails getLinkDetails(FieldParsedContent bibField,
                                      AuthorityParsedContent authority,
@@ -150,6 +144,15 @@ public class LinksSuggestionService {
         bibSubfields.put(modification.getTarget(), modifiedSubfield);
       });
     }
+  }
+
+  private List<AuthorityParsedContent> filterSuitableAuthorities(FieldParsedContent bibField,
+                                                                 List<AuthorityParsedContent> marcAuthoritiesContent,
+                                                                 InstanceAuthorityLinkingRule rule) {
+    return marcAuthoritiesContent.stream()
+      .filter(authorityContent -> validateZeroSubfields(authorityContent.getNaturalId(), bibField))
+      .filter(authorityContent -> validateAuthorityFields(authorityContent, rule))
+      .toList();
   }
 
   private boolean validateZeroSubfields(String naturalId, FieldParsedContent bibField) {

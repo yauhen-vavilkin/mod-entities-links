@@ -51,7 +51,7 @@ class LinksSuggestionsServiceDelegateTest {
 
   private static final UUID AUTHORITY_ID = UUID.randomUUID();
   private static final String MIN_AUTHORITY_FIELD = "100";
-  private static final String MAX_AUTHORITY_FIELD = "150";
+  private static final String MAX_AUTHORITY_FIELD = "155";
   private static final String NATURAL_ID = "e12345";
   private static final String BASE_URL = "https://base/url/";
   private static final String EXPECTED_SEARCH_QUERY = "authRefType=Authorized and (naturalId=" + NATURAL_ID + ')';

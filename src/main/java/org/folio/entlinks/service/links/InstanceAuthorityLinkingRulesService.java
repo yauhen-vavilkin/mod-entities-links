@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class InstanceAuthorityLinkingRulesService {
 
   private static final String MIN_AVAILABLE_AUTHORITY_FIELD = "100";
-  private static final String MAX_AVAILABLE_AUTHORITY_FIELD = "150";
+  private static final String MAX_AVAILABLE_AUTHORITY_FIELD = "155";
   private final LinkingRulesRepository repository;
 
   @Cacheable(cacheNames = AUTHORITY_LINKING_RULES_CACHE,

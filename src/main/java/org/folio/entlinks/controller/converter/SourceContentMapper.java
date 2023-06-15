@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 
 import java.util.AbstractMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -74,7 +75,7 @@ public interface SourceContentMapper {
     return fields.stream()
       .flatMap(map -> map.entrySet().stream())
       .map(this::convertFieldContent)
-      .collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, Collectors.toList())));
+      .collect(groupingBy(Map.Entry::getKey, LinkedHashMap::new, mapping(Map.Entry::getValue, Collectors.toList())));
   }
 
   private List<Map<String, String>> convertSubfieldsToListOfMaps(Map<String, List<String>> subfields) {
@@ -89,7 +90,7 @@ public interface SourceContentMapper {
   private Map<String, List<String>> convertSubfieldsToOneMap(List<Map<String, String>> subfields) {
     return subfields.stream()
       .flatMap(map -> map.entrySet().stream())
-      .collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, Collectors.toList())));
+      .collect(groupingBy(Map.Entry::getKey, LinkedHashMap::new, mapping(Map.Entry::getValue, Collectors.toList())));
   }
 
   private Map.Entry<String, FieldParsedContent> convertFieldContent(Map.Entry<String, FieldContent> fieldContent) {
