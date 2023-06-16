@@ -8,7 +8,7 @@ import static org.apache.commons.lang3.BooleanUtils.isFalse;
 import static org.folio.entlinks.domain.dto.LinkStatus.ERROR;
 import static org.folio.entlinks.domain.dto.LinkStatus.NEW;
 import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.DISABLED_AUTO_LINKING;
-import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.MORE_THEN_ONE_SUGGESTIONS;
+import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.MORE_THAN_ONE_SUGGESTIONS;
 import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.NO_SUGGESTIONS;
 import static org.folio.entlinks.utils.FieldUtils.getSubfield0Value;
 
@@ -44,13 +44,24 @@ public class LinksSuggestionService {
   public void fillLinkDetailsWithSuggestedAuthorities(List<SourceParsedContent> marcBibsContent,
                                                       List<AuthorityParsedContent> marcAuthoritiesContent,
                                                       Map<String, List<InstanceAuthorityLinkingRule>> rules) {
-    if (isNotEmpty(marcAuthoritiesContent)) {
-      marcBibsContent.stream()
-        .flatMap(bibContent -> bibContent.getFields().entrySet().stream())
-        .forEach(bibFields -> suggestAuthorityForBibFields(
-          bibFields.getValue(), marcAuthoritiesContent, rules.get(bibFields.getKey())
-        ));
-    }
+    marcBibsContent.stream()
+      .flatMap(bibContent -> bibContent.getFields().entrySet().stream())
+      .forEach(bibFields -> suggestAuthorityForBibFields(
+        bibFields.getValue(), marcAuthoritiesContent, rules.get(bibFields.getKey())
+      ));
+  }
+
+  /**
+   * Fill bib fields with no suggestions error detail, if it contains subfields $0.
+   *
+   * @param marcBibsContent list of bib records {@link SourceParsedContent}
+   */
+  public void fillErrorDetailsWithNoSuggestions(List<SourceParsedContent> marcBibsContent) {
+    marcBibsContent.stream()
+      .flatMap(bibContent -> bibContent.getFields().entrySet().stream())
+      .flatMap(bibFields -> bibFields.getValue().stream())
+      .filter(this::containsSubfield0)
+      .forEach(bibField -> bibField.setLinkDetails(getErrorDetails(NO_SUGGESTIONS)));
   }
 
   private void suggestAuthorityForBibFields(List<FieldParsedContent> bibFields,
@@ -69,9 +80,11 @@ public class LinksSuggestionService {
 
   private boolean isBibFieldLinkable(FieldParsedContent bibField) {
     var linkDetails = bibField.getLinkDetails();
-    var zeroValues = bibField.getSubfields().get("0");
+    return containsSubfield0(bibField) && (isNull(linkDetails) || linkDetails.getStatus() != NEW);
+  }
 
-    return isNotEmpty(zeroValues) && (isNull(linkDetails) || linkDetails.getStatus() != NEW);
+  private boolean containsSubfield0(FieldParsedContent bibField) {
+    return isNotEmpty(bibField.getSubfields().get("0"));
   }
 
   private void suggestAuthorityForBibField(FieldParsedContent bibField,
@@ -90,9 +103,9 @@ public class LinksSuggestionService {
       bibField.setLinkDetails(errorDetails);
       log.info("Field {}: No authorities to suggest", rule.getBibField());
     } else if (suitableAuthorities.size() > 1) {
-      var errorDetails = getErrorDetails(MORE_THEN_ONE_SUGGESTIONS);
+      var errorDetails = getErrorDetails(MORE_THAN_ONE_SUGGESTIONS);
       bibField.setLinkDetails(errorDetails);
-      log.info("Field {}: More then one authority to suggest", rule.getBibField());
+      log.info("Field {}: More than one authority to suggest", rule.getBibField());
     } else {
       var authority = suitableAuthorities.get(0);
       var linkDetails = getLinkDetails(bibField, authority, rule);

@@ -2,7 +2,7 @@ package org.folio.entlinks.service.links;
 
 import static java.util.Collections.emptyMap;
 import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.DISABLED_AUTO_LINKING;
-import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.MORE_THEN_ONE_SUGGESTIONS;
+import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.MORE_THAN_ONE_SUGGESTIONS;
 import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.NO_SUGGESTIONS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -123,7 +123,7 @@ class LinksSuggestionsServiceTest {
 
     var linkDetails = bib.getFields().get("100").get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
-    assertEquals(MORE_THEN_ONE_SUGGESTIONS.getErrorCode(), linkDetails.getErrorCause());
+    assertEquals(MORE_THAN_ONE_SUGGESTIONS.getErrorCode(), linkDetails.getErrorCause());
     assertNull(linkDetails.getAuthorityId());
     assertNull(linkDetails.getAuthorityNaturalId());
     assertNull(linkDetails.getLinkingRuleId());

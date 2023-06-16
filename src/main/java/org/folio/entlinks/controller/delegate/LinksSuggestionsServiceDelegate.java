@@ -47,15 +47,20 @@ public class LinksSuggestionsServiceDelegate {
     log.info("Links suggestion started for {} bibs", contentCollection.getRecords().size());
     var rules = rulesToBibFieldMap(linkingRulesService.getLinkingRules());
     var marcBibsContent = contentMapper.convertToParsedContent(contentCollection);
+
     var naturalIds = extractNaturalIdsOfLinkableFields(marcBibsContent, rules);
     log.info("{} natural ids was extracted", naturalIds.size());
 
     var authorities = findAuthoritiesByNaturalIds(naturalIds);
-    var marcAuthorities = fetchAuthorityParsedRecords(authorities);
-    var marcAuthoritiesContent = contentMapper.convertToAuthorityParsedContent(marcAuthorities, authorities);
-    log.info("{} marc authorities to suggest found", marcAuthorities.getTotalRecords());
+    log.info("{} authorities to suggest found", authorities.size());
 
-    suggestionService.fillLinkDetailsWithSuggestedAuthorities(marcBibsContent, marcAuthoritiesContent, rules);
+    if (isNotEmpty(authorities)) {
+      var marcAuthorities = fetchAuthorityParsedRecords(authorities);
+      var marcAuthoritiesContent = contentMapper.convertToAuthorityParsedContent(marcAuthorities, authorities);
+      suggestionService.fillLinkDetailsWithSuggestedAuthorities(marcBibsContent, marcAuthoritiesContent, rules);
+    } else {
+      suggestionService.fillErrorDetailsWithNoSuggestions(marcBibsContent);
+    }
 
     return contentMapper.convertToParsedContentCollection(marcBibsContent);
   }
