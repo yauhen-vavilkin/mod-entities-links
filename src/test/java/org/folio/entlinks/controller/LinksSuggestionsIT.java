@@ -4,7 +4,7 @@ import static org.folio.entlinks.domain.dto.LinkStatus.ACTUAL;
 import static org.folio.entlinks.domain.dto.LinkStatus.ERROR;
 import static org.folio.entlinks.domain.dto.LinkStatus.NEW;
 import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.DISABLED_AUTO_LINKING;
-import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.MORE_THEN_ONE_SUGGESTIONS;
+import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.MORE_THAN_ONE_SUGGESTIONS;
 import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.NO_SUGGESTIONS;
 import static org.folio.support.JsonTestUtils.asJson;
 import static org.folio.support.base.TestConstants.linksSuggestionsEndpoint;
@@ -84,6 +84,23 @@ class LinksSuggestionsIT extends IntegrationTestBase {
 
   @Test
   @SneakyThrows
+  void getAuthDataStat_shouldFillErrorDetails_whenNoAuthoritiesFound() {
+    var givenSubfields = Map.of("0", "noAuthority");
+    var givenRecord = getRecord("100", null, givenSubfields);
+
+    var expectedLinkDetails = new LinkDetails().status(ERROR).errorCause(NO_SUGGESTIONS.getErrorCode());
+    var expectedSubfields = Map.of("0", "noAuthority");
+    var expectedRecord = getRecord("100", expectedLinkDetails, expectedSubfields);
+
+    var requestBody = new ParsedRecordContentCollection().records(List.of(givenRecord));
+    doPost(linksSuggestionsEndpoint(), requestBody)
+      .andExpect(status().isOk())
+      .andExpect(content().json(asJson(new ParsedRecordContentCollection()
+        .records(List.of(expectedRecord)), objectMapper)));
+  }
+
+  @Test
+  @SneakyThrows
   void getAuthDataStat_shouldFillErrorDetails_whenAutoLinkingDisabled() {
     var givenSubfields = Map.of("0", "oneAuthority");
     var givenRecord = getRecord("100", null, givenSubfields);
@@ -109,7 +126,7 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     var givenSubfields = Map.of("0", "twoAuthority");
     var givenRecord = getRecord("100", null, givenSubfields);
 
-    var expectedLinkDetails = new LinkDetails().status(ERROR).errorCause(MORE_THEN_ONE_SUGGESTIONS.getErrorCode());
+    var expectedLinkDetails = new LinkDetails().status(ERROR).errorCause(MORE_THAN_ONE_SUGGESTIONS.getErrorCode());
     var expectedSubfields = Map.of("0", "twoAuthority");
     var expectedRecord = getRecord("100", expectedLinkDetails, expectedSubfields);
 

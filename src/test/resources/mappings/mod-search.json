@@ -29,6 +29,19 @@
     {
       "request": {
         "method": "GET",
+        "url": "/search/authorities?query=authRefType%3DAuthorized%20and%20%28naturalId%3D%22noAuthority%22%29&includeNumberOfTitles=false"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"totalRecords\": 0, \"authorities\": []}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
         "url": "/search/authorities?query=authRefType%3DAuthorized%20and%20%28naturalId%3D%22twoAuthority%22%29&includeNumberOfTitles=false"
       },
       "response": {
