@@ -13,7 +13,15 @@
 * Implement endpoint to suggest links for MARC-bibliographic record ([MODELINKS-82](https://issues.folio.org/browse/MODELINKS-82))
 
 ### Tech Dept
+* Upgrade folio-spring-base to v7.1.0 ([MODELINKS-99](https://issues.folio.org/browse/MODELINKS-99))
 * Expose database parameters to environment variables ([MODELINKS-102](https://issues.folio.org/browse/MODELINKS-102))
+
+### Dependencies
+Bump `folio-spring-base` from `6.0.1` to `7.1.0`
+Bump `spring-boot` from `3.0.2` to `3.1.0`
+Bump `hypersistence-utils` from `3.2.0` to `3.5.0`
+
+---
 
 ## v1.0.0 Released 2023-02-21
 ### APIs versions
