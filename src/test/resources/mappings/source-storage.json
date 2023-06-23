@@ -7,7 +7,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"id\": \"c56b70ce-4ef6-47ef-8bc3-c470bafa0b8c\",\n  \"snapshotId\": \"c9db5d7a-e1d4-11e8-9f32-f2801f1b9fd1\",\n  \"recordType\": \"MARC_AUTHORITY\",\n  \"parsedRecord\": {\n    \"id\": \"c9db5d7a-e1d4-11e8-9f32-f2801f1b9fd1\",\n    \"content\": {\n      \"fields\": [\n        {\n          \"001\": \"393893\"\n        },\n        {\n          \"005\": \"20141107001016.0\"\n        },\n        {\n          \"010\": {\n            \"ind1\": \" \",\n            \"ind2\": \" \",\n            \"subfields\": [\n              {\n                \"a\": \"  2001000234\"\n              }\n            ]\n          }\n        },\n        {\n          \"100\": {\n            \"ind1\": \"1\",\n            \"ind2\": \" \",\n            \"subfields\": [\n              {\n                \"a\": \"Lansing, John\"\n              },\n              {\n                \"d\": \"1756-1791.\"\n              },\n              {\n                \"t\": \"Black Eagles\"\n              },\n              {\n                \"q\": \"(Jules)\"\n              },\n              {\n                \"l\": \"book\"\n              }\n            ]\n          }\n        }\n      ],\n      \"leader\": \"06059cz  a2201201n  4500\"\n    }\n  }\n}\n",
+        "body": "{\n  \"id\": \"c56b70ce-4ef6-47ef-8bc3-c470bafa0b8c\",\n  \"snapshotId\": \"c9db5d7a-e1d4-11e8-9f32-f2801f1b9fd1\",\n  \"recordType\": \"MARC_AUTHORITY\",\n  \"parsedRecord\": {\n    \"id\": \"c9db5d7a-e1d4-11e8-9f32-f2801f1b9fd1\",\n    \"content\": {\n\"fields\": [\n  {\n\"001\": \"393893\"\n  },\n  {\n\"005\": \"20141107001016.0\"\n  },\n  {\n\"010\": {\n  \"ind1\": \" \",\n  \"ind2\": \" \",\n  \"subfields\": [\n{\n  \"a\": \"  2001000234\"\n}\n  ]\n}\n  },\n  {\n\"100\": {\n  \"ind1\": \"1\",\n  \"ind2\": \" \",\n  \"subfields\": [\n{\n  \"a\": \"Lansing, John\"\n},\n{\n  \"d\": \"1756-1791.\"\n},\n{\n  \"t\": \"Black Eagles\"\n},\n{\n  \"q\": \"(Jules)\"\n},\n{\n  \"l\": \"book\"\n}\n  ]\n}\n  }\n],\n\"leader\": \"06059cz  a2201201n  4500\"\n    }\n  }\n}\n",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -23,7 +23,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\"records\": [{\"id\": \"f380b531-7703-4c6f-b06c-bdbb00479a81\",\n            \"externalIdsHolder\": {\n                \"authorityId\": \"417f3355-081c-4aae-9209-ccb305f25f7e\"\n            },\n            \"recordType\": \"MARC_AUTHORITY\",\n            \"recordState\": \"ACTUAL\",\n            \"parsedRecord\": {\n                \"id\": \"f380b531-7703-4c6f-b06c-bdbb00479a81\",\n                \"content\": {\n                    \"fields\": [\n                        {\n                            \"100\": {\n                                \"ind1\": \"2\",\n                                \"ind2\": \" \",\n                                \"subfields\": [\n                                    {\n                                        \"a\": \"new $a value\"\n                                    }                 ]\n                            }\n                        }\n                    ],\n                    \"leader\": \"01172cz  a2200181n  4500\"\n                }\n            }\n        }\n    ],\n    \"totalRecords\": 1\n}",
+        "body": "{\"records\": [{\"id\": \"f380b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"externalIdsHolder\": {\n  \"authorityId\": \"417f3355-081c-4aae-9209-ccb305f25f7e\"\n  },\n  \"recordType\": \"MARC_AUTHORITY\",\n  \"recordState\": \"ACTUAL\",\n  \"parsedRecord\": {\n  \"id\": \"f380b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"content\": {\n\"fields\": [\n{\n\"100\": {\n    \"ind1\": \"2\",\n    \"ind2\": \" \",\n    \"subfields\": [\n  {\n  \"a\": \"new $a value\"\n  }   ]\n}\n}\n],\n\"leader\": \"01172cz  a2200181n  4500\"\n  }\n  }\n  }\n    ],\n    \"totalRecords\": 1\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -40,7 +40,92 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"records\": [\n    {\n      \"id\": \"f390b531-7703-4c6f-b06c-bdbb00479a81\",\n      \"externalIdsHolder\": {\n        \"authorityId\": \"517f3355-081c-4aae-9209-ccb305f25f7e\"\n      },\n      \"recordType\": \"MARC_AUTHORITY\",\n      \"recordState\": \"ACTUAL\",\n      \"parsedRecord\": {\n        \"id\": \"f390b531-7703-4c6f-b06c-bdbb00479a81\",\n        \"content\": {\n          \"fields\": [\n            {\n              \"100\": {\n                \"ind1\": \"2\",\n                \"ind2\": \" \",\n                \"subfields\": [\n                  {\n                    \"a\": \"new $a value\"\n                  }\n                ]\n              }\n            }\n          ],\n          \"leader\": \"01172cz  a2200181n  4500\"\n        }\n      }\n    },\n    {\n      \"id\": \"f490b531-7703-4c6f-b06c-bdbb00479a81\",\n      \"externalIdsHolder\": {\n        \"authorityId\": \"617f3355-081c-4aae-9209-ccb305f25f7e\"\n      },\n      \"recordType\": \"MARC_AUTHORITY\",\n      \"recordState\": \"ACTUAL\",\n      \"parsedRecord\": {\n        \"id\": \"f360b531-7703-4c6f-b06c-bdbb00479a81\",\n        \"content\": {\n          \"fields\": [\n            {\n              \"100\": {\n                \"ind1\": \"2\",\n                \"ind2\": \" \",\n                \"subfields\": [\n                  {\n                    \"a\": \"second new $a value\"\n                  }\n                ]\n              }\n            }\n          ],\n          \"leader\": \"01172cz  a2200181n  4500\"\n        }\n      }\n    }\n  ],\n  \"totalRecords\": 2\n}",
+        "body": "{\n  \"records\": [\n    {\n\"id\": \"f390b531-7703-4c6f-b06c-bdbb00479a81\",\n\"externalIdsHolder\": {\n  \"authorityId\": \"517f3355-081c-4aae-9209-ccb305f25f7e\"\n},\n\"recordType\": \"MARC_AUTHORITY\",\n\"recordState\": \"ACTUAL\",\n\"parsedRecord\": {\n  \"id\": \"f390b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"content\": {\n\"fields\": [\n  {\n\"100\": {\n  \"ind1\": \"2\",\n  \"ind2\": \" \",\n  \"subfields\": [\n    {\n\"a\": \"new $a value\"\n    }\n  ]\n}\n  }\n],\n\"leader\": \"01172cz  a2200181n  4500\"\n  }\n}\n    },\n    {\n\"id\": \"f490b531-7703-4c6f-b06c-bdbb00479a81\",\n\"externalIdsHolder\": {\n  \"authorityId\": \"617f3355-081c-4aae-9209-ccb305f25f7e\"\n},\n\"recordType\": \"MARC_AUTHORITY\",\n\"recordState\": \"ACTUAL\",\n\"parsedRecord\": {\n  \"id\": \"f360b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"content\": {\n\"fields\": [\n  {\n\"100\": {\n  \"ind1\": \"2\",\n  \"ind2\": \" \",\n  \"subfields\": [\n    {\n\"a\": \"second new $a value\"\n    }\n  ]\n}\n  }\n],\n\"leader\": \"01172cz  a2200181n  4500\"\n  }\n}\n    }\n  ],\n  \"totalRecords\": 2\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/source-storage/batch/parsed-records/fetch",
+        "bodyPatterns": [
+          { "contains": "a501dcc2-23ce-4a4a-adb4-ff683b6f325e" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"records\": [{\"id\": \"f380b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"externalIdsHolder\": {\n  \"authorityId\": \"a501dcc2-23ce-4a4a-adb4-ff683b6f325e\"\n  },\n  \"recordType\": \"MARC_AUTHORITY\",\n  \"recordState\": \"ACTUAL\",\n  \"parsedRecord\": {\n  \"id\": \"f380b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"content\": {\n\"fields\": [\n{\n\"100\": {\n    \"ind1\": \"2\",\n    \"ind2\": \" \",\n    \"subfields\": [\n  {\n  \"a\": \"new $a value\"\n  },\n  {\n  \"t\": \"test $t value\"\n  }   ]\n}\n}\n],\n\"leader\": \"01172cz  a2200181n  4500\"\n  }\n  }\n  }\n    ],\n    \"totalRecords\": 1\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/source-storage/batch/parsed-records/fetch",
+        "bodyPatterns": [
+          { "contains": "845642cf-d4eb-4c2e-a067-db580c9a1abd" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"records\": [{\"id\": \"f380b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"externalIdsHolder\": {\n  \"authorityId\": \"845642cf-d4eb-4c2e-a067-db580c9a1abd\"\n  },\n  \"recordType\": \"MARC_AUTHORITY\",\n  \"recordState\": \"ACTUAL\",\n  \"parsedRecord\": {\n  \"id\": \"f380b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"content\": {\n\"fields\": [\n{\n\"100\": {\n    \"ind1\": \"2\",\n    \"ind2\": \" \",\n    \"subfields\": [\n  {\n  \"a\": \"new $a value\"\n  }   ]\n}\n}\n],\n\"leader\": \"01172cz  a2200181n  4500\"\n  }\n  }\n  }\n    ],\n    \"totalRecords\": 1\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/source-storage/batch/parsed-records/fetch",
+        "bodyPatterns": [
+          { "contains": "845642cf-d4eb-4c2e-a067-db580c9a1abd" },
+          { "contains": "1b8867a1-2f1d-4f6a-8023-5abaf980c24c" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"records\": [\n    {\n\"id\": \"f390b531-7703-4c6f-b06c-bdbb00479a81\",\n\"externalIdsHolder\": {\n  \"authorityId\": \"845642cf-d4eb-4c2e-a067-db580c9a1abd\"\n},\n\"recordType\": \"MARC_AUTHORITY\",\n\"recordState\": \"ACTUAL\",\n\"parsedRecord\": {\n  \"id\": \"f390b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"content\": {\n\"fields\": [\n  {\n\"100\": {\n  \"ind1\": \"2\",\n  \"ind2\": \" \",\n  \"subfields\": [\n    {\n\"a\": \"new $a value\"\n    }\n  ]\n}\n  }\n],\n\"leader\": \"01172cz  a2200181n  4500\"\n  }\n}\n    },\n    {\n\"id\": \"f490b531-7703-4c6f-b06c-bdbb00479a81\",\n\"externalIdsHolder\": {\n  \"authorityId\": \"1b8867a1-2f1d-4f6a-8023-5abaf980c24c\"\n},\n\"recordType\": \"MARC_AUTHORITY\",\n\"recordState\": \"ACTUAL\",\n\"parsedRecord\": {\n  \"id\": \"f360b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"content\": {\n\"fields\": [\n  {\n\"100\": {\n  \"ind1\": \"2\",\n  \"ind2\": \" \",\n  \"subfields\": [\n    {\n\"a\": \"second new $a value\"\n    },\n {\n\"t\": \"test $t value\"\n    }\n  ]\n}\n  }\n],\n\"leader\": \"01172cz  a2200181n  4500\"\n  }\n}\n    }\n  ],\n  \"totalRecords\": 2\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/source-storage/batch/parsed-records/fetch",
+        "bodyPatterns": [
+          { "contains": "845642cf-d4eb-4c2e-a067-db580c9a1abd" },
+          { "contains": "a501dcc2-23ce-4a4a-adb4-ff683b6f325e" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"records\": [\n    {\n\"id\": \"f390b531-7703-4c6f-b06c-bdbb00479a81\",\n\"externalIdsHolder\": {\n  \"authorityId\": \"845642cf-d4eb-4c2e-a067-db580c9a1abd\"\n},\n\"recordType\": \"MARC_AUTHORITY\",\n\"recordState\": \"ACTUAL\",\n\"parsedRecord\": {\n  \"id\": \"f390b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"content\": {\n\"fields\": [\n  {\n\"100\": {\n  \"ind1\": \"2\",\n  \"ind2\": \" \",\n  \"subfields\": [\n    {\n\"a\": \"new $a value\"\n    }\n  ]\n}\n  }\n],\n\"leader\": \"01172cz  a2200181n  4500\"\n  }\n}\n    },\n    {\n\"id\": \"f490b531-7703-4c6f-b06c-bdbb00479a81\",\n\"externalIdsHolder\": {\n  \"authorityId\": \"a501dcc2-23ce-4a4a-adb4-ff683b6f325e\"\n},\n\"recordType\": \"MARC_AUTHORITY\",\n\"recordState\": \"ACTUAL\",\n\"parsedRecord\": {\n  \"id\": \"f360b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"content\": {\n\"fields\": [\n  {\n\"100\": {\n  \"ind1\": \"2\",\n  \"ind2\": \" \",\n  \"subfields\": [\n    {\n\"a\": \"second new $a value\"\n    },\n {\n\"t\": \"test $t value\"\n    }\n  ]\n}\n  }\n],\n\"leader\": \"01172cz  a2200181n  4500\"\n  }\n}\n    }\n  ],\n  \"totalRecords\": 2\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/source-storage/batch/parsed-records/fetch",
+        "bodyPatterns": [
+          { "contains": "1c8f571c-eff8-43fa-90a5-2dca70a35f2d" },
+          { "contains": "845642cf-d4eb-4c2e-a067-db580c9a1abd" },
+          { "contains": "91c3d682-7a6b-4c6f-802b-b2793e591fa4" },
+          { "contains": "1b8867a1-2f1d-4f6a-8023-5abaf980c24c" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"records\": [\n  {\n\"id\": \"f390b531-7703-4c6f-b06c-bdbb00479a81\",\n\"externalIdsHolder\": {\n  \"authorityId\": \"1c8f571c-eff8-43fa-90a5-2dca70a35f2d\"\n},\n\"recordType\": \"MARC_AUTHORITY\",\n\"recordState\": \"ACTUAL\",\n\"parsedRecord\": {\n  \"id\": \"f390b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"content\": {\n\"fields\": [\n  {\n\"100\": {\n  \"ind1\": \"2\",\n  \"ind2\": \" \",\n  \"subfields\": [\n    {\n\"a\": \"new $a value\"\n    },\n {\n\"t\": \"test $t value\"\n    }\n  ]\n}\n  },\n {\n\"110\": {\n  \"ind1\": \"2\",\n  \"ind2\": \" \",\n  \"subfields\": [\n    {\n\"a\": \"new $a value\"\n    }\n  ]\n}\n  }\n],\n\"leader\": \"01172cz  a2200181n  4500\"\n  }\n}\n    },\n  {\n\"id\": \"f390b531-7703-4c6f-b06c-bdbb00479a81\",\n\"externalIdsHolder\": {\n  \"authorityId\": \"845642cf-d4eb-4c2e-a067-db580c9a1abd\"\n},\n\"recordType\": \"MARC_AUTHORITY\",\n\"recordState\": \"ACTUAL\",\n\"parsedRecord\": {\n  \"id\": \"f390b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"content\": {\n\"fields\": [\n  {\n\"100\": {\n  \"ind1\": \"2\",\n  \"ind2\": \" \",\n  \"subfields\": [\n    {\n\"a\": \"new $a value\"\n    }\n  ]\n}\n  }\n],\n\"leader\": \"01172cz  a2200181n  4500\"\n  }\n}\n    },\n {\n\"id\": \"f390b531-7703-4c6f-b06c-bdbb00479a81\",\n\"externalIdsHolder\": {\n  \"authorityId\": \"91c3d682-7a6b-4c6f-802b-b2793e591fa4\"\n},\n\"recordType\": \"MARC_AUTHORITY\",\n\"recordState\": \"ACTUAL\",\n\"parsedRecord\": {\n  \"id\": \"f390b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"content\": {\n\"fields\": [\n {\n\"100\": {\n  \"ind1\": \"2\",\n  \"ind2\": \" \",\n  \"subfields\": [\n    {\n\"a\": \"new $a value\"\n    }\n  ]\n}\n  },  {\n\"110\": {\n  \"ind1\": \"2\",\n  \"ind2\": \" \",\n  \"subfields\": [\n    {\n\"a\": \"new $a value\"\n    }\n  ]\n}\n  }\n],\n\"leader\": \"01172cz  a2200181n  4500\"\n  }\n}\n    },\n   {\n\"id\": \"f490b531-7703-4c6f-b06c-bdbb00479a81\",\n\"externalIdsHolder\": {\n  \"authorityId\": \"1b8867a1-2f1d-4f6a-8023-5abaf980c24c\"\n},\n\"recordType\": \"MARC_AUTHORITY\",\n\"recordState\": \"ACTUAL\",\n\"parsedRecord\": {\n  \"id\": \"f360b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"content\": {\n\"fields\": [\n  {\n\"100\": {\n  \"ind1\": \"2\",\n  \"ind2\": \" \",\n  \"subfields\": [\n    {\n\"a\": \"second new $a value\"\n    },\n {\n\"t\": \"test $t value\"\n    }\n  ]\n}\n  },\n {\n\"110\": {\n  \"ind1\": \"2\",\n  \"ind2\": \" \",\n  \"subfields\": [\n    {\n\"a\": \"new $a value\"\n    }\n  ]\n}\n  } \n],\n\"leader\": \"01172cz  a2200181n  4500\"\n  }\n}\n    }\n  ],\n  \"totalRecords\": 4\n}",
         "headers": {
           "Content-Type": "application/json"
         }

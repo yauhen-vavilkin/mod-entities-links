@@ -74,7 +74,7 @@ public class LinkingServiceDelegate {
     var ids = new HashSet<>(authorityIdCollection.getIds());
     var linkCountMap = fillInMissingIdsWithZeros(linkingService.countLinksByAuthorityIds(ids), ids);
 
-    return new LinksCountDtoCollection().links(mapper.convert(linkCountMap));
+    return new LinksCountDtoCollection(mapper.convert(linkCountMap));
   }
 
   private Map<UUID, Integer> fillInMissingIdsWithZeros(Map<UUID, Integer> linksCountMap, HashSet<UUID> ids) {
@@ -122,7 +122,6 @@ public class LinkingServiceDelegate {
       .toList();
 
     var instanceTitles = instanceService.getInstanceTitles(instanceIds);
-
 
     bibStatsList.forEach(bibStatsDto -> {
       var instanceId = bibStatsDto.getInstanceId().toString();

@@ -73,7 +73,7 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
   void shouldHandleEvent_positive() {
     var instanceId = UUID.randomUUID();
     var authorityId = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
-    var link = new Link(authorityId, TAGS[0]);
+    var link = new Link(authorityId, TAGS[1]);
 
     prepareData(instanceId, authorityId, link);
 
@@ -99,7 +99,7 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
   void shouldHandleEvent_positive_whenLinkIdsAndInstanceIdAreEmpty() {
     var instanceId = UUID.randomUUID();
     var authorityId = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
-    var link = new Link(authorityId, TAGS[0]);
+    var link = new Link(authorityId, TAGS[1]);
 
     // save link
     prepareData(instanceId, authorityId, link);
@@ -123,6 +123,8 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
   private void prepareData(UUID instanceId, UUID authorityId, Link link) {
     // save link
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
+    // clear LinksChangeEvent queue filled by link renovation
+    getReceivedEvent();
     // prepare and send inventory update authority event to save stats data
     var authUpdateEvent = TestDataUtils.authorityEvent("UPDATE",
       new AuthorityInventoryRecord().id(authorityId).personalName("new personal name").naturalId("naturalId"),

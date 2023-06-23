@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.folio.entlinks.domain.dto.InstanceLinkDto;
@@ -138,10 +139,10 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
     doPut(linksInstanceEndpoint(), existedLinks, instanceId);
 
     var incomingLinks = linksDtoCollection(linksDto(instanceId,
-      Link.of(0, 1),
-      Link.of(1, 0),
-      Link.of(2, 3),
-      Link.of(3, 2)
+      Link.of(0, 2),
+      Link.of(1, 3),
+      Link.of(2, 1),
+      Link.of(3, 0)
     ));
     doPut(linksInstanceEndpoint(), incomingLinks, instanceId);
 
@@ -186,8 +187,8 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
     doPut(linksInstanceEndpoint(), existedLinks, instanceId);
 
     var incomingLinks = linksDtoCollection(linksDto(instanceId,
-      Link.of(0, 0, "12345-updated"),
-      Link.of(1, 1, "7890-updated")
+      Link.of(0, 0),
+      Link.of(1, 1)
     ));
     doPut(linksInstanceEndpoint(), incomingLinks, instanceId);
 
@@ -306,21 +307,21 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
   @SneakyThrows
   void countNumberOfTitles_positive_whenInstanceLinksExist() {
     var instanceId = randomUUID();
-    var authorityId = randomUUID();
+    var authorityId = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
     var links = linksDtoCollection(linksDto(instanceId,
-      new Link(authorityId, TAGS[0]),
       new Link(authorityId, TAGS[1]),
-      new Link(authorityId, TAGS[2])
+      new Link(authorityId, TAGS[2]),
+      new Link(authorityId, TAGS[3])
     ));
     doPut(linksInstanceEndpoint(), links, instanceId);
 
     var secondInstanceId = randomUUID();
-    var secondAuthorityId = randomUUID();
+    var secondAuthorityId = UUID.fromString("845642cf-d4eb-4c2e-a067-db580c9a1abd");
     var secondLinks = linksDtoCollection(linksDto(secondInstanceId,
-      new Link(authorityId, TAGS[0]),
       new Link(authorityId, TAGS[1]),
+      new Link(authorityId, TAGS[2]),
       new Link(secondAuthorityId, TAGS[0]),
-      new Link(secondAuthorityId, TAGS[1])
+      new Link(secondAuthorityId, TAGS[2])
     ));
     doPut(linksInstanceEndpoint(), secondLinks, secondInstanceId);
 

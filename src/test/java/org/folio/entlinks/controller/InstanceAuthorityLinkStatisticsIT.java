@@ -84,7 +84,7 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
   void getAuthDataStat_positive() {
     var instanceId = UUID.randomUUID();
     var authorityId = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
-    var link = new TestDataUtils.Link(authorityId, TAGS[0]);
+    var link = new TestDataUtils.Link(authorityId, TAGS[1]);
 
     // save link
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);

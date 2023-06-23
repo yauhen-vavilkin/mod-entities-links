@@ -1,7 +1,9 @@
 package org.folio.entlinks.service.links;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -37,5 +39,9 @@ public class AuthorityDataService {
   public void markDeleted(Collection<UUID> ids) {
     log.info("Update authority data [authority ids: {}, deleted: true]", ids);
     repository.updateDeletedByIdIn(ids);
+  }
+
+  public List<AuthorityData> getByIdAndDeleted(Set<UUID> ids, Boolean deleted) {
+    return repository.findByIdInAndDeleted(ids, deleted);
   }
 }

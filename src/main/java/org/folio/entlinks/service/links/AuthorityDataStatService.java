@@ -6,6 +6,7 @@ import static org.folio.entlinks.utils.DateUtils.currentTs;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -63,8 +64,15 @@ public class AuthorityDataStatService {
   public void updateForReports(UUID jobId, List<LinkUpdateReport> reports) {
     log.info("Updating links, stats for reports: [jobId: {}, reports count: {}]", jobId, reports.size());
     log.debug("Updating links,stats for reports: [reports: {}]", reports);
-    updateLinks(jobId, reports);
-    updateStatsData(jobId, reports);
+
+    var dataStat = statRepository.findById(jobId);
+    updateLinks(jobId, dataStat, reports);
+
+    if (dataStat.isPresent()) {
+      updateStatsData(dataStat.get(), reports);
+    } else {
+      log.warn("No data statistics found for jobId {}", jobId);
+    }
   }
 
   private void checkIfAllFailed(List<LinkUpdateReport> reports, AuthorityDataStat dataStat) {
@@ -75,7 +83,7 @@ public class AuthorityDataStatService {
       .ifPresent(linkUpdateReport -> dataStat.setLbFailed(dataStat.getLbTotal()));
   }
 
-  private void updateLinks(UUID jobId, List<LinkUpdateReport> reports) {
+  private void updateLinks(UUID jobId, Optional<AuthorityDataStat> dataStat, List<LinkUpdateReport> reports) {
     reports.forEach(report -> {
       var linkIds = report.getLinkIds();
       var status = mapReportStatus(report);
@@ -89,9 +97,8 @@ public class AuthorityDataStatService {
         });
 
         linkingService.saveAll(report.getInstanceId(), links);
-      } else {
-        var dataStat = getDataStatOrFail(jobId);
-        var authorityId = dataStat.getAuthorityData().getId();
+      } else if (dataStat.isPresent()) {
+        var authorityId = dataStat.get().getAuthorityData().getId();
         linkingService.updateStatus(authorityId, status, report.getFailCause());
       }
     });
@@ -100,12 +107,10 @@ public class AuthorityDataStatService {
   /**
    * Updates authority statistics data.
    *
-   * @param jobId linked bib update job id.
-   *              AuthorityDataStat id and jobId are interchangeable (jobId is used as id to create stat record)
+   * @param dataStat Authority data statistics related to current job.
+   *                 AuthorityDataStat id and jobId are interchangeable (jobId is used as id to create stat record)
    */
-  private void updateStatsData(UUID jobId, List<LinkUpdateReport> reports) {
-    var dataStat = getDataStatOrFail(jobId);
-
+  private void updateStatsData(AuthorityDataStat dataStat, List<LinkUpdateReport> reports) {
     var failedCount = getReportCountForStatus(reports, FAIL);
     var successCount = getReportCountForStatus(reports, SUCCESS);
 
@@ -147,11 +152,6 @@ public class AuthorityDataStatService {
       case SUCCESS -> InstanceAuthorityLinkStatus.ACTUAL;
       case FAIL -> InstanceAuthorityLinkStatus.ERROR;
     };
-  }
-
-  private AuthorityDataStat getDataStatOrFail(UUID jobId) {
-    return statRepository.findById(jobId)
-      .orElseThrow(() -> new IllegalStateException("Cannot find authority data statistics for id: " + jobId));
   }
 
 }

@@ -1,9 +1,7 @@
 package org.folio.entlinks.service.links;
 
 import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
-import static org.apache.commons.collections4.MapUtils.isNotEmpty;
 import static org.apache.commons.lang3.BooleanUtils.isFalse;
 import static org.folio.entlinks.domain.dto.LinkStatus.ERROR;
 import static org.folio.entlinks.domain.dto.LinkStatus.NEW;
@@ -32,6 +30,7 @@ import org.springframework.stereotype.Service;
 public class LinksSuggestionService {
 
   private final AuthoritySourceFilesService sourceFilesService;
+  private final AuthorityRuleValidationService authorityRuleValidationService;
 
   /**
    * Validate bib-authority fields by linking rules and fill bib fields with suggested links.
@@ -164,7 +163,7 @@ public class LinksSuggestionService {
                                                                  InstanceAuthorityLinkingRule rule) {
     return marcAuthoritiesContent.stream()
       .filter(authorityContent -> validateZeroSubfields(authorityContent.getNaturalId(), bibField))
-      .filter(authorityContent -> validateAuthorityFields(authorityContent, rule))
+      .filter(authorityContent -> authorityRuleValidationService.validateAuthorityFields(authorityContent, rule))
       .toList();
   }
 
@@ -172,31 +171,5 @@ public class LinksSuggestionService {
     return bibField.getSubfields().get("0").stream()
       .map(FieldUtils::trimSubfield0Value)
       .anyMatch(zeroValue -> zeroValue.equals(naturalId));
-  }
-
-  private boolean validateAuthorityFields(AuthorityParsedContent authorityContent, InstanceAuthorityLinkingRule rule) {
-    var authorityFields = authorityContent.getFields().get(rule.getAuthorityField());
-
-    if (nonNull(authorityFields) && authorityFields.size() == 1) {
-      var authorityField = authorityFields.get(0);
-      return validateAuthoritySubfields(authorityField, rule);
-    }
-    return false;
-  }
-
-  private boolean validateAuthoritySubfields(FieldParsedContent authorityField,
-                                             InstanceAuthorityLinkingRule rule) {
-    var existValidation = rule.getSubfieldsExistenceValidations();
-    if (isNotEmpty(existValidation)) {
-      var authoritySubfields = authorityField.getSubfields();
-
-      for (var subfieldExistence : existValidation.entrySet()) {
-        var contains = authoritySubfields.containsKey(subfieldExistence.getKey());
-        if (contains != subfieldExistence.getValue()) {
-          return false;
-        }
-      }
-    }
-    return true;
   }
 }

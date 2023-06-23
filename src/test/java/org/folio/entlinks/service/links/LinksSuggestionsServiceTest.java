@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @UnitTest
@@ -40,6 +41,7 @@ class LinksSuggestionsServiceTest {
   private static final String BASE_URL = "https://base/url/";
   private static final String SOURCE_FILE_NAME = "sourceFileName";
 
+  private @Spy AuthorityRuleValidationService authorityRuleValidationService;
   private @Mock AuthoritySourceFilesService sourceFilesService;
   private @InjectMocks LinksSuggestionService linksSuggestionService;
 
