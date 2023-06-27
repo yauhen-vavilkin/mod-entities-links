@@ -1,7 +1,6 @@
 package org.folio.entlinks.integration.dto;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,5 +10,5 @@ import lombok.Getter;
 public class SourceParsedContent {
   private final UUID id;
   private final String leader;
-  private final Map<String, List<FieldParsedContent>> fields;
+  private final List<FieldParsedContent> fields;
 }

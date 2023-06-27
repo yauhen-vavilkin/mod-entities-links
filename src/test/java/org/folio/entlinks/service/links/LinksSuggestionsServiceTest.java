@@ -57,7 +57,7 @@ class LinksSuggestionsServiceTest {
     linksSuggestionService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules);
 
-    var bibField = bib.getFields().get("100").get(0);
+    var bibField = bib.getFields().get(0);
     var linkDetails = bibField.getLinkDetails();
     assertEquals(LinkStatus.NEW, linkDetails.getStatus());
     assertEquals(AUTHORITY_ID, linkDetails.getAuthorityId());
@@ -84,7 +84,7 @@ class LinksSuggestionsServiceTest {
     linksSuggestionService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules);
 
-    var bibField = bib.getFields().get("100").get(0);
+    var bibField = bib.getFields().get(0);
     var linkDetails = bibField.getLinkDetails();
     assertEquals(LinkStatus.ACTUAL, linkDetails.getStatus());
     assertEquals(AUTHORITY_ID, linkDetails.getAuthorityId());
@@ -108,7 +108,7 @@ class LinksSuggestionsServiceTest {
     linksSuggestionService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules);
 
-    var linkDetails = bib.getFields().get("100").get(0).getLinkDetails();
+    var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
     assertEquals(NO_SUGGESTIONS.getErrorCode(), linkDetails.getErrorCause());
   }
@@ -123,7 +123,7 @@ class LinksSuggestionsServiceTest {
     linksSuggestionService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority, secondAuthority), rules);
 
-    var linkDetails = bib.getFields().get("100").get(0).getLinkDetails();
+    var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
     assertEquals(MORE_THAN_ONE_SUGGESTIONS.getErrorCode(), linkDetails.getErrorCause());
     assertNull(linkDetails.getAuthorityId());
@@ -140,7 +140,7 @@ class LinksSuggestionsServiceTest {
     linksSuggestionService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules);
 
-    var linkDetails = bib.getFields().get("100").get(0).getLinkDetails();
+    var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
     assertEquals(NO_SUGGESTIONS.getErrorCode(), linkDetails.getErrorCause());
   }
@@ -156,7 +156,7 @@ class LinksSuggestionsServiceTest {
     linksSuggestionService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules);
 
-    var linkDetails = bib.getFields().get("600").get(0).getLinkDetails();
+    var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
     assertEquals(DISABLED_AUTO_LINKING.getErrorCode(), linkDetails.getErrorCause());
   }
@@ -167,17 +167,15 @@ class LinksSuggestionsServiceTest {
 
   private AuthorityParsedContent getAuthorityParsedRecordContent(String authorityField,
                                                                  Map<String, List<String>> subfields) {
-    var field = new FieldParsedContent("//", "//", subfields, null);
-    var fields = Map.of(authorityField, List.of(field));
-    return new AuthorityParsedContent(AUTHORITY_ID, NATURAL_ID, "", fields);
+    var field = new FieldParsedContent(authorityField, "//", "//", subfields, null);
+    return new AuthorityParsedContent(AUTHORITY_ID, NATURAL_ID, "", List.of(field));
   }
 
   private SourceParsedContent getBibParsedRecordContent(String bibField, LinkDetails linkDetails) {
     var subfields = new HashMap<String, List<String>>();
     subfields.put("0", List.of(NATURAL_ID));
-    var field = new FieldParsedContent("//", "//", subfields, linkDetails);
-    var fields = Map.of(bibField, List.of(field));
-    return new SourceParsedContent(UUID.randomUUID(), "", fields);
+    var field = new FieldParsedContent(bibField, "//", "//", subfields, linkDetails);
+    return new SourceParsedContent(UUID.randomUUID(), "", List.of(field));
   }
 
   private LinkDetails getActualLinksDetails() {

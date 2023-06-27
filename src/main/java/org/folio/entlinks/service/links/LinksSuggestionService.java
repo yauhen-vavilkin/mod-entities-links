@@ -44,9 +44,9 @@ public class LinksSuggestionService {
                                                       List<AuthorityParsedContent> marcAuthoritiesContent,
                                                       Map<String, List<InstanceAuthorityLinkingRule>> rules) {
     marcBibsContent.stream()
-      .flatMap(bibContent -> bibContent.getFields().entrySet().stream())
-      .forEach(bibFields -> suggestAuthorityForBibFields(
-        bibFields.getValue(), marcAuthoritiesContent, rules.get(bibFields.getKey())
+      .flatMap(bibContent -> bibContent.getFields().stream())
+      .forEach(bibField -> suggestAuthorityForBibFields(
+        List.of(bibField), marcAuthoritiesContent, rules.get(bibField.getTag())
       ));
   }
 
@@ -57,8 +57,7 @@ public class LinksSuggestionService {
    */
   public void fillErrorDetailsWithNoSuggestions(List<SourceParsedContent> marcBibsContent) {
     marcBibsContent.stream()
-      .flatMap(bibContent -> bibContent.getFields().entrySet().stream())
-      .flatMap(bibFields -> bibFields.getValue().stream())
+      .flatMap(bibContent -> bibContent.getFields().stream())
       .filter(this::containsSubfield0)
       .forEach(bibField -> bibField.setLinkDetails(getErrorDetails(NO_SUGGESTIONS)));
   }
@@ -136,12 +135,15 @@ public class LinksSuggestionService {
                                      AuthorityParsedContent authority,
                                      InstanceAuthorityLinkingRule rule) {
     var bibSubfields = bibField.getSubfields();
-    var authoritySubfields = authority.getFields()
-      .get(rule.getAuthorityField()).get(0)
-      .getSubfields();
+    var optionalField = authority.getFields().stream()
+      .filter(fieldParsedContent -> fieldParsedContent.getTag().equals(rule.getAuthorityField()))
+      .findFirst();
+    if (optionalField.isEmpty()) {
+      return;
+    }
 
     var zeroValue = getSubfield0Value(sourceFilesService.fetchAuthoritySources(), authority.getNaturalId());
-    bibSubfields.putAll(authoritySubfields);
+    bibSubfields.putAll(optionalField.get().getSubfields());
     bibSubfields.put("0", List.of(zeroValue));
     bibSubfields.put("9", List.of(authority.getId().toString()));
 

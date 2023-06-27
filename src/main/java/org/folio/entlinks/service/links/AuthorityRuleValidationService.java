@@ -64,7 +64,8 @@ public class AuthorityRuleValidationService {
 
   public boolean validateAuthorityFields(AuthorityParsedContent authorityContent, InstanceAuthorityLinkingRule rule) {
     log.info("Starting validation for authority {}", authorityContent.getId());
-    var authorityFields = authorityContent.getFields().get(rule.getAuthorityField());
+    var authorityFields = authorityContent.getFields().stream().filter(fieldParsedContent ->
+      fieldParsedContent.getTag().equals(rule.getAuthorityField())).toList();
 
     if (validateAuthorityFields(authorityFields)) {
       var authorityField = authorityFields.get(0);

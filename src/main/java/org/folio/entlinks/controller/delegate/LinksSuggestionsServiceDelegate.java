@@ -101,17 +101,10 @@ public class LinksSuggestionsServiceDelegate {
   private Set<String> extractNaturalIdsOfLinkableFields(List<SourceParsedContent> contentCollection,
                                                         Map<String, List<InstanceAuthorityLinkingRule>> rules) {
     return contentCollection.stream()
-      .flatMap(bibRecord -> bibRecord.getFields().entrySet().stream())
-      .filter(fields -> isAutoLinkingEnabled(rules.get(fields.getKey())))
-      .map(fields -> extractNaturalIds(fields.getValue()))
-      .filter(CollectionUtils::isNotEmpty)
-      .flatMap(Set::stream)
-      .collect(Collectors.toSet());
-  }
-
-  private Set<String> extractNaturalIds(List<FieldParsedContent> fields) {
-    return fields.stream()
+      .flatMap(bibRecord -> bibRecord.getFields().stream())
+      .filter(field -> isAutoLinkingEnabled(rules.get(field.getTag())))
       .map(this::extractNaturalIds)
+      .filter(CollectionUtils::isNotEmpty)
       .flatMap(Set::stream)
       .collect(Collectors.toSet());
   }

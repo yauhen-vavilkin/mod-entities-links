@@ -11,6 +11,7 @@ import org.folio.entlinks.domain.dto.LinkDetails;
 @Setter
 @AllArgsConstructor
 public class FieldParsedContent {
+  private String tag;
   private String ind1;
   private String ind2;
   private Map<String, List<String>> subfields;

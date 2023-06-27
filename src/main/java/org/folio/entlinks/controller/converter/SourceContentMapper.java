@@ -3,7 +3,6 @@ package org.folio.entlinks.controller.converter;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 
-import java.util.AbstractMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,18 +63,17 @@ public interface SourceContentMapper {
     return new AuthorityParsedContent(authorityId, naturalId, leader, fields);
   }
 
-  private List<Map<String, FieldContent>> convertFieldsToListOfMaps(Map<String, List<FieldParsedContent>> fields) {
-    return fields.entrySet().stream()
+  private List<Map<String, FieldContent>> convertFieldsToListOfMaps(List<FieldParsedContent> fields) {
+    return fields.stream()
       .map(this::convertParsedContent)
-      .flatMap(List::stream)
       .toList();
   }
 
-  private Map<String, List<FieldParsedContent>> convertFieldsToOneMap(List<Map<String, FieldContent>> fields) {
+  private List<FieldParsedContent> convertFieldsToOneMap(List<Map<String, FieldContent>> fields) {
     return fields.stream()
       .flatMap(map -> map.entrySet().stream())
       .map(this::convertFieldContent)
-      .collect(groupingBy(Map.Entry::getKey, LinkedHashMap::new, mapping(Map.Entry::getValue, Collectors.toList())));
+      .toList();
   }
 
   private List<Map<String, String>> convertSubfieldsToListOfMaps(Map<String, List<String>> subfields) {
@@ -93,30 +91,26 @@ public interface SourceContentMapper {
       .collect(groupingBy(Map.Entry::getKey, LinkedHashMap::new, mapping(Map.Entry::getValue, Collectors.toList())));
   }
 
-  private Map.Entry<String, FieldParsedContent> convertFieldContent(Map.Entry<String, FieldContent> fieldContent) {
+  private FieldParsedContent convertFieldContent(Map.Entry<String, FieldContent> fieldContent) {
     var ind1 = fieldContent.getValue().getInd1();
     var ind2 = fieldContent.getValue().getInd2();
     var linkDetails = fieldContent.getValue().getLinkDetails();
     var subfields = convertSubfieldsToOneMap(fieldContent.getValue().getSubfields());
 
-    var fieldParsedContent = new FieldParsedContent(ind1, ind2, subfields, linkDetails);
-
-    return new AbstractMap.SimpleEntry<>(fieldContent.getKey(), fieldParsedContent);
+    return new FieldParsedContent(fieldContent.getKey(), ind1, ind2, subfields, linkDetails);
   }
 
-  private List<Map<String, FieldContent>> convertParsedContent(Map.Entry<String, List<FieldParsedContent>> fields) {
-    return fields.getValue().stream().map(field -> {
-      var ind1 = field.getInd1();
-      var ind2 = field.getInd2();
-      var linkDetails = field.getLinkDetails();
-      var subfields = convertSubfieldsToListOfMaps(field.getSubfields());
+  private Map<String, FieldContent> convertParsedContent(FieldParsedContent field) {
+    var ind1 = field.getInd1();
+    var ind2 = field.getInd2();
+    var linkDetails = field.getLinkDetails();
+    var subfields = convertSubfieldsToListOfMaps(field.getSubfields());
 
-      var fieldContent = new FieldContent().ind1(ind1).ind2(ind2)
-        .linkDetails(linkDetails)
-        .subfields(subfields);
+    var fieldContent = new FieldContent().ind1(ind1).ind2(ind2)
+      .linkDetails(linkDetails)
+      .subfields(subfields);
 
-      return Map.of(fields.getKey(), fieldContent);
-    }).toList();
+    return Map.of(field.getTag(), fieldContent);
   }
 
   private String extractNaturalId(List<AuthorityData> authorityData, UUID authorityId) {
