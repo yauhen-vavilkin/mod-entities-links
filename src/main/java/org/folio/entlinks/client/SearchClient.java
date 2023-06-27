@@ -2,6 +2,7 @@ package org.folio.entlinks.client;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.folio.entlinks.domain.dto.AuthoritySearchResult;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -13,23 +14,25 @@ public interface SearchClient {
 
   String OR = " or ";
   String AND = " and ";
-  String ID = "id=%s";
-  String NATURAL_ID = "naturalId=\"%s\"";
-  String AUTHORIZED_REF_TYPE = "authRefType=Authorized";
+  String ID_CQL = "id=%s";
+  String NATURAL_ID_CQL = "naturalId=\"%s\"";
+  String AUTHORIZED_REF_TYPE_CQL = "authRefType=Authorized";
 
   @GetMapping("/authorities")
   AuthoritySearchResult searchAuthorities(@RequestParam String query,
                                           @RequestParam boolean includeNumberOfTitles);
 
   default String buildNaturalIdsQuery(Set<String> naturalIds) {
-    return AUTHORIZED_REF_TYPE + AND + naturalIds.stream()
-      .map(id -> String.format(NATURAL_ID, id))
-      .collect(Collectors.joining(OR, "(", ")"));
+    return buildQuery(naturalIds, id -> String.format(NATURAL_ID_CQL, id));
   }
 
   default String buildIdsQuery(Set<UUID> ids) {
-    return AUTHORIZED_REF_TYPE + AND + ids.stream()
-      .map(id -> String.format(ID, id))
+    return buildQuery(ids, id -> String.format(ID_CQL, id));
+  }
+
+  private static <T> String buildQuery(Set<T> params, Function<T, String> queryFunction) {
+    return AUTHORIZED_REF_TYPE_CQL + AND + params.stream()
+      .map(queryFunction)
       .collect(Collectors.joining(OR, "(", ")"));
   }
 }

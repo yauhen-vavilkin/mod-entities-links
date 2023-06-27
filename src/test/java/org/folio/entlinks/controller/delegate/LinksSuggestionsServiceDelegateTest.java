@@ -3,8 +3,7 @@ package org.folio.entlinks.controller.delegate;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,12 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.folio.entlinks.client.SearchClient;
 import org.folio.entlinks.client.SourceStorageClient;
-import org.folio.entlinks.controller.converter.DataMapper;
 import org.folio.entlinks.controller.converter.SourceContentMapper;
-import org.folio.entlinks.domain.dto.Authority;
-import org.folio.entlinks.domain.dto.AuthoritySearchResult;
 import org.folio.entlinks.domain.dto.ExternalIdType;
 import org.folio.entlinks.domain.dto.FetchConditions;
 import org.folio.entlinks.domain.dto.FetchParsedRecordsBatchRequest;
@@ -34,6 +29,7 @@ import org.folio.entlinks.domain.dto.SubfieldModification;
 import org.folio.entlinks.domain.entity.AuthorityData;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.domain.repository.AuthorityDataRepository;
+import org.folio.entlinks.integration.internal.SearchService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.LinksSuggestionService;
 import org.folio.spring.test.type.UnitTest;
@@ -54,15 +50,13 @@ class LinksSuggestionsServiceDelegateTest {
   private static final String MAX_AUTHORITY_FIELD = "155";
   private static final String NATURAL_ID = "e12345";
   private static final String BASE_URL = "https://base/url/";
-  private static final String EXPECTED_SEARCH_QUERY = "authRefType=Authorized and (naturalId=" + NATURAL_ID + ')';
 
   private @Spy SourceContentMapper contentMapper = Mappers.getMapper(SourceContentMapper.class);
-  private @Spy DataMapper dataMapper = Mappers.getMapper(DataMapper.class);
   private @Mock InstanceAuthorityLinkingRulesService linkingRulesService;
   private @Mock LinksSuggestionService suggestionService;
   private @Mock AuthorityDataRepository dataRepository;
   private @Mock SourceStorageClient sourceStorageClient;
-  private @Mock SearchClient searchClient;
+  private @Mock SearchService searchService;
   private @InjectMocks LinksSuggestionsServiceDelegate serviceDelegate;
 
   @Test
@@ -70,8 +64,6 @@ class LinksSuggestionsServiceDelegateTest {
     var records = List.of(getRecord("100"));
     var rules = List.of(getRule("100"));
 
-    var authority = new Authority().id(AUTHORITY_ID).naturalId(NATURAL_ID);
-    var authorities = new AuthoritySearchResult().authorities(List.of(authority));
     var authorityData = List.of(new AuthorityData(AUTHORITY_ID, NATURAL_ID, false));
     var fetchRequest = getBatchFetchRequestForAuthority(AUTHORITY_ID);
     var strippedParsedRecords = new StrippedParsedRecordCollection(emptyList(), 1);
@@ -80,8 +72,7 @@ class LinksSuggestionsServiceDelegateTest {
     when(linkingRulesService.getMinAuthorityField()).thenReturn(MIN_AUTHORITY_FIELD);
     when(linkingRulesService.getMaxAuthorityField()).thenReturn(MAX_AUTHORITY_FIELD);
 
-    when(searchClient.buildNaturalIdsQuery(Set.of(NATURAL_ID))).thenReturn(EXPECTED_SEARCH_QUERY);
-    when(searchClient.searchAuthorities(EXPECTED_SEARCH_QUERY, false)).thenReturn(authorities);
+    when(searchService.searchAuthoritiesByNaturalIds(List.of(NATURAL_ID))).thenReturn(authorityData);
 
     when(dataRepository.findByNaturalIds(Set.of(NATURAL_ID))).thenReturn(new ArrayList<>());
     when(dataRepository.saveAll(authorityData)).thenReturn(authorityData);
@@ -96,7 +87,7 @@ class LinksSuggestionsServiceDelegateTest {
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection);
 
     verify(dataRepository).saveAll(authorityData);
-    verify(searchClient).searchAuthorities(EXPECTED_SEARCH_QUERY, false);
+    verify(searchService).searchAuthoritiesByNaturalIds(List.of(NATURAL_ID));
     verify(sourceStorageClient).fetchParsedRecordsInBatch(fetchRequest);
   }
 
@@ -122,7 +113,7 @@ class LinksSuggestionsServiceDelegateTest {
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection);
 
     verify(dataRepository).findByNaturalIds(Set.of(NATURAL_ID));
-    verify(searchClient, times(0)).searchAuthorities(anyString(), anyBoolean());
+    verify(searchService, times(0)).searchAuthoritiesByNaturalIds(anyList());
     verify(sourceStorageClient).fetchParsedRecordsInBatch(fetchRequest);
   }
 
@@ -148,7 +139,7 @@ class LinksSuggestionsServiceDelegateTest {
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection);
 
     verify(dataRepository).findByNaturalIds(Set.of(NATURAL_ID));
-    verify(searchClient, times(0)).searchAuthorities(anyString(), anyBoolean());
+    verify(searchService, times(0)).searchAuthoritiesByNaturalIds(anyList());
     verify(sourceStorageClient).fetchParsedRecordsInBatch(fetchRequest);
   }
 
@@ -164,7 +155,7 @@ class LinksSuggestionsServiceDelegateTest {
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection);
 
     verify(dataRepository).findByNaturalIds(emptySet());
-    verify(searchClient, times(0)).searchAuthorities(anyString(), anyBoolean());
+    verify(searchService, times(0)).searchAuthoritiesByNaturalIds(anyList());
     verify(sourceStorageClient, times(0)).fetchParsedRecordsInBatch(any());
   }
 
@@ -179,7 +170,7 @@ class LinksSuggestionsServiceDelegateTest {
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection);
 
     verify(dataRepository).findByNaturalIds(emptySet());
-    verify(searchClient, times(0)).searchAuthorities(anyString(), anyBoolean());
+    verify(searchService, times(0)).searchAuthoritiesByNaturalIds(anyList());
     verify(sourceStorageClient, times(0)).fetchParsedRecordsInBatch(any());
   }
 

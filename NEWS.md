@@ -18,7 +18,7 @@
 
 ### Dependencies
 Bump `folio-spring-base` from `6.0.1` to `7.1.0`
-Bump `spring-boot` from `3.0.2` to `3.1.0`
+Bump `spring-boot` from `3.0.2` to `3.1.1`
 Bump `hypersistence-utils` from `3.2.0` to `3.5.0`
 
 ---

@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.collections4.CollectionUtils.removeAll;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -14,9 +15,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
-import org.folio.entlinks.client.SearchClient;
 import org.folio.entlinks.client.SourceStorageClient;
-import org.folio.entlinks.controller.converter.DataMapper;
 import org.folio.entlinks.controller.converter.SourceContentMapper;
 import org.folio.entlinks.domain.dto.ParsedRecordContentCollection;
 import org.folio.entlinks.domain.dto.StrippedParsedRecordCollection;
@@ -25,6 +24,7 @@ import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.domain.repository.AuthorityDataRepository;
 import org.folio.entlinks.integration.dto.FieldParsedContent;
 import org.folio.entlinks.integration.dto.SourceParsedContent;
+import org.folio.entlinks.integration.internal.SearchService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.LinksSuggestionService;
 import org.folio.entlinks.utils.FieldUtils;
@@ -40,8 +40,7 @@ public class LinksSuggestionsServiceDelegate {
   private final AuthorityDataRepository dataRepository;
   private final SourceStorageClient sourceStorageClient;
   private final SourceContentMapper contentMapper;
-  private final SearchClient searchClient;
-  private final DataMapper dataMapper;
+  private final SearchService searchService;
 
   public ParsedRecordContentCollection suggestLinksForMarcRecords(ParsedRecordContentCollection contentCollection) {
     log.info("Links suggestion started for {} bibs", contentCollection.getRecords().size());
@@ -95,13 +94,7 @@ public class LinksSuggestionsServiceDelegate {
   }
 
   private List<AuthorityData> searchAndSaveAuthorities(Set<String> naturalIds) {
-    var query = searchClient.buildNaturalIdsQuery(naturalIds);
-
-    var authorityData = searchClient.searchAuthorities(query, false)
-      .getAuthorities().stream()
-      .map(dataMapper::convertToData)
-      .toList();
-
+    var authorityData = searchService.searchAuthoritiesByNaturalIds(new ArrayList<>(naturalIds));
     return dataRepository.saveAll(authorityData);
   }
 

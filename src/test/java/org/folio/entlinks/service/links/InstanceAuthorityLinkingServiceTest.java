@@ -29,10 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.folio.entlinks.client.SearchClient;
 import org.folio.entlinks.client.SourceStorageClient;
-import org.folio.entlinks.domain.dto.Authority;
-import org.folio.entlinks.domain.dto.AuthoritySearchResult;
 import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.dto.StrippedParsedRecordCollection;
@@ -43,6 +40,7 @@ import org.folio.entlinks.domain.repository.InstanceLinkRepository;
 import org.folio.entlinks.exception.DeletedLinkingAuthorityException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
+import org.folio.entlinks.integration.internal.SearchService;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.spring.test.type.UnitTest;
 import org.folio.support.TestDataUtils.Link;
@@ -72,7 +70,7 @@ class InstanceAuthorityLinkingServiceTest {
   @Mock
   private AuthorityDataService authorityDataService;
   @Mock
-  private SearchClient searchClient;
+  private SearchService searchService;
   @Mock
   private SourceStorageClient sourceStorageClient;
   @Mock
@@ -554,13 +552,9 @@ class InstanceAuthorityLinkingServiceTest {
   private void mockAuthorities(List<InstanceAuthorityLink> links, StrippedParsedRecordCollection authorityRecords) {
     final var authorityDataSet = links.stream()
       .map(InstanceAuthorityLink::getAuthorityData)
-      .collect(Collectors.toSet());
-    final var authoritiesMock = authorityDataSet.stream()
-      .map(authorityData -> new Authority().id(authorityData.getId()).naturalId(authorityData.getNaturalId()))
       .toList();
 
-    when(searchClient.searchAuthorities(any(), eq(false)))
-      .thenReturn(new AuthoritySearchResult().authorities(authoritiesMock));
+    when(searchService.searchAuthoritiesByIds(any())).thenReturn(authorityDataSet);
     when(sourceStorageClient.fetchParsedRecordsInBatch(any())).thenReturn(authorityRecords);
     when(authorityDataService.saveAll(any(Collection.class)))
       .thenAnswer(invocation -> ((Collection<AuthorityData>) invocation.getArgument(0)).stream()

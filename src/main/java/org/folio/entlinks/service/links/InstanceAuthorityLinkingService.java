@@ -22,9 +22,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.entlinks.client.SearchClient;
 import org.folio.entlinks.client.SourceStorageClient;
-import org.folio.entlinks.domain.dto.Authority;
 import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.dto.StrippedParsedRecord;
@@ -35,6 +33,7 @@ import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.domain.entity.projection.LinkCountView;
 import org.folio.entlinks.domain.repository.InstanceLinkRepository;
 import org.folio.entlinks.exception.DeletedLinkingAuthorityException;
+import org.folio.entlinks.integration.internal.SearchService;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -56,7 +55,7 @@ public class InstanceAuthorityLinkingService {
   private final AuthorityRuleValidationService authorityRuleValidationService;
   private final AuthorityDataService authorityDataService;
   private final RenovateLinksService renovateService;
-  private final SearchClient searchClient;
+  private final SearchService searchService;
   private final SourceStorageClient sourceStorageClient;
   private final EventProducer<LinksChangeEvent> eventProducer;
 
@@ -171,7 +170,7 @@ public class InstanceAuthorityLinkingService {
     InstanceAuthorityLinkStatus status, Timestamp from, Timestamp to) {
 
     return (root, query, builder) -> {
-      var predicates = new LinkedList<>();
+      var predicates = new LinkedList<Predicate>();
 
       if (status != null) {
         predicates.add(builder.equal(root.get("status"), status));
@@ -211,10 +210,8 @@ public class InstanceAuthorityLinkingService {
     if (authorityIds.isEmpty()) {
       return emptyMap();
     }
-    var searchQuery = searchClient.buildIdsQuery(authorityIds);
-    return searchClient.searchAuthorities(searchQuery, false)
-      .getAuthorities().stream()
-      .collect(Collectors.toMap(Authority::getId, Authority::getNaturalId));
+    return searchService.searchAuthoritiesByIds(authorityIds).stream()
+      .collect(Collectors.toMap(AuthorityData::getId, AuthorityData::getNaturalId));
   }
 
   private List<StrippedParsedRecord> fetchAuthoritySources(Set<UUID> authorityIds) {

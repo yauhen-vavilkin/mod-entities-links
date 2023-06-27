@@ -34,7 +34,7 @@ public class AuthorityData extends AuditableEntity {
   private String naturalId;
 
   @Column(name = "state")
-  private boolean deleted = false;
+  private boolean deleted;
 
   @Override
   public int hashCode() {
