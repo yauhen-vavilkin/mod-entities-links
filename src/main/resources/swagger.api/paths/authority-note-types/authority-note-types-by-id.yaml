@@ -1,0 +1,52 @@
+parameters:
+  - $ref: '../../parameters/record-id-param.yaml'
+get:
+  operationId: getAuthorityNoteType
+  tags:
+    - authority-note-type
+  responses:
+    '200':
+      description: Retrieved record
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/authority-note-type/authorityNoteTypeDto.yaml'
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '404':
+      $ref: '../../responses/notFoundResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'
+put:
+  operationId: updateAuthorityNoteType
+  tags:
+    - authority-note-type
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/authority-note-type/authorityNoteTypeDto.yaml'
+  responses:
+    '202':
+      description: Record successfully updated
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '404':
+      $ref: '../../responses/notFoundResponse.yaml'
+    '422':
+      $ref: '../../responses/unprocessableEntityResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'
+delete:
+  operationId: deleteAuthorityNoteType
+  tags:
+    - authority-note-type
+  responses:
+    '204':
+      description: Record successfully deleted
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '404':
+      $ref: '../../responses/notFoundResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'

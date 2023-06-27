@@ -43,7 +43,7 @@ import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecordMetadata;
 import org.folio.entlinks.domain.dto.BibStatsDtoCollection;
 import org.folio.entlinks.domain.dto.LinkStatus;
-import org.folio.entlinks.exception.type.ErrorCode;
+import org.folio.entlinks.exception.type.ErrorType;
 import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
@@ -298,7 +298,7 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
       .andExpect(status().isUnprocessableEntity())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("RequestBodyValidationException")))
-      .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())))
+      .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
       .andExpect(errorMessageMatch(containsString("'to' date should be not less than 'from' date.")));
   }
 

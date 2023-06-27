@@ -9,6 +9,7 @@ import static org.folio.support.JsonTestUtils.asJson;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -107,6 +108,18 @@ public class IntegrationTestBase {
     return mockMvc.perform(rb
         .headers(defaultHeaders()).accept(APPLICATION_JSON))
       .andDo(log());
+  }
+
+  @SneakyThrows
+  protected static ResultActions tryDelete(String uri, Object... args) {
+    return mockMvc.perform(delete(uri, args)
+            .headers(defaultHeaders()).accept(APPLICATION_JSON))
+        .andDo(log());
+  }
+
+  @SneakyThrows
+  protected static ResultActions doDelete(String uri, Object... args) {
+    return tryDelete(uri, args).andExpect(status().is2xxSuccessful());
   }
 
   @SneakyThrows

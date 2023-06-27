@@ -1,9 +1,9 @@
 package org.folio.entlinks.service.links;
 
 import static java.util.Collections.emptyMap;
-import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.DISABLED_AUTO_LINKING;
-import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.MORE_THAN_ONE_SUGGESTIONS;
-import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.NO_SUGGESTIONS;
+import static org.folio.entlinks.config.constants.ErrorCode.DISABLED_AUTO_LINKING;
+import static org.folio.entlinks.config.constants.ErrorCode.MORE_THAN_ONE_SUGGESTIONS;
+import static org.folio.entlinks.config.constants.ErrorCode.NO_SUGGESTIONS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;

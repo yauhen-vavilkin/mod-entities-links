@@ -1,0 +1,15 @@
+description: Nonpublic general authority note
+type: object
+properties:
+  noteTypeId:
+    description: ID of the type of note
+    type: string
+    format: uuid
+  note:
+    type: string
+    description: Text content of the note
+  staffOnly:
+    type: boolean
+required:
+  - note
+  - noteTypeId

@@ -3,6 +3,7 @@ package org.folio.support.base;
 import static org.folio.support.KafkaTestUtils.fullTopicName;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 import lombok.experimental.UtilityClass;
 import org.folio.entlinks.domain.dto.AuthoritySearchParameter;
 import org.folio.entlinks.domain.dto.LinkAction;
@@ -28,6 +29,9 @@ public class TestConstants {
   private static final String AUTH_STATS_ENDPOINT_PATH_PATTERN = "/links/stats/authority";
   private static final String AUTH_STATS_ENDPOINT_PARAMS = "?action=%s&fromDate=%s&toDate=%s&limit=%d";
   private static final String LINKING_RULES_ENDPOINT = "/linking-rules/instance-authority";
+  private static final String AUTHORITY_NOTE_TYPES_ENDPOINT = "/authority-note-types";
+  private static final String AUTHORITY_SOURCE_FILES_ENDPOINT = "/authority-source-files";
+  private static final String AUTHORITY_STORAGE_ENDPOINT = "/authority-storage/authorities";
 
   public static String inventoryAuthorityTopic() {
     return fullTopicName(AUTHORITY_TOPIC, TENANT_ID);
@@ -78,5 +82,29 @@ public class TestConstants {
   public static String authorityStatsEndpoint(LinkAction action, OffsetDateTime fromDate,
                                               OffsetDateTime toDate, int limit) {
     return AUTH_STATS_ENDPOINT_PATH_PATTERN + AUTH_STATS_ENDPOINT_PARAMS.formatted(action, fromDate, toDate, limit);
+  }
+
+  public static String authorityNoteTypesEndpoint() {
+    return AUTHORITY_NOTE_TYPES_ENDPOINT;
+  }
+
+  public static String authorityNoteTypesEndpoint(UUID id) {
+    return AUTHORITY_NOTE_TYPES_ENDPOINT + "/" + id;
+  }
+
+  public static String authoritySourceFilesEndpoint() {
+    return AUTHORITY_SOURCE_FILES_ENDPOINT;
+  }
+
+  public static String authoritySourceFilesEndpoint(UUID id) {
+    return AUTHORITY_SOURCE_FILES_ENDPOINT + "/" + id;
+  }
+
+  public static String authorityEndpoint() {
+    return AUTHORITY_STORAGE_ENDPOINT;
+  }
+
+  public static String authorityEndpoint(UUID id) {
+    return AUTHORITY_STORAGE_ENDPOINT + "/" + id;
   }
 }

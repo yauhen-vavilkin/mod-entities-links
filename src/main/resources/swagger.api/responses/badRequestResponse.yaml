@@ -1,0 +1,5 @@
+description: Validation errors.
+content:
+  application/json:
+    schema:
+      $ref: "../schemas/common/errors.yaml"

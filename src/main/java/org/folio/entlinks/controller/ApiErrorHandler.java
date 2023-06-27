@@ -3,24 +3,32 @@ package org.folio.entlinks.controller;
 import static java.util.Collections.emptyList;
 import static org.apache.logging.log4j.Level.DEBUG;
 import static org.apache.logging.log4j.Level.WARN;
-import static org.folio.entlinks.exception.type.ErrorCode.UNKNOWN_ERROR;
-import static org.folio.entlinks.exception.type.ErrorCode.VALIDATION_ERROR;
+import static org.folio.entlinks.config.constants.ErrorCode.DUPLICATE_AUTHORITY_SOURCE_FILE_CODE;
+import static org.folio.entlinks.config.constants.ErrorCode.DUPLICATE_AUTHORITY_SOURCE_FILE_NAME;
+import static org.folio.entlinks.config.constants.ErrorCode.DUPLICATE_AUTHORITY_SOURCE_FILE_URL;
+import static org.folio.entlinks.config.constants.ErrorCode.DUPLICATE_NOTE_TYPE_NAME;
+import static org.folio.entlinks.config.constants.ErrorCode.VIOLATION_OF_RELATION_BETWEEN_AUTHORITY_AND_SOURCE_FILE;
+import static org.folio.entlinks.exception.type.ErrorType.UNKNOWN_ERROR;
+import static org.folio.entlinks.exception.type.ErrorType.VALIDATION_ERROR;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
-import jakarta.validation.ConstraintViolationException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Level;
+import org.folio.entlinks.config.constants.ErrorCode;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.exception.ResourceNotFoundException;
-import org.folio.entlinks.exception.type.ErrorCode;
+import org.folio.entlinks.exception.type.ErrorType;
 import org.folio.tenant.domain.dto.Error;
 import org.folio.tenant.domain.dto.Errors;
 import org.folio.tenant.domain.dto.Parameter;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -35,32 +43,12 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 public class ApiErrorHandler {
 
-  private static ResponseEntity<Errors> buildResponseEntity(Exception e, HttpStatus status, ErrorCode code) {
-    var errors = new Errors()
-      .errors(List.of(new Error()
-        .message(e.getMessage())
-        .type(e.getClass().getSimpleName())
-        .code(code != null ? code.getValue() : null)))
-      .totalRecords(1);
-    return buildResponseEntity(errors, status);
-  }
-
-  private static ResponseEntity<Errors> buildResponseEntity(Errors errorResponse, HttpStatus status) {
-    return ResponseEntity.status(status).body(errorResponse);
-  }
-
-  private static void logException(Level logLevel, Exception e) {
-    log.log(logLevel, "Handling e", e);
-  }
-
-  private static Errors buildValidationError(Exception e, List<Parameter> parameters) {
-    var error = new Error()
-      .type(e.getClass().getSimpleName())
-      .code(VALIDATION_ERROR.getValue())
-      .message(e.getMessage())
-      .parameters(parameters);
-    return new Errors().errors(List.of(error)).totalRecords(1);
-  }
+  private static Map<String, ErrorCode> CONSTRAINS_I18N_MAP = Map.of(
+    "authority_note_type_name_unq", DUPLICATE_NOTE_TYPE_NAME,
+    "authority_source_file_name_unq", DUPLICATE_AUTHORITY_SOURCE_FILE_NAME,
+    "authority_source_file_base_url_unq", DUPLICATE_AUTHORITY_SOURCE_FILE_URL,
+    "authority_source_file_code_unq", DUPLICATE_AUTHORITY_SOURCE_FILE_CODE,
+      "authority_storage_source_file_id_foreign_key", VIOLATION_OF_RELATION_BETWEEN_AUTHORITY_AND_SOURCE_FILE);
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<Errors> handleGlobalExceptions(Exception e) {
@@ -70,7 +58,7 @@ public class ApiErrorHandler {
 
   @ExceptionHandler(ResourceNotFoundException.class)
   public ResponseEntity<Errors> handleNotFoundException(ResourceNotFoundException e) {
-    return buildResponseEntity(e, NOT_FOUND, ErrorCode.NOT_FOUND_ERROR);
+    return buildResponseEntity(e, NOT_FOUND, ErrorType.NOT_FOUND_ERROR);
   }
 
   @ExceptionHandler(RequestBodyValidationException.class)
@@ -100,20 +88,6 @@ public class ApiErrorHandler {
     return buildResponseEntity(errorResponse, UNPROCESSABLE_ENTITY);
   }
 
-  @ExceptionHandler(ConstraintViolationException.class)
-  public ResponseEntity<Errors> handleConstraintViolation(ConstraintViolationException e) {
-    logException(DEBUG, e);
-    var errors = e.getConstraintViolations().stream()
-      .map(constraintViolation -> new Error()
-        .message(String.format("%s %s", constraintViolation.getPropertyPath(), constraintViolation.getMessage()))
-        .code(VALIDATION_ERROR.getValue())
-        .type(ConstraintViolationException.class.getSimpleName()))
-      .toList();
-
-    var errorResponse = new Errors().errors(errors).totalRecords(errors.size());
-    return buildResponseEntity(errorResponse, BAD_REQUEST);
-  }
-
   @ExceptionHandler({
     MethodArgumentTypeMismatchException.class,
     MissingServletRequestParameterException.class,
@@ -135,6 +109,54 @@ public class ApiErrorHandler {
         logException(DEBUG, e);
         return buildResponseEntity(e, BAD_REQUEST, VALIDATION_ERROR);
       });
+  }
+
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<Errors> conflict(DataIntegrityViolationException e) {
+    var cause = e.getCause();
+    if (cause instanceof ConstraintViolationException cve) {
+      var constraintName = cve.getConstraintName();
+      var errorCode = CONSTRAINS_I18N_MAP.get(constraintName);
+      return buildResponseEntity(errorCode, VALIDATION_ERROR, UNPROCESSABLE_ENTITY);
+    }
+    return buildResponseEntity(e, BAD_REQUEST, VALIDATION_ERROR);
+  }
+
+  private static ResponseEntity<Errors> buildResponseEntity(Exception e, HttpStatus status, ErrorType type) {
+    var errors = new Errors()
+      .errors(List.of(new Error()
+        .message(e.getMessage())
+        .type(e.getClass().getSimpleName())
+        .code(type != null ? type.getValue() : null)))
+      .totalRecords(1);
+    return buildResponseEntity(errors, status);
+  }
+
+  private static ResponseEntity<Errors> buildResponseEntity(ErrorCode errorCode, ErrorType type, HttpStatus status) {
+    var errors = new Errors()
+      .errors(List.of(new Error()
+        .message(errorCode.getMessage())
+        .type(type.getValue())
+        .code(errorCode.getErrorCode())))
+      .totalRecords(1);
+    return buildResponseEntity(errors, status);
+  }
+
+  private static ResponseEntity<Errors> buildResponseEntity(Errors errorResponse, HttpStatus status) {
+    return ResponseEntity.status(status).body(errorResponse);
+  }
+
+  private static void logException(Level logLevel, Exception e) {
+    log.log(logLevel, "Handling e", e);
+  }
+
+  private static Errors buildValidationError(Exception e, List<Parameter> parameters) {
+    var error = new Error()
+      .type(e.getClass().getSimpleName())
+      .code(VALIDATION_ERROR.getValue())
+      .message(e.getMessage())
+      .parameters(parameters);
+    return new Errors().errors(List.of(error)).totalRecords(1);
   }
 
 }

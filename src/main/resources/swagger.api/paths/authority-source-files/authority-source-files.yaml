@@ -1,0 +1,42 @@
+get:
+  operationId: retrieveAuthoritySourceFiles
+  tags:
+    - authority-source-file
+  parameters:
+    - $ref: '../../parameters/offset-param.yaml'
+    - $ref: '../../parameters/limit-param.yaml'
+    - $ref: '../../parameters/cql-query.yaml'
+  responses:
+    '200':
+      description: Returns a list of authority source files
+      content:
+        application/json:
+          example: examples/authorities.sample
+          schema:
+            $ref: '../../schemas/authority-source-file/authoritySourceFileDtoCollection.yaml'
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'
+post:
+  operationId: createAuthoritySourceFile
+  tags:
+    - authority-source-file
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/authority-source-file/authoritySourceFileDto.yaml'
+  responses:
+    '200':
+      description: Record successfully created
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/authority-source-file/authoritySourceFileDto.yaml'
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '422':
+      $ref: '../../responses/unprocessableEntityResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'

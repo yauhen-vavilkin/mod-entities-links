@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum ErrorCode {
+public enum ErrorType {
 
   VALIDATION_ERROR("validation"),
   NOT_FOUND_ERROR("not-found"),

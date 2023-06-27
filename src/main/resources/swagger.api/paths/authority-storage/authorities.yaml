@@ -1,0 +1,42 @@
+get:
+  operationId: retrieveAuthorities
+  tags:
+    - authority-storage
+  parameters:
+    - $ref: '../../parameters/offset-param.yaml'
+    - $ref: '../../parameters/limit-param.yaml'
+    - $ref: '../../parameters/cql-query.yaml'
+  responses:
+    '200':
+      description: Returns a list of authorities
+      content:
+        application/json:
+          example: examples/authorities.sample
+          schema:
+            $ref: '../../schemas/authority-storage/authorityDtoCollection.yaml'
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'
+post:
+  operationId: createAuthority
+  tags:
+    - authority-storage
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/authority-storage/authorityDto.yaml'
+  responses:
+    '200':
+      description: Record successfully created
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/authority-storage/authorityDto.yaml'
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '422':
+      $ref: '../../responses/unprocessableEntityResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'

@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.folio.entlinks.client.SearchClient;
 import org.folio.entlinks.controller.converter.DataMapper;
-import org.folio.entlinks.domain.dto.Authority;
+import org.folio.entlinks.domain.dto.AuthorityRecord;
 import org.folio.entlinks.domain.dto.AuthoritySearchResult;
 import org.folio.entlinks.domain.entity.AuthorityData;
 import org.folio.entlinks.exception.FolioIntegrationException;
@@ -58,7 +58,7 @@ public class SearchService {
     }
   }
 
-  private AuthorityData toAuthorityData(Authority authority) {
+  private AuthorityData toAuthorityData(AuthorityRecord authority) {
     var authorityData = dataMapper.convertToData(authority);
     authorityData.setDeleted(false);
     return authorityData;
