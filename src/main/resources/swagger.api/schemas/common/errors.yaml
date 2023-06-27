@@ -1,0 +1,18 @@
+description: Errors response
+type: object
+properties:
+  errors:
+    description: List of errors
+    type: array
+    items:
+      $ref: './error.yaml'
+example:
+  Error:
+    value:
+      errors:
+        - message: may not be null
+          type: 1
+          code: -1
+          parameters:
+            - key: moduleTo
+              value: null

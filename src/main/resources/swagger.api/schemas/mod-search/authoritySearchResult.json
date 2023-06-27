@@ -11,7 +11,7 @@
       "type": "array",
       "description": "List of authorities found",
       "items": {
-        "$ref": "authority.json"
+        "$ref": "authorityRecord.json"
       }
     }
   }

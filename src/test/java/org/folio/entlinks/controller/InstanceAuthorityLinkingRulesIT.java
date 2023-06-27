@@ -23,7 +23,7 @@ import org.folio.entlinks.domain.dto.LinkingRuleDto;
 import org.folio.entlinks.domain.dto.LinkingRulePatchRequest;
 import org.folio.entlinks.domain.dto.SubfieldModification;
 import org.folio.entlinks.domain.dto.SubfieldValidation;
-import org.folio.entlinks.exception.type.ErrorCode;
+import org.folio.entlinks.exception.type.ErrorType;
 import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.base.IntegrationTestBase;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,7 +69,7 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
       .andExpect(status().isNotFound())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("LinkingRuleNotFoundException")))
-      .andExpect(errorCodeMatch(is(ErrorCode.NOT_FOUND_ERROR.getValue())))
+      .andExpect(errorCodeMatch(is(ErrorType.NOT_FOUND_ERROR.getValue())))
       .andExpect(errorMessageMatch(is(String.format("Linking rule with ID [%s] was not found", MAX_VALUE))));
   }
 
@@ -106,7 +106,7 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
       .andExpect(status().isNotFound())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("LinkingRuleNotFoundException")))
-      .andExpect(errorCodeMatch(is(ErrorCode.NOT_FOUND_ERROR.getValue())))
+      .andExpect(errorCodeMatch(is(ErrorType.NOT_FOUND_ERROR.getValue())))
       .andExpect(errorMessageMatch(is(String.format("Linking rule with ID [%s] was not found", MAX_VALUE))));
   }
 
@@ -118,7 +118,7 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
       .andExpect(status().isUnprocessableEntity())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("RequestBodyValidationException")))
-      .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())))
+      .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
       .andExpect(errorParameterMatch(is("id")))
       .andExpect(errorMessageMatch(is(String.format("Request should have id = %s", MAX_VALUE))));
   }

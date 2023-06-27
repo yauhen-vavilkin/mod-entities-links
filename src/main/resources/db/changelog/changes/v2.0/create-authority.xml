@@ -1,0 +1,70 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
+
+  <changeSet id="MODELINKS-106@@create-authority-table" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="authority"/>
+      </not>
+    </preConditions>
+
+    <comment>Create authority table</comment>
+
+    <createTable tableName="authority">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_authority_storage"/>
+      </column>
+      <column name="natural_id" type="varchar(250)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="source_file_id" type="UUID"/>
+      <column name="source" type="varchar(250)"/>
+      <column name="heading" type="varchar(250)"/>
+      <column name="heading_type" type="varchar(250)"/>
+      <column name="_version" type="integer" defaultValue="0"/>
+      <column name="subject_heading_code" type="char"/>
+      <column name="sft_headings" type="jsonb"/>
+      <column name="saft_headings" type="jsonb"/>
+      <column name="identifiers" type="jsonb"/>
+      <column name="notes" type="jsonb"/>
+      <column name="created_date" type="DATETIME">
+        <constraints nullable="false"/>
+      </column>
+      <column name="updated_date" type="DATETIME">
+        <constraints nullable="false"/>
+      </column>
+      <column name="created_by_user_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+      <column name="updated_by_user_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODELINKS-106@@add-authority_storage_source_file_id_foreign_key" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <tableExists tableName="authority"/>
+        <tableExists tableName="authority_source_file"/>
+        <not>
+          <foreignKeyConstraintExists foreignKeyName="authority_storage_source_file_id_foreign_key"
+                                      schemaName="${database.defaultSchemaName}"
+                                      foreignKeyTableName="authority"/>
+        </not>
+      </and>
+    </preConditions>
+
+    <comment>Add FK for authority_source_file in authority referenced to authority_source_file.id</comment>
+
+    <addForeignKeyConstraint baseTableName="authority"
+                             baseColumnNames="source_file_id"
+                             referencedTableName="authority_source_file"
+                             referencedColumnNames="id"
+                             constraintName="authority_storage_source_file_id_foreign_key"/>
+  </changeSet>
+
+</databaseChangeLog>

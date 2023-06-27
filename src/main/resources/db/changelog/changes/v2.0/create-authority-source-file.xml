@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+  <changeSet id="MODELINKS-106@@create-authority_source_file-table" author="Pavlo_Smahin">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="authority_source_file"/>
+      </not>
+    </preConditions>
+
+    <comment>Create authority_source_file table</comment>
+
+    <createTable tableName="authority_source_file">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_authority_source_file"/>
+      </column>
+      <column name="name" type="varchar(250)">
+        <constraints nullable="false" unique="true" uniqueConstraintName="authority_source_file_name_unq"/>
+      </column>
+      <column name="type" type="varchar(100)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="base_url" type="varchar(250)">
+        <constraints nullable="false" unique="true" uniqueConstraintName="authority_source_file_base_url_unq"/>
+      </column>
+      <column name="source" type="varchar(100)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="created_date" type="DATETIME">
+        <constraints nullable="false"/>
+      </column>
+      <column name="updated_date" type="DATETIME">
+        <constraints nullable="false"/>
+      </column>
+      <column name="created_by_user_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+      <column name="updated_by_user_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODELINKS-106@@create-authority_source_file_code-table" author="Pavlo_Smahin">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="authority_source_file_code"/>
+      </not>
+    </preConditions>
+
+    <comment>Create authority_source_file_code table</comment>
+
+    <createTable tableName="authority_source_file_code">
+      <column autoIncrement="true" name="id" type="integer" >
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_authority_source_file_code"/>
+      </column>
+      <column name="authority_source_file_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+      <column name="code" type="varchar(25)">
+        <constraints nullable="false" unique="true" uniqueConstraintName="authority_source_file_code_unq"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODELINKS-106@@add-authority_source_file_code_foreign_key" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <tableExists tableName="authority_source_file"/>
+        <tableExists tableName="authority_source_file_code"/>
+        <not>
+          <foreignKeyConstraintExists foreignKeyName="fk_authority_source_file_code_authority_source_file_id"
+                                      schemaName="${database.defaultSchemaName}"
+                                      foreignKeyTableName="authority_source_file_code"/>
+        </not>
+      </and>
+    </preConditions>
+
+    <comment>Add FK for authority_source_file in authority_source_file_code referenced to authority_source_file.id</comment>
+
+    <addForeignKeyConstraint baseTableName="authority_source_file_code"
+                             baseColumnNames="authority_source_file_id"
+                             referencedTableName="authority_source_file"
+                             referencedColumnNames="id"
+                             constraintName="fk_authority_source_file_code_authority_source_file_id"/>
+  </changeSet>
+
+</databaseChangeLog>

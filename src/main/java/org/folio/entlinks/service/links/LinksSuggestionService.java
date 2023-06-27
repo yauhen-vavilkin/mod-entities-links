@@ -4,11 +4,11 @@ import static java.util.Objects.isNull;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.BooleanUtils.isFalse;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.entlinks.config.constants.ErrorCode.DISABLED_AUTO_LINKING;
+import static org.folio.entlinks.config.constants.ErrorCode.MORE_THAN_ONE_SUGGESTIONS;
+import static org.folio.entlinks.config.constants.ErrorCode.NO_SUGGESTIONS;
 import static org.folio.entlinks.domain.dto.LinkStatus.ERROR;
 import static org.folio.entlinks.domain.dto.LinkStatus.NEW;
-import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.DISABLED_AUTO_LINKING;
-import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.MORE_THAN_ONE_SUGGESTIONS;
-import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.NO_SUGGESTIONS;
 import static org.folio.entlinks.utils.FieldUtils.getSubfield0Value;
 
 import com.google.common.primitives.Chars;
@@ -20,13 +20,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.entlinks.config.constants.ErrorCode;
 import org.folio.entlinks.domain.dto.LinkDetails;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.integration.dto.AuthorityParsedContent;
 import org.folio.entlinks.integration.dto.FieldParsedContent;
 import org.folio.entlinks.integration.dto.SourceParsedContent;
 import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
-import org.folio.entlinks.service.links.model.LinksSuggestionErrorCode;
 import org.folio.entlinks.utils.FieldUtils;
 import org.springframework.stereotype.Service;
 
@@ -157,7 +157,7 @@ public class LinksSuggestionService {
     return linkDetails;
   }
 
-  private LinkDetails getErrorDetails(LinksSuggestionErrorCode errorCode) {
+  private LinkDetails getErrorDetails(ErrorCode errorCode) {
     return new LinkDetails().status(ERROR).errorCause(errorCode.getErrorCode());
   }
 

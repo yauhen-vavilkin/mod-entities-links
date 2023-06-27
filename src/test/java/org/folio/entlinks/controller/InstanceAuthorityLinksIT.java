@@ -36,7 +36,7 @@ import org.folio.entlinks.domain.dto.LinksCountDto;
 import org.folio.entlinks.domain.dto.LinksCountDtoCollection;
 import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
-import org.folio.entlinks.exception.type.ErrorCode;
+import org.folio.entlinks.exception.type.ErrorType;
 import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
@@ -92,7 +92,7 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
       .andExpect(status().isBadRequest())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("MethodArgumentTypeMismatchException")))
-      .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())))
+      .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
       .andExpect(errorMessageMatch(containsString("Invalid UUID string")));
   }
 
@@ -256,7 +256,7 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
       .andExpect(status().isUnprocessableEntity())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("RequestBodyValidationException")))
-      .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())))
+      .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
       .andExpect(errorMessageMatch(containsString("Link should have instanceId = " + instanceId)));
   }
 
@@ -270,7 +270,7 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
       .andExpect(status().isBadRequest())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("MethodArgumentTypeMismatchException")))
-      .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())))
+      .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
       .andExpect(errorMessageMatch(containsString("Invalid UUID string")));
   }
 
@@ -283,7 +283,7 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
       .andExpect(status().isBadRequest())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("HttpMessageNotReadableException")))
-      .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())))
+      .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
       .andExpect(errorMessageMatch(containsString("Required request body is missing")));
   }
 
@@ -298,7 +298,7 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
       .andExpect(status().isUnprocessableEntity())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("MethodArgumentNotValidException")))
-      .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())))
+      .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())))
       .andExpect(errorMessageMatch(containsString("must not be null")))
       .andExpect(errorParameterMatch(is("links[0]." + missingField)));
   }
@@ -364,7 +364,7 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
       .andExpect(status().isBadRequest())
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("HttpMessageNotReadableException")))
-      .andExpect(errorCodeMatch(is(ErrorCode.VALIDATION_ERROR.getValue())));
+      .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())));
   }
 
   private ResultMatcher totalRecordsMatch(int recordsTotal) {

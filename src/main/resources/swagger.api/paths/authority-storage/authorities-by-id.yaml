@@ -1,0 +1,52 @@
+parameters:
+  - $ref: '../../parameters/record-id-param.yaml'
+get:
+  operationId: getAuthority
+  tags:
+    - authority-storage
+  responses:
+    '200':
+      description: Retrieved record
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/authority-storage/authorityDto.yaml'
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '404':
+      $ref: '../../responses/notFoundResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'
+put:
+  operationId: updateAuthority
+  tags:
+    - authority-storage
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/authority-storage/authorityDto.yaml'
+  responses:
+    '202':
+      description: Record successfully updated
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '404':
+      $ref: '../../responses/notFoundResponse.yaml'
+    '422':
+      $ref: '../../responses/unprocessableEntityResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'
+delete:
+  operationId: deleteAuthority
+  tags:
+    - authority-storage
+  responses:
+    '204':
+      description: Record successfully deleted
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '404':
+      $ref: '../../responses/notFoundResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'

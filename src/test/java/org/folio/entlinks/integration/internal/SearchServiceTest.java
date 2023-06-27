@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.UUID;
 import org.folio.entlinks.client.SearchClient;
 import org.folio.entlinks.controller.converter.DataMapper;
-import org.folio.entlinks.domain.dto.Authority;
+import org.folio.entlinks.domain.dto.AuthorityRecord;
 import org.folio.entlinks.domain.dto.AuthoritySearchResult;
 import org.folio.entlinks.domain.entity.AuthorityData;
 import org.folio.spring.test.type.UnitTest;
@@ -69,10 +69,10 @@ class SearchServiceTest {
     final var ids = Arrays.asList(randomUUID(), randomUUID(), randomUUID());
 
     AuthoritySearchResult searchResult1 = new AuthoritySearchResult();
-    searchResult1.setAuthorities(Arrays.asList(new Authority(), new Authority()));
+    searchResult1.setAuthorities(Arrays.asList(new AuthorityRecord(), new AuthorityRecord()));
 
     AuthoritySearchResult searchResult2 = new AuthoritySearchResult();
-    searchResult2.setAuthorities(Collections.singletonList(new Authority()));
+    searchResult2.setAuthorities(Collections.singletonList(new AuthorityRecord()));
 
     AuthorityData authorityData1 = new AuthorityData();
     AuthorityData authorityData2 = new AuthorityData();
@@ -80,7 +80,8 @@ class SearchServiceTest {
 
     when(searchClient.buildIdsQuery(anySet())).thenReturn("query1", "query2");
     when(searchClient.searchAuthorities(anyString(), eq(false))).thenReturn(searchResult1, searchResult2);
-    when(dataMapper.convertToData(any(Authority.class))).thenReturn(authorityData1, authorityData2, authorityData3);
+    when(dataMapper.convertToData(any(AuthorityRecord.class)))
+        .thenReturn(authorityData1, authorityData2, authorityData3);
     searchService.setRequestParamMaxSize(2);
 
     // Act
@@ -91,7 +92,7 @@ class SearchServiceTest {
       .containsAll(List.of(authorityData1, authorityData2, authorityData3))
       .allMatch(authorityData -> !authorityData.isDeleted());
     verify(searchClient, times(2)).searchAuthorities(anyString(), eq(false));
-    verify(dataMapper, times(3)).convertToData(any(Authority.class));
+    verify(dataMapper, times(3)).convertToData(any(AuthorityRecord.class));
   }
 
   @Test
@@ -128,10 +129,10 @@ class SearchServiceTest {
     final var naturalIds = Arrays.asList("id1", "id2", "id3");
 
     AuthoritySearchResult searchResult1 = new AuthoritySearchResult();
-    searchResult1.setAuthorities(Arrays.asList(new Authority(), new Authority()));
+    searchResult1.setAuthorities(Arrays.asList(new AuthorityRecord(), new AuthorityRecord()));
 
     AuthoritySearchResult searchResult2 = new AuthoritySearchResult();
-    searchResult2.setAuthorities(Collections.singletonList(new Authority()));
+    searchResult2.setAuthorities(Collections.singletonList(new AuthorityRecord()));
 
     AuthorityData authorityData1 = new AuthorityData();
     AuthorityData authorityData2 = new AuthorityData();
@@ -139,7 +140,8 @@ class SearchServiceTest {
 
     when(searchClient.buildNaturalIdsQuery(anySet())).thenReturn("query1", "query2");
     when(searchClient.searchAuthorities(anyString(), eq(false))).thenReturn(searchResult1, searchResult2);
-    when(dataMapper.convertToData(any(Authority.class))).thenReturn(authorityData1, authorityData2, authorityData3);
+    when(dataMapper.convertToData(any(AuthorityRecord.class)))
+        .thenReturn(authorityData1, authorityData2, authorityData3);
     searchService.setRequestParamMaxSize(2);
 
     // Act
@@ -150,6 +152,6 @@ class SearchServiceTest {
       .containsAll(List.of(authorityData1, authorityData2, authorityData3))
       .allMatch(authorityData -> !authorityData.isDeleted());
     verify(searchClient, times(2)).searchAuthorities(anyString(), eq(false));
-    verify(dataMapper, times(3)).convertToData(any(Authority.class));
+    verify(dataMapper, times(3)).convertToData(any(AuthorityRecord.class));
   }
 }

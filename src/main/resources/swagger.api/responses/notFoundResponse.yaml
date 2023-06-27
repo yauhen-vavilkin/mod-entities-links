@@ -1,0 +1,5 @@
+description: Record was not found.
+content:
+  application/json:
+    schema:
+      $ref: "../schemas/common/errors.yaml"

@@ -1,0 +1,11 @@
+in: query
+name: query
+required: false
+description: A query expressed as a CQL string
+  (see [dev.folio.org/reference/glossary#cql](https://dev.folio.org/reference/glossary#cql))
+  using valid searchable fields.
+  The first example below shows the general form of a full CQL query,
+  but those fields might not be relevant in this context.
+schema:
+  type: string
+  default: cql.allRecords=1

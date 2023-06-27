@@ -1,11 +1,11 @@
 package org.folio.entlinks.controller;
 
+import static org.folio.entlinks.config.constants.ErrorCode.DISABLED_AUTO_LINKING;
+import static org.folio.entlinks.config.constants.ErrorCode.MORE_THAN_ONE_SUGGESTIONS;
+import static org.folio.entlinks.config.constants.ErrorCode.NO_SUGGESTIONS;
 import static org.folio.entlinks.domain.dto.LinkStatus.ACTUAL;
 import static org.folio.entlinks.domain.dto.LinkStatus.ERROR;
 import static org.folio.entlinks.domain.dto.LinkStatus.NEW;
-import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.DISABLED_AUTO_LINKING;
-import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.MORE_THAN_ONE_SUGGESTIONS;
-import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.NO_SUGGESTIONS;
 import static org.folio.support.JsonTestUtils.asJson;
 import static org.folio.support.base.TestConstants.linksSuggestionsEndpoint;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;

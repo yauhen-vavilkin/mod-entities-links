@@ -1,0 +1,42 @@
+get:
+  operationId: retrieveAuthorityNoteTypes
+  tags:
+    - authority-note-type
+  parameters:
+    - $ref: '../../parameters/offset-param.yaml'
+    - $ref: '../../parameters/limit-param.yaml'
+    - $ref: '../../parameters/cql-query.yaml'
+  responses:
+    '200':
+      description: Returns a list of authority note types
+      content:
+        application/json:
+          example: examples/authorities.sample
+          schema:
+            $ref: '../../schemas/authority-note-type/authorityNoteTypeDtoCollection.yaml'
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'
+post:
+  operationId: createAuthorityNoteType
+  tags:
+    - authority-note-type
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/authority-note-type/authorityNoteTypeDto.yaml'
+  responses:
+    '200':
+      description: Record successfully created
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/authority-note-type/authorityNoteTypeDto.yaml'
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '422':
+      $ref: '../../responses/unprocessableEntityResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'

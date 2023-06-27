@@ -1,6 +1,6 @@
 package org.folio.entlinks.exception;
 
-import static org.folio.entlinks.exception.type.ErrorCode.INTEGRATION_ERROR;
+import static org.folio.entlinks.exception.type.ErrorType.INTEGRATION_ERROR;
 
 /**
  * Handles exceptional cases of module integration with other Folio modules.
