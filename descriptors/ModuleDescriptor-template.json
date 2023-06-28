@@ -52,6 +52,10 @@
           "pathPattern": "/links/instances/{instanceId}",
           "permissionsRequired": [
             "instance-authority-links.instances.collection.put"
+          ],
+          "modulePermissions": [
+            "source-storage.records.fetch",
+            "search.authorities.collection.get"
           ]
         },
         {
