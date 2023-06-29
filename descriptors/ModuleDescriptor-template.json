@@ -55,7 +55,10 @@
           ],
           "modulePermissions": [
             "source-storage.records.fetch",
-            "search.authorities.collection.get"
+            "search.authorities.collection.get",
+            "mapping-metadata.get",
+            "inventory-storage.instances.item.get",
+            "inventory-storage.instances.item.put"
           ]
         },
         {
