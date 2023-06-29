@@ -1,0 +1,10 @@
+description: A patch request for authority source file
+type: object
+properties:
+  id:
+    description: Unique ID of the Authority source file; a UUID
+    type: string
+    format: uuid
+  baseUrl:
+    type: string
+    description: Base URL of the source file origin
