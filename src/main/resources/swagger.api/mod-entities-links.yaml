@@ -296,6 +296,9 @@ paths:
   /authority-storage/authorities/{id}:
     $ref: './paths/authority-storage/authorities-by-id.yaml'
 
+  /authority/reindex:
+    $ref: './paths/authority-storage-reindex/reindex.yaml'
+
   /authority-note-types:
     $ref: './paths/authority-note-types/authority-note-types.yaml'
 
@@ -528,6 +531,12 @@ components:
 
     authoritySourceFileDtoCollection:
       $ref: schemas/authority-source-file/authoritySourceFileDtoCollection.yaml
+
+    reindexJobDto:
+      $ref: schemas/authority-storage-reindex/reindexJobDto.yaml
+
+    reindexJobDtoCollection:
+      $ref: schemas/authority-storage-reindex/reindexJobDtoCollection.yaml
 
     linksChangeEvent:
       type: object

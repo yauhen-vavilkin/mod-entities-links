@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+
+  <changeSet id="1688496209132-1" author="pavel">
+    <createTable tableName="reindex_job">
+        <column name="id" type="UUID">
+            <constraints nullable="false" primaryKey="true" primaryKeyName="pk_reindex_job"/>
+        </column>
+        <column name="resource_name" type="VARCHAR(255)">
+            <constraints nullable="false"/>
+        </column>
+        <column name="job_status" type="VARCHAR(255)">
+            <constraints nullable="false"/>
+        </column>
+        <column name="published" type="INT"/>
+        <column name="submitted_date" type="timestamp"/>
+    </createTable>
+  </changeSet>
+</databaseChangeLog>

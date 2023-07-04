@@ -14,6 +14,7 @@ import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.integration.kafka.AuthorityChangeFilterStrategy;
 import org.folio.entlinks.integration.kafka.EventProducer;
+import org.folio.entlinks.service.reindex.event.DomainEvent;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -143,6 +144,23 @@ public class KafkaConfiguration {
   public EventProducer<LinkUpdateReport> linkUpdateReportMessageProducerService(
     KafkaTemplate<String, LinkUpdateReport> template) {
     return new EventProducer<>(template, "links.instance-authority-stats");
+  }
+
+  @Bean
+  public ProducerFactory<String, DomainEvent<?>> domainProducerFactory(KafkaProperties kafkaProperties) {
+    return new DefaultKafkaProducerFactory<>(getProducerConfigProps(kafkaProperties));
+  }
+
+  @Bean
+  public KafkaTemplate<String, DomainEvent<?>> domainKafkaTemplate(
+    ProducerFactory<String, DomainEvent<?>> domainProducerFactory) {
+    return new KafkaTemplate<>(domainProducerFactory);
+  }
+
+  @Bean
+  public EventProducer<DomainEvent<?>> authorityDomainMessageProducerService(
+    KafkaTemplate<String, DomainEvent<?>> template) {
+    return new EventProducer<>(template, "authorities.authority");
   }
 
   private <T> ConcurrentKafkaListenerContainerFactory<String, T> listenerFactory(
