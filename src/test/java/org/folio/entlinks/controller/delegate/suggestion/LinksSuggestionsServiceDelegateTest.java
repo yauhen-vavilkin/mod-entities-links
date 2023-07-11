@@ -1,4 +1,4 @@
-package org.folio.entlinks.controller.delegate;
+package org.folio.entlinks.controller.delegate.suggestion;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -57,7 +57,7 @@ class LinksSuggestionsServiceDelegateTest {
   private @Mock AuthorityDataRepository dataRepository;
   private @Mock SourceStorageClient sourceStorageClient;
   private @Mock SearchService searchService;
-  private @InjectMocks LinksSuggestionsServiceDelegate serviceDelegate;
+  private @InjectMocks LinksSuggestionsByAuthorityNaturalId serviceDelegate;
 
   @Test
   void suggestLinksForMarcRecords_shouldSaveAuthoritiesFromSearch() {

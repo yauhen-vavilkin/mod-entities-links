@@ -24,8 +24,9 @@ import org.folio.entlinks.integration.dto.FieldParsedContent;
 import org.folio.entlinks.integration.dto.SourceParsedContent;
 import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
 import org.folio.spring.test.type.UnitTest;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -38,6 +39,8 @@ class LinksSuggestionsServiceTest {
   private static final UUID AUTHORITY_ID = UUID.randomUUID();
   private static final UUID SOURCE_FILE_ID = UUID.randomUUID();
   private static final String NATURAL_ID = "e12345";
+  private static final String NATURAL_ID_SUBFIELD = "0";
+  private static final String ID_SUBFIELD = "9";
   private static final String BASE_URL = "https://base/url/";
   private static final String SOURCE_FILE_NAME = "sourceFileName";
 
@@ -45,8 +48,9 @@ class LinksSuggestionsServiceTest {
   private @Mock AuthoritySourceFilesService sourceFilesService;
   private @InjectMocks LinksSuggestionService linksSuggestionService;
 
-  @Test
-  void fillLinkDetailsWithSuggestedAuthorities_shouldFillLinkDetails_withNewLink() {
+  @ParameterizedTest
+  @ValueSource(strings = {NATURAL_ID_SUBFIELD, ID_SUBFIELD})
+  void fillLinkDetailsWithSuggestedAuthorities_shouldFillLinkDetails_withNewLink(String linkingMatchSubfield) {
     var rules = getMapRule("100", "100");
     var bib = getBibParsedRecordContent("100", null);
     var authority = getAuthorityParsedRecordContent("100");
@@ -55,7 +59,7 @@ class LinksSuggestionsServiceTest {
     when(sourceFilesService.fetchAuthoritySources()).thenReturn(Map.of(sourceFile.id(), sourceFile));
 
     linksSuggestionService
-      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules);
+      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield);
 
     var bibField = bib.getFields().get(0);
     var linkDetails = bibField.getLinkDetails();
@@ -72,8 +76,9 @@ class LinksSuggestionsServiceTest {
     assertTrue(bibSubfields.containsKey("b"));
   }
 
-  @Test
-  void fillLinkDetailsWithSuggestedAuthorities_shouldFillLinkDetails_withActualLink() {
+  @ParameterizedTest
+  @ValueSource(strings = {NATURAL_ID_SUBFIELD, ID_SUBFIELD})
+  void fillLinkDetailsWithSuggestedAuthorities_shouldFillLinkDetails_withActualLink(String linkingMatchSubfield) {
     var rules = getMapRule("100", "100");
     var bib = getBibParsedRecordContent("100", getActualLinksDetails());
     var authority = getAuthorityParsedRecordContent("100");
@@ -82,7 +87,7 @@ class LinksSuggestionsServiceTest {
     when(sourceFilesService.fetchAuthoritySources()).thenReturn(Map.of(sourceFile.id(), sourceFile));
 
     linksSuggestionService
-      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules);
+      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield);
 
     var bibField = bib.getFields().get(0);
     var linkDetails = bibField.getLinkDetails();
@@ -99,29 +104,34 @@ class LinksSuggestionsServiceTest {
     assertTrue(bibSubfields.containsKey("b"));
   }
 
-  @Test
-  void fillLinkDetailsWithSuggestedAuthorities_shouldFillLinkDetails_withError_whenRequiredAuthoritySubfieldNotExist() {
+  @ParameterizedTest
+  @ValueSource(strings = {NATURAL_ID_SUBFIELD, ID_SUBFIELD})
+  void fillLinkDetailsWithSuggestedAuthorities_shouldFillLinkDetails_withError_whenRequiredAuthoritySubfieldNotExist(
+    String linkingMatchSubfield) {
     var rules = getMapRule("100", "100");
     var bib = getBibParsedRecordContent("100", null);
     var authority = getAuthorityParsedRecordContent("100", emptyMap());
 
     linksSuggestionService
-      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules);
+      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield);
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
     assertEquals(NO_SUGGESTIONS.getErrorCode(), linkDetails.getErrorCause());
   }
 
-  @Test
-  void fillLinkDetailsWithSuggestedAuthorities_shouldFillLinkDetails_withErrorMoreThenOneAuthoritiesFound() {
+  @ParameterizedTest
+  @ValueSource(strings = {NATURAL_ID_SUBFIELD, ID_SUBFIELD})
+  void fillLinkDetailsWithSuggestedAuthorities_shouldFillLinkDetails_withErrorMoreThenOneAuthoritiesFound(
+    String linkingMatchSubfield) {
     var rules = getMapRule("100", "100");
     var bib = getBibParsedRecordContent("100", getActualLinksDetails());
     var authority = getAuthorityParsedRecordContent("100");
     var secondAuthority = getAuthorityParsedRecordContent("100");
 
     linksSuggestionService
-      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority, secondAuthority), rules);
+      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority, secondAuthority), rules,
+        linkingMatchSubfield);
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
@@ -131,22 +141,26 @@ class LinksSuggestionsServiceTest {
     assertNull(linkDetails.getLinkingRuleId());
   }
 
-  @Test
-  void fillLinkDetailsWithSuggestedAuthorities_shouldFillLinkDetails_withErrorNoAuthoritiesFound() {
+  @ParameterizedTest
+  @ValueSource(strings = {NATURAL_ID_SUBFIELD, ID_SUBFIELD})
+  void fillLinkDetailsWithSuggestedAuthorities_shouldFillLinkDetails_withErrorNoAuthoritiesFound(
+    String linkingMatchSubfield) {
     var rules = getMapRule("100", "100");
     var bib = getBibParsedRecordContent("100", null);
     var authority = getAuthorityParsedRecordContent("110");
 
     linksSuggestionService
-      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules);
+      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield);
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
     assertEquals(NO_SUGGESTIONS.getErrorCode(), linkDetails.getErrorCause());
   }
 
-  @Test
-  void fillLinkDetailsWithSuggestedAuthorities_shouldFillLinkDetails_withErrorDisabledAutoLinkingFeature() {
+  @ParameterizedTest
+  @ValueSource(strings = {NATURAL_ID_SUBFIELD, ID_SUBFIELD})
+  void fillLinkDetailsWithSuggestedAuthorities_shouldFillLinkDetails_withErrorDisabledAutoLinkingFeature(
+    String linkingMatchSubfield) {
     var rules = getMapRule("600", "100");
     disableAutoLinkingFeature(rules.get("600"));
 
@@ -154,7 +168,7 @@ class LinksSuggestionsServiceTest {
     var authority = getAuthorityParsedRecordContent("110");
 
     linksSuggestionService
-      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules);
+      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield);
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
@@ -173,7 +187,8 @@ class LinksSuggestionsServiceTest {
 
   private SourceParsedContent getBibParsedRecordContent(String bibField, LinkDetails linkDetails) {
     var subfields = new HashMap<String, List<String>>();
-    subfields.put("0", List.of(NATURAL_ID));
+    subfields.put(NATURAL_ID_SUBFIELD, List.of(NATURAL_ID));
+    subfields.put(ID_SUBFIELD, List.of(AUTHORITY_ID.toString()));
     var field = new FieldParsedContent(bibField, "//", "//", subfields, linkDetails);
     return new SourceParsedContent(UUID.randomUUID(), "", List.of(field));
   }

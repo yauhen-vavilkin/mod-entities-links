@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.SneakyThrows;
+import org.folio.entlinks.domain.dto.AuthoritySearchParameter;
 import org.folio.entlinks.domain.dto.FieldContent;
 import org.folio.entlinks.domain.dto.LinkDetails;
 import org.folio.entlinks.domain.dto.LinkStatus;
@@ -60,6 +61,23 @@ class LinksSuggestionsIT extends IntegrationTestBase {
 
     var requestBody = new ParsedRecordContentCollection().records(List.of(givenRecord));
     doPost(linksSuggestionsEndpoint(), requestBody)
+      .andExpect(status().isOk())
+      .andExpect(content().json(asJson(new ParsedRecordContentCollection()
+        .records(List.of(expectedRecord)), objectMapper)));
+  }
+
+  @Test
+  @SneakyThrows
+  void getAuthDataStat_shouldSuggestNewLinkByAuthorityId() {
+    var givenSubfields = Map.of("9", LINKABLE_AUTHORITY_ID);
+    var givenRecord = getRecord("100", null, givenSubfields);
+
+    var expectedLinkDetails = getLinkDetails(NEW, "oneAuthority");
+    var expectedSubfields = Map.of("a", "new $a value", "0", BASE_URL + "oneAuthority", "9", LINKABLE_AUTHORITY_ID);
+    var expectedRecord = getRecord("100", expectedLinkDetails, expectedSubfields);
+
+    var requestBody = new ParsedRecordContentCollection().records(List.of(givenRecord));
+    doPost(linksSuggestionsEndpoint(AuthoritySearchParameter.ID), requestBody)
       .andExpect(status().isOk())
       .andExpect(content().json(asJson(new ParsedRecordContentCollection()
         .records(List.of(expectedRecord)), objectMapper)));

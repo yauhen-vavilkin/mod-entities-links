@@ -10,6 +10,7 @@ import static org.folio.entlinks.utils.LinkEventsUtils.groupLinksByAuthorityId;
 import jakarta.persistence.criteria.Predicate;
 import java.sql.Timestamp;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -82,6 +83,37 @@ public class InstanceAuthorityLinkingService {
 
   @Transactional
   public void updateLinks(UUID instanceId, List<InstanceAuthorityLink> incomingLinks) {
+    if (log.isDebugEnabled()) {
+      log.debug("Update links for [instanceId: {}, links: {}]", instanceId, incomingLinks);
+    } else {
+      log.info("Update links for [instanceId: {}, links amount: {}]", instanceId, incomingLinks.size());
+    }
+
+    var authorityDataSet = incomingLinks.stream()
+      .map(InstanceAuthorityLink::getAuthorityData)
+      .collect(Collectors.toSet());
+
+    var existedAuthorityData = authorityDataService.saveAll(authorityDataSet);
+
+    for (InstanceAuthorityLink incomingLink : incomingLinks) {
+      var linkAuthorityData = incomingLink.getAuthorityData();
+      var authorityData = existedAuthorityData.get(linkAuthorityData.getId());
+      incomingLink.setAuthorityData(authorityData);
+    }
+    var existedLinks = instanceLinkRepository.findByInstanceId(instanceId);
+
+    var linksToDelete = subtract(existedLinks, incomingLinks);
+    var linksToSave = getLinksToSave(incomingLinks, existedLinks, linksToDelete);
+    instanceLinkRepository.deleteAllInBatch(linksToDelete);
+    instanceLinkRepository.saveAll(linksToSave);
+  }
+
+  /**
+   * Update links and renovate bibs with data from actual authority records.
+   * Currently, doesn't work as expected (problems described in MODELINKS-113) so not used.
+   * */
+  @Transactional
+  public void updateLinksWithRenovation(UUID instanceId, List<InstanceAuthorityLink> incomingLinks) {
     if (log.isDebugEnabled()) {
       log.debug("Update/renovate links for [instanceId: {}, links: {}]", instanceId, incomingLinks);
     } else {
@@ -157,6 +189,25 @@ public class InstanceAuthorityLinkingService {
 
     var specification = getSpecFromStatusAndDates(linkStatus, linkFromDate, linkToDate);
     return instanceLinkRepository.findAll(specification, pageable).getContent();
+  }
+
+  private List<InstanceAuthorityLink> getLinksToSave(List<InstanceAuthorityLink> incomingLinks,
+                                                     List<InstanceAuthorityLink> existedLinks,
+                                                     List<InstanceAuthorityLink> linksToDelete) {
+    var linksToCreate = subtract(incomingLinks, existedLinks);
+    var linksToUpdate = subtract(existedLinks, linksToDelete);
+    updateLinksData(incomingLinks, linksToUpdate);
+    var linksToSave = new ArrayList<>(linksToCreate);
+    linksToSave.addAll(linksToUpdate);
+    return linksToSave;
+  }
+
+  private void updateLinksData(List<InstanceAuthorityLink> incomingLinks, List<InstanceAuthorityLink> linksToUpdate) {
+    linksToUpdate
+      .forEach(link -> incomingLinks.stream().filter(l -> l.isSameLink(link)).findFirst()
+        .ifPresent(l ->
+          link.getAuthorityData().setNaturalId(l.getAuthorityData().getNaturalId())
+        ));
   }
 
   private List<InstanceAuthorityLink> subtract(Collection<InstanceAuthorityLink> source,

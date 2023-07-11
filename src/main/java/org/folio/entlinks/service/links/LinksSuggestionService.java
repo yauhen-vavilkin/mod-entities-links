@@ -12,6 +12,8 @@ import static org.folio.entlinks.utils.FieldUtils.getSubfield0Value;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.domain.dto.LinkDetails;
@@ -39,14 +41,17 @@ public class LinksSuggestionService {
    * @param marcAuthoritiesContent list of authorities {@link AuthorityParsedContent} that can be suggested as link
    * @param rules                  linking rules
    *                               <p>Key - bib tag, Value - list of {@link InstanceAuthorityLinkingRule}</p>
+   * @param linkingMatchSubfield   bib field's subfield code to use as a matching point for links
    */
   public void fillLinkDetailsWithSuggestedAuthorities(List<SourceParsedContent> marcBibsContent,
                                                       List<AuthorityParsedContent> marcAuthoritiesContent,
-                                                      Map<String, List<InstanceAuthorityLinkingRule>> rules) {
+                                                      Map<String, List<InstanceAuthorityLinkingRule>> rules,
+                                                      String linkingMatchSubfield) {
     marcBibsContent.stream()
       .flatMap(bibContent -> bibContent.getFields().stream())
       .forEach(bibField -> suggestAuthorityForBibFields(
-        List.of(bibField), marcAuthoritiesContent, rules.get(bibField.getTag())
+        List.of(bibField), marcAuthoritiesContent, rules.get(bibField.getTag()),
+        linkingMatchSubfield
       ));
   }
 
@@ -55,20 +60,22 @@ public class LinksSuggestionService {
    *
    * @param marcBibsContent list of bib records {@link SourceParsedContent}
    */
-  public void fillErrorDetailsWithNoSuggestions(List<SourceParsedContent> marcBibsContent) {
+  public void fillErrorDetailsWithNoSuggestions(List<SourceParsedContent> marcBibsContent,
+                                                String linkingMatchSubfield) {
     marcBibsContent.stream()
       .flatMap(bibContent -> bibContent.getFields().stream())
-      .filter(this::containsSubfield0)
+      .filter(fieldContent -> containsSubfield(fieldContent, linkingMatchSubfield))
       .forEach(bibField -> bibField.setLinkDetails(getErrorDetails(NO_SUGGESTIONS)));
   }
 
   private void suggestAuthorityForBibFields(List<FieldParsedContent> bibFields,
                                             List<AuthorityParsedContent> marcAuthoritiesContent,
-                                            List<InstanceAuthorityLinkingRule> rules) {
+                                            List<InstanceAuthorityLinkingRule> rules,
+                                            String linkingMatchSubfield) {
     if (isNotEmpty(rules) && isNotEmpty(bibFields)) {
       for (InstanceAuthorityLinkingRule rule : rules) {
         for (FieldParsedContent bibField : bibFields) {
-          if (isBibFieldLinkable(bibField)) {
+          if (isBibFieldLinkable(bibField, linkingMatchSubfield)) {
             suggestAuthorityForBibField(bibField, marcAuthoritiesContent, rule);
           }
         }
@@ -76,13 +83,14 @@ public class LinksSuggestionService {
     }
   }
 
-  private boolean isBibFieldLinkable(FieldParsedContent bibField) {
+  private boolean isBibFieldLinkable(FieldParsedContent bibField, String linkingMatchSubfield) {
     var linkDetails = bibField.getLinkDetails();
-    return containsSubfield0(bibField) && (isNull(linkDetails) || linkDetails.getStatus() != NEW);
+    return containsSubfield(bibField, linkingMatchSubfield)
+      && (isNull(linkDetails) || linkDetails.getStatus() != NEW);
   }
 
-  private boolean containsSubfield0(FieldParsedContent bibField) {
-    return isNotEmpty(bibField.getSubfields().get("0"));
+  private boolean containsSubfield(FieldParsedContent bibField, String linkingMatchSubfield) {
+    return isNotEmpty(bibField.getSubfields().get(linkingMatchSubfield));
   }
 
   private void suggestAuthorityForBibField(FieldParsedContent bibField,
@@ -164,14 +172,22 @@ public class LinksSuggestionService {
                                                                  List<AuthorityParsedContent> marcAuthoritiesContent,
                                                                  InstanceAuthorityLinkingRule rule) {
     return marcAuthoritiesContent.stream()
-      .filter(authorityContent -> validateZeroSubfields(authorityContent.getNaturalId(), bibField))
+      .filter(authorityContent -> validateSubfields(authorityContent, bibField))
       .filter(authorityContent -> authorityRuleValidationService.validateAuthorityFields(authorityContent, rule))
       .toList();
   }
 
-  private boolean validateZeroSubfields(String naturalId, FieldParsedContent bibField) {
-    return bibField.getSubfields().get("0").stream()
-      .map(FieldUtils::trimSubfield0Value)
-      .anyMatch(zeroValue -> zeroValue.equals(naturalId));
+  private boolean validateSubfields(AuthorityParsedContent marcAuthorityContent, FieldParsedContent bibField) {
+    return Optional.ofNullable(bibField.getSubfields().get("0"))
+      .map(subfields -> subfields.stream()
+        .filter(Objects::nonNull)
+        .map(FieldUtils::trimSubfield0Value)
+        .anyMatch(zeroValue -> zeroValue.equals(marcAuthorityContent.getNaturalId())))
+      .orElse(false)
+      || Optional.ofNullable(bibField.getSubfields().get("9"))
+      .map(subfields -> subfields.stream()
+        .filter(Objects::nonNull)
+        .anyMatch(nineValue -> nineValue.equals(marcAuthorityContent.getId().toString())))
+      .orElse(false);
   }
 }

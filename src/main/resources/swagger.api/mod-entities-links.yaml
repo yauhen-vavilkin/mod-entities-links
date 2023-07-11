@@ -163,6 +163,13 @@ paths:
       operationId: suggestLinksForMarcRecord
       tags:
         - links-suggestions
+      parameters:
+        - name: authoritySearchParameter
+          in: query
+          required: false
+          description: Authority field to search by
+          schema:
+            $ref: "#/components/schemas/AuthoritySearchParameter"
       requestBody:
         content:
           application/json:
@@ -625,6 +632,11 @@ components:
         ts:
           description: Timestamp
           type: string
+    AuthoritySearchParameter:
+      description: Authority search parameter for link suggestions
+      type: string
+      enum: [ID, NATURAL_ID]
+      default: NATURAL_ID
 
   responses:
     badRequestResponse:

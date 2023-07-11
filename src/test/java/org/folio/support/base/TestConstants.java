@@ -4,6 +4,7 @@ import static org.folio.support.KafkaTestUtils.fullTopicName;
 
 import java.time.OffsetDateTime;
 import lombok.experimental.UtilityClass;
+import org.folio.entlinks.domain.dto.AuthoritySearchParameter;
 import org.folio.entlinks.domain.dto.LinkAction;
 import org.folio.entlinks.domain.dto.LinkStatus;
 
@@ -46,6 +47,10 @@ public class TestConstants {
 
   public static String linksSuggestionsEndpoint() {
     return LINKS_SUGGESTIONS_ENDPOINT;
+  }
+
+  public static String linksSuggestionsEndpoint(AuthoritySearchParameter authoritySearchParameter) {
+    return LINKS_SUGGESTIONS_ENDPOINT + "?authoritySearchParameter=" + authoritySearchParameter;
   }
 
   public static String linkingRulesEndpoint() {
