@@ -155,6 +155,96 @@
       ]
     },
     {
+      "id": "authority-storage",
+      "version": "2.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authority-storage/authorities",
+          "permissionsRequired": ["inventory-storage.authorities.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/authority-storage/authorities/{id}",
+          "permissionsRequired": ["inventory-storage.authorities.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/authority-storage/authorities",
+          "permissionsRequired": ["inventory-storage.authorities.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/authority-storage/authorities/{id}",
+          "permissionsRequired": ["inventory-storage.authorities.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/authority-storage/authorities/{id}",
+          "permissionsRequired": ["inventory-storage.authorities.item.delete"]
+        }
+      ]
+    },
+    {
+      "id": "authority-note-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authority-note-types",
+          "permissionsRequired": ["inventory-storage.authority-note-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/authority-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.authority-note-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/authority-note-types",
+          "permissionsRequired": ["inventory-storage.authority-note-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/authority-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.authority-note-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/authority-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.authority-note-types.item.delete"]
+        }
+      ]
+    },
+    {
+      "id": "authority-source-files",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authority-source-files",
+          "permissionsRequired": ["inventory-storage.authority-source-files.collection.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authority-source-files/{id}",
+          "permissionsRequired": ["inventory-storage.authority-source-files.item.get"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/authority-source-files",
+          "permissionsRequired": ["inventory-storage.authority-source-files.item.post"]
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/authority-source-files/{id}",
+          "permissionsRequired": ["inventory-storage.authority-source-files.item.put"]
+        },
+        {
+          "methods": ["PATCH"],
+          "pathPattern": "/authority-source-files/{id}",
+          "permissionsRequired": ["inventory-storage.authority-source-files.item.patch"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/authority-source-files/{id}",
+          "permissionsRequired": ["inventory-storage.authority-source-files.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "2.0",
       "interfaceType": "system",
