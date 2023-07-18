@@ -14,12 +14,12 @@ public enum ErrorCode {
       "Cannot complete operation on the entity due to it's relation with Authority/Authority Source File.");
 
   @Getter
-  private final String errorCode;
+  private final String code;
   @Getter
   private final String message;
 
-  ErrorCode(String errorCode, String message) {
-    this.errorCode = errorCode;
+  ErrorCode(String code, String message) {
+    this.code = code;
     this.message = message;
   }
 }

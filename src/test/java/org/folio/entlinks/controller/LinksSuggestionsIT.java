@@ -89,7 +89,7 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     var givenSubfields = Map.of("0", "oneAuthority");
     var givenRecord = getRecord("110", null, givenSubfields);
 
-    var expectedLinkDetails = new LinkDetails().status(ERROR).errorCause(NO_SUGGESTIONS.getErrorCode());
+    var expectedLinkDetails = new LinkDetails().status(ERROR).errorCause(NO_SUGGESTIONS.getCode());
     var expectedSubfields = Map.of("0", "oneAuthority");
     var expectedRecord = getRecord("110", expectedLinkDetails, expectedSubfields);
 
@@ -106,7 +106,7 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     var givenSubfields = Map.of("0", "noAuthority");
     var givenRecord = getRecord("100", null, givenSubfields);
 
-    var expectedLinkDetails = new LinkDetails().status(ERROR).errorCause(NO_SUGGESTIONS.getErrorCode());
+    var expectedLinkDetails = new LinkDetails().status(ERROR).errorCause(NO_SUGGESTIONS.getCode());
     var expectedSubfields = Map.of("0", "noAuthority");
     var expectedRecord = getRecord("100", expectedLinkDetails, expectedSubfields);
 
@@ -124,7 +124,7 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     var givenRecord = getRecord("100", null, givenSubfields);
     var disabledAutoLinkingRecord = getRecord("600", null, givenSubfields);
 
-    var expectedErrorDetails = new LinkDetails().status(ERROR).errorCause(DISABLED_AUTO_LINKING.getErrorCode());
+    var expectedErrorDetails = new LinkDetails().status(ERROR).errorCause(DISABLED_AUTO_LINKING.getCode());
     var expectedErrorRecord = getRecord("600", expectedErrorDetails, givenSubfields);
 
     var expectedLinkDetails = getLinkDetails(NEW, "oneAuthority");
@@ -144,7 +144,7 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     var givenSubfields = Map.of("0", "twoAuthority");
     var givenRecord = getRecord("100", null, givenSubfields);
 
-    var expectedLinkDetails = new LinkDetails().status(ERROR).errorCause(MORE_THAN_ONE_SUGGESTIONS.getErrorCode());
+    var expectedLinkDetails = new LinkDetails().status(ERROR).errorCause(MORE_THAN_ONE_SUGGESTIONS.getCode());
     var expectedSubfields = Map.of("0", "twoAuthority");
     var expectedRecord = getRecord("100", expectedLinkDetails, expectedSubfields);
 

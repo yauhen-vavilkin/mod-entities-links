@@ -117,7 +117,7 @@ class LinksSuggestionsServiceTest {
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
-    assertEquals(NO_SUGGESTIONS.getErrorCode(), linkDetails.getErrorCause());
+    assertEquals(NO_SUGGESTIONS.getCode(), linkDetails.getErrorCause());
   }
 
   @ParameterizedTest
@@ -135,7 +135,7 @@ class LinksSuggestionsServiceTest {
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
-    assertEquals(MORE_THAN_ONE_SUGGESTIONS.getErrorCode(), linkDetails.getErrorCause());
+    assertEquals(MORE_THAN_ONE_SUGGESTIONS.getCode(), linkDetails.getErrorCause());
     assertNull(linkDetails.getAuthorityId());
     assertNull(linkDetails.getAuthorityNaturalId());
     assertNull(linkDetails.getLinkingRuleId());
@@ -154,7 +154,7 @@ class LinksSuggestionsServiceTest {
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
-    assertEquals(NO_SUGGESTIONS.getErrorCode(), linkDetails.getErrorCause());
+    assertEquals(NO_SUGGESTIONS.getCode(), linkDetails.getErrorCause());
   }
 
   @ParameterizedTest
@@ -172,7 +172,7 @@ class LinksSuggestionsServiceTest {
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
-    assertEquals(DISABLED_AUTO_LINKING.getErrorCode(), linkDetails.getErrorCause());
+    assertEquals(DISABLED_AUTO_LINKING.getCode(), linkDetails.getErrorCause());
   }
 
   private AuthorityParsedContent getAuthorityParsedRecordContent(String authorityField) {

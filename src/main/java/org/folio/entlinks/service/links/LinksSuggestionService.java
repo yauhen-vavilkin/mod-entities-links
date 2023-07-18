@@ -136,7 +136,7 @@ public class LinksSuggestionService {
   }
 
   private LinkDetails getErrorDetails(ErrorCode errorCode) {
-    return new LinkDetails().status(ERROR).errorCause(errorCode.getErrorCode());
+    return new LinkDetails().status(ERROR).errorCause(errorCode.getCode());
   }
 
   private void actualizeBibSubfields(FieldParsedContent bibField,

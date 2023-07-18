@@ -43,7 +43,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 public class ApiErrorHandler {
 
-  private static Map<String, ErrorCode> CONSTRAINS_I18N_MAP = Map.of(
+  private static final Map<String, ErrorCode> CONSTRAINS_I18N_MAP = Map.of(
     "authority_note_type_name_unq", DUPLICATE_NOTE_TYPE_NAME,
     "authority_source_file_name_unq", DUPLICATE_AUTHORITY_SOURCE_FILE_NAME,
     "authority_source_file_base_url_unq", DUPLICATE_AUTHORITY_SOURCE_FILE_URL,
@@ -75,12 +75,10 @@ public class ApiErrorHandler {
       .map(org.springframework.validation.Errors::getAllErrors)
       .orElse(emptyList())
       .stream()
-      .map(error -> new Error()
-        .message(error.getDefaultMessage())
+      .map(error -> new Error(error.getDefaultMessage())
         .code(VALIDATION_ERROR.getValue())
         .type(MethodArgumentNotValidException.class.getSimpleName())
-        .addParametersItem(new Parameter()
-          .key(((FieldError) error).getField())
+        .addParametersItem(new Parameter(((FieldError) error).getField())
           .value(String.valueOf(((FieldError) error).getRejectedValue()))))
       .toList();
 
@@ -124,8 +122,7 @@ public class ApiErrorHandler {
 
   private static ResponseEntity<Errors> buildResponseEntity(Exception e, HttpStatus status, ErrorType type) {
     var errors = new Errors()
-      .errors(List.of(new Error()
-        .message(e.getMessage())
+      .errors(List.of(new Error(e.getMessage())
         .type(e.getClass().getSimpleName())
         .code(type != null ? type.getValue() : null)))
       .totalRecords(1);
@@ -134,10 +131,9 @@ public class ApiErrorHandler {
 
   private static ResponseEntity<Errors> buildResponseEntity(ErrorCode errorCode, ErrorType type, HttpStatus status) {
     var errors = new Errors()
-      .errors(List.of(new Error()
-        .message(errorCode.getMessage())
+      .errors(List.of(new Error(errorCode.getMessage())
         .type(type.getValue())
-        .code(errorCode.getErrorCode())))
+        .code(errorCode.getCode())))
       .totalRecords(1);
     return buildResponseEntity(errors, status);
   }
@@ -151,10 +147,9 @@ public class ApiErrorHandler {
   }
 
   private static Errors buildValidationError(Exception e, List<Parameter> parameters) {
-    var error = new Error()
+    var error = new Error(e.getMessage())
       .type(e.getClass().getSimpleName())
       .code(VALIDATION_ERROR.getValue())
-      .message(e.getMessage())
       .parameters(parameters);
     return new Errors().errors(List.of(error)).totalRecords(1);
   }
