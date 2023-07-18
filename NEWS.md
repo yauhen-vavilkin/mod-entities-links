@@ -5,6 +5,9 @@
 * Provides `instance-authority-links v2.1`
 * Provides `instance-authority-linking-rules v1.1`
 * Removes `linked-bib-update-statistics v1.0`
+* Provides `authority-storage 2.0`
+* Provides `authority-source-files 1.0`
+* Provides `authority-note-types 1.0`
 
 ### Features
 * Remove field and subfields from links endpoint, use linking rule ([MODELINKS-47](https://issues.folio.org/browse/MODELINKS-47))
@@ -12,6 +15,7 @@
 * Extend GET /links/instances/{id} with link status, errorCause ([MODELINKS-68](https://issues.folio.org/browse/MODELINKS-68))
 * Implement endpoint to suggest links for MARC-bibliographic record ([MODELINKS-82](https://issues.folio.org/browse/MODELINKS-82))
 * Add possibility of matching by Authority id for links suggestions ([MODELINKS-113](https://issues.folio.org/browse/MODELINKS-113))
+* Relocate Authority API and associated reference APIs ([MODELINKS-106](https://issues.folio.org/browse/MODELINKS-106))
 
 ### Tech Dept
 * Upgrade folio-spring-base to v7.1.0 ([MODELINKS-99](https://issues.folio.org/browse/MODELINKS-99))
