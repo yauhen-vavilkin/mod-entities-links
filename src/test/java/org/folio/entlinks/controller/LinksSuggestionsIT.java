@@ -155,6 +155,26 @@ class LinksSuggestionsIT extends IntegrationTestBase {
         .records(List.of(expectedRecord)), objectMapper)));
   }
 
+  @Test
+  @SneakyThrows
+  void getAuthDataStat_shouldSuggestNewLink_whenAutoLinkingIgnored() {
+    var givenSubfields = Map.of("0", "oneAuthority");
+    var givenRecord = getRecord("100", null, givenSubfields);
+    var disabledAutoLinkingRecord = getRecord("600", null, givenSubfields);
+
+    var expectedLinkDetails = getLinkDetails(NEW, "oneAuthority");
+    var expectedLinkDetailsForDisabled = getLinkDetails(NEW, "oneAuthority", 8);
+    var expectedSubfields = Map.of("a", "new $a value", "0", BASE_URL + "oneAuthority", "9", LINKABLE_AUTHORITY_ID);
+    var expectedRecord = getRecord("100", expectedLinkDetails, expectedSubfields);
+    var expectedDisabledAutoLinkingRecord = getRecord("600", expectedLinkDetailsForDisabled, expectedSubfields);
+
+    var requestBody = new ParsedRecordContentCollection().records(List.of(givenRecord, disabledAutoLinkingRecord));
+    doPost(linksSuggestionsEndpoint(true), requestBody)
+        .andExpect(status().isOk())
+        .andExpect(content().json(asJson(new ParsedRecordContentCollection()
+            .records(List.of(expectedRecord, expectedDisabledAutoLinkingRecord)), objectMapper)));
+  }
+
   private ParsedRecordContent getRecord(String bibField, LinkDetails linkDetails, Map<String, String> subfields) {
     var field = new FieldContent();
     field.setLinkDetails(linkDetails);
@@ -166,9 +186,13 @@ class LinksSuggestionsIT extends IntegrationTestBase {
   }
 
   private LinkDetails getLinkDetails(LinkStatus linkStatus, String naturalId) {
-    return new LinkDetails().linkingRuleId(1)
-      .authorityId(UUID.fromString(LINKABLE_AUTHORITY_ID))
-      .authorityNaturalId(naturalId)
-      .status(linkStatus);
+    return getLinkDetails(linkStatus, naturalId, 1);
+  }
+
+  private LinkDetails getLinkDetails(LinkStatus linkStatus, String naturalId, Integer linkingRuleId) {
+    return new LinkDetails().linkingRuleId(linkingRuleId)
+        .authorityId(UUID.fromString(LINKABLE_AUTHORITY_ID))
+        .authorityNaturalId(naturalId)
+        .status(linkStatus);
   }
 }

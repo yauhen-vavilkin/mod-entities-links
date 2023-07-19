@@ -1,7 +1,7 @@
 ## v2.0.0 In progress
 ### APIs versions
 * Provides `instance-authority-links-statistics v2.0`
-* Provides `instance-authority-links-suggestions v1.1`
+* Provides `instance-authority-links-suggestions v1.2`
 * Provides `instance-authority-links v2.1`
 * Provides `instance-authority-linking-rules v1.1`
 * Removes `linked-bib-update-statistics v1.0`
@@ -12,6 +12,7 @@
 * Extend GET /links/instances/{id} with link status, errorCause ([MODELINKS-68](https://issues.folio.org/browse/MODELINKS-68))
 * Implement endpoint to suggest links for MARC-bibliographic record ([MODELINKS-82](https://issues.folio.org/browse/MODELINKS-82))
 * Add possibility of matching by Authority id for links suggestions ([MODELINKS-113](https://issues.folio.org/browse/MODELINKS-113))
+* Add possibility of ignoring autoLinkingEnabled flag for links suggestions ([MODELINKS-113](https://issues.folio.org/browse/MODELINKS-114))
 
 ### Tech Dept
 * Upgrade folio-spring-base to v7.1.0 ([MODELINKS-99](https://issues.folio.org/browse/MODELINKS-99))

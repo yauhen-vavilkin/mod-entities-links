@@ -84,7 +84,7 @@ class LinksSuggestionsServiceDelegateTest {
       strippedParsedRecords);
 
     var parsedContentCollection = new ParsedRecordContentCollection().records(records);
-    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection);
+    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
     verify(dataRepository).saveAll(authorityData);
     verify(searchService).searchAuthoritiesByNaturalIds(List.of(NATURAL_ID));
@@ -110,7 +110,7 @@ class LinksSuggestionsServiceDelegateTest {
       new StrippedParsedRecordCollection(emptyList(), 1));
 
     var parsedContentCollection = new ParsedRecordContentCollection().records(records);
-    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection);
+    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
     verify(dataRepository).findByNaturalIds(Set.of(NATURAL_ID));
     verify(searchService, times(0)).searchAuthoritiesByNaturalIds(anyList());
@@ -136,7 +136,7 @@ class LinksSuggestionsServiceDelegateTest {
       new StrippedParsedRecordCollection(emptyList(), 1));
 
     var parsedContentCollection = new ParsedRecordContentCollection().records(records);
-    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection);
+    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
     verify(dataRepository).findByNaturalIds(Set.of(NATURAL_ID));
     verify(searchService, times(0)).searchAuthoritiesByNaturalIds(anyList());
@@ -152,7 +152,7 @@ class LinksSuggestionsServiceDelegateTest {
     when(dataRepository.findByNaturalIds(emptySet())).thenReturn(emptyList());
 
     var parsedContentCollection = new ParsedRecordContentCollection().records(List.of(record));
-    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection);
+    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
     verify(dataRepository).findByNaturalIds(emptySet());
     verify(searchService, times(0)).searchAuthoritiesByNaturalIds(anyList());
@@ -167,7 +167,7 @@ class LinksSuggestionsServiceDelegateTest {
     when(linkingRulesService.getLinkingRules()).thenReturn(rules);
 
     var parsedContentCollection = new ParsedRecordContentCollection().records(records);
-    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection);
+    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
     verify(dataRepository).findByNaturalIds(emptySet());
     verify(searchService, times(0)).searchAuthoritiesByNaturalIds(anyList());

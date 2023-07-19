@@ -44,7 +44,8 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
   private final SourceStorageClient sourceStorageClient;
   private final SourceContentMapper contentMapper;
 
-  public ParsedRecordContentCollection suggestLinksForMarcRecords(ParsedRecordContentCollection contentCollection) {
+  public ParsedRecordContentCollection suggestLinksForMarcRecords(
+      ParsedRecordContentCollection contentCollection, Boolean ignoreAutoLinkingEnabled) {
     log.info("{}: Links suggestion started for {} bibs",
       this.getClass().getSimpleName(), contentCollection.getRecords().size());
     var rules = rulesToBibFieldMap(linkingRulesService.getLinkingRules());
@@ -60,7 +61,7 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
       var marcAuthorities = fetchAuthorityParsedRecords(authorities);
       var marcAuthoritiesContent = contentMapper.convertToAuthorityParsedContent(marcAuthorities, authorities);
       suggestionService.fillLinkDetailsWithSuggestedAuthorities(marcBibsContent, marcAuthoritiesContent, rules,
-        getSearchSubfield());
+        getSearchSubfield(), ignoreAutoLinkingEnabled);
     } else {
       suggestionService.fillErrorDetailsWithNoSuggestions(marcBibsContent, getSearchSubfield());
     }

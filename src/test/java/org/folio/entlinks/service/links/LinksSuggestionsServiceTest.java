@@ -59,7 +59,7 @@ class LinksSuggestionsServiceTest {
     when(sourceFilesService.fetchAuthoritySources()).thenReturn(Map.of(sourceFile.id(), sourceFile));
 
     linksSuggestionService
-      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield);
+      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
 
     var bibField = bib.getFields().get(0);
     var linkDetails = bibField.getLinkDetails();
@@ -87,7 +87,7 @@ class LinksSuggestionsServiceTest {
     when(sourceFilesService.fetchAuthoritySources()).thenReturn(Map.of(sourceFile.id(), sourceFile));
 
     linksSuggestionService
-      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield);
+      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
 
     var bibField = bib.getFields().get(0);
     var linkDetails = bibField.getLinkDetails();
@@ -113,7 +113,7 @@ class LinksSuggestionsServiceTest {
     var authority = getAuthorityParsedRecordContent("100", emptyMap());
 
     linksSuggestionService
-      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield);
+      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
@@ -131,7 +131,7 @@ class LinksSuggestionsServiceTest {
 
     linksSuggestionService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority, secondAuthority), rules,
-        linkingMatchSubfield);
+        linkingMatchSubfield, false);
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
@@ -150,7 +150,7 @@ class LinksSuggestionsServiceTest {
     var authority = getAuthorityParsedRecordContent("110");
 
     linksSuggestionService
-      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield);
+      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
@@ -168,11 +168,41 @@ class LinksSuggestionsServiceTest {
     var authority = getAuthorityParsedRecordContent("110");
 
     linksSuggestionService
-      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield);
+      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
     assertEquals(DISABLED_AUTO_LINKING.getErrorCode(), linkDetails.getErrorCause());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {NATURAL_ID_SUBFIELD, ID_SUBFIELD})
+  void fillLinkDetailsWithSuggestedAuthorities_shouldFillLinkDetails_onIgnoredAutoLinkingFeature(
+    String linkingMatchSubfield) {
+    var rules = getMapRule("100", "100");
+    disableAutoLinkingFeature(rules.get("100"));
+    var bib = getBibParsedRecordContent("100", getActualLinksDetails());
+    var authority = getAuthorityParsedRecordContent("100");
+    var sourceFile = new AuthoritySourceFile(SOURCE_FILE_ID, BASE_URL, SOURCE_FILE_NAME, codes("e1"));
+
+    when(sourceFilesService.fetchAuthoritySources()).thenReturn(Map.of(sourceFile.id(), sourceFile));
+
+    linksSuggestionService
+      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, true);
+
+    var bibField = bib.getFields().get(0);
+    var linkDetails = bibField.getLinkDetails();
+    assertEquals(LinkStatus.ACTUAL, linkDetails.getStatus());
+    assertEquals(AUTHORITY_ID, linkDetails.getAuthorityId());
+    assertEquals(NATURAL_ID, linkDetails.getAuthorityNaturalId());
+    assertEquals(1, linkDetails.getLinkingRuleId());
+    assertNull(linkDetails.getErrorCause());
+
+    var bibSubfields = bibField.getSubfields();
+    assertEquals(AUTHORITY_ID.toString(), bibSubfields.get("9").get(0));
+    assertEquals(BASE_URL + NATURAL_ID, bibSubfields.get("0").get(0));
+    assertFalse(bibSubfields.containsKey("a"));
+    assertTrue(bibSubfields.containsKey("b"));
   }
 
   private AuthorityParsedContent getAuthorityParsedRecordContent(String authorityField) {

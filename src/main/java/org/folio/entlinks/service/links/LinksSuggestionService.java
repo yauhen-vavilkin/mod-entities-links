@@ -46,12 +46,13 @@ public class LinksSuggestionService {
   public void fillLinkDetailsWithSuggestedAuthorities(List<SourceParsedContent> marcBibsContent,
                                                       List<AuthorityParsedContent> marcAuthoritiesContent,
                                                       Map<String, List<InstanceAuthorityLinkingRule>> rules,
-                                                      String linkingMatchSubfield) {
+                                                      String linkingMatchSubfield,
+                                                      Boolean ignoreAutoLinkingEnabled) {
     marcBibsContent.stream()
       .flatMap(bibContent -> bibContent.getFields().stream())
       .forEach(bibField -> suggestAuthorityForBibFields(
         List.of(bibField), marcAuthoritiesContent, rules.get(bibField.getTag()),
-        linkingMatchSubfield
+        linkingMatchSubfield, ignoreAutoLinkingEnabled
       ));
   }
 
@@ -71,12 +72,13 @@ public class LinksSuggestionService {
   private void suggestAuthorityForBibFields(List<FieldParsedContent> bibFields,
                                             List<AuthorityParsedContent> marcAuthoritiesContent,
                                             List<InstanceAuthorityLinkingRule> rules,
-                                            String linkingMatchSubfield) {
+                                            String linkingMatchSubfield,
+                                            Boolean ignoreAutoLinkingEnabled) {
     if (isNotEmpty(rules) && isNotEmpty(bibFields)) {
       for (InstanceAuthorityLinkingRule rule : rules) {
         for (FieldParsedContent bibField : bibFields) {
           if (isBibFieldLinkable(bibField, linkingMatchSubfield)) {
-            suggestAuthorityForBibField(bibField, marcAuthoritiesContent, rule);
+            suggestAuthorityForBibField(bibField, marcAuthoritiesContent, rule, ignoreAutoLinkingEnabled);
           }
         }
       }
@@ -95,8 +97,9 @@ public class LinksSuggestionService {
 
   private void suggestAuthorityForBibField(FieldParsedContent bibField,
                                            List<AuthorityParsedContent> marcAuthoritiesContent,
-                                           InstanceAuthorityLinkingRule rule) {
-    if (isFalse(rule.getAutoLinkingEnabled())) {
+                                           InstanceAuthorityLinkingRule rule,
+                                           Boolean ignoreAutoLinkingEnabled) {
+    if (isFalse(ignoreAutoLinkingEnabled) && isFalse(rule.getAutoLinkingEnabled())) {
       var errorDetails = getErrorDetails(DISABLED_AUTO_LINKING);
       bibField.setLinkDetails(errorDetails);
       log.info("Field {}: auto linking feature is disabled", rule.getBibField());
