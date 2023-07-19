@@ -10,6 +10,7 @@ import org.folio.entlinks.domain.dto.AuthorityDtoNote;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityIdentifier;
 import org.folio.entlinks.domain.entity.AuthorityNote;
+import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.utils.DateUtils;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
@@ -25,7 +26,7 @@ public interface AuthorityMapper {
   @Mapping(target = "updatedByUserId", ignore = true)
   @Mapping(target = "createdDate", ignore = true)
   @Mapping(target = "createdByUserId", ignore = true)
-  @Mapping(target = "authoritySourceFile.id", source = "sourceFileId")
+  @Mapping(target = "authoritySourceFile", expression = "java(toAuthoritySourceFile(dto))")
   @Mapping(target = "subjectHeadingCode", expression = "java(toSubjectHeadingCode(dto.getSubjectHeadings()))")
   Authority toEntity(AuthorityDto dto);
 
@@ -48,10 +49,21 @@ public interface AuthorityMapper {
 
   List<AuthorityDto> toDtoList(Iterable<Authority> authorityStorageIterable);
 
-  default AuthorityDtoCollection toAuthoritySourceFileCollection(
+  default AuthorityDtoCollection toAuthorityCollection(
       Iterable<Authority> authorityStorageIterable) {
     var authorityDtos = toDtoList(authorityStorageIterable);
     return new AuthorityDtoCollection(authorityDtos, authorityDtos.size());
+  }
+
+  default AuthoritySourceFile toAuthoritySourceFile(AuthorityDto dto) {
+    if ( dto == null || dto.getSourceFileId() == null ) {
+      return null;
+    }
+
+    var sourceFile = new AuthoritySourceFile();
+    sourceFile.setId(dto.getSourceFileId());
+
+    return sourceFile;
   }
 
   default Character toSubjectHeadingCode(String subjectHeadings) {

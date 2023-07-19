@@ -152,6 +152,27 @@ class AuthorityControllerIT extends IntegrationTestBase {
   }
 
   @Test
+  @DisplayName("POST: create new Authority without Source File ID")
+  void createAuthority_positive_entityWithoutSourceFileRelationShouldBeCreated() throws Exception {
+    assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
+
+    var dto = prepareDto(0);
+    dto.setSourceFileId(null);
+
+    doPost(authorityEndpoint(), dto)
+        .andExpect(jsonPath("source", is(dto.getSource())))
+        .andExpect(jsonPath("naturalId", is(dto.getNaturalId())))
+        .andExpect(jsonPath("personalName", is(dto.getPersonalName())))
+        .andExpect(jsonPath("sourceFileId").doesNotExist())
+        .andExpect(jsonPath("metadata.createdDate", notNullValue()))
+        .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
+        .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
+        .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
+
+    assertEquals(1, databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID));
+  }
+
+  @Test
   @DisplayName("POST: create new Authority with non-existing source file")
   void createAuthority_negative_notCreatedWithNonExistingSourceFile() throws Exception {
     assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
