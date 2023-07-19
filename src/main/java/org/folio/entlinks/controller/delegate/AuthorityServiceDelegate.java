@@ -19,7 +19,7 @@ public class AuthorityServiceDelegate {
 
   public AuthorityDtoCollection retrieveAuthorityCollection(Integer offset, Integer limit, String cqlQuery) {
     var entities = service.getAll(offset, limit, cqlQuery);
-    return mapper.toAuthoritySourceFileCollection(entities);
+    return mapper.toAuthorityCollection(entities);
   }
 
   public AuthorityDto getAuthorityStorageById(UUID id) {
