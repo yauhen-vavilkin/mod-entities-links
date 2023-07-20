@@ -6,12 +6,16 @@ import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.authoritySourceFilesEndpoint;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -21,6 +25,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
 import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
@@ -136,6 +143,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
         .andExpect(jsonPath("naturalId", is(dto.getNaturalId())))
         .andExpect(jsonPath("personalName", is(dto.getPersonalName())))
         .andExpect(jsonPath("sourceFileId", is(dto.getSourceFileId().toString())))
+        .andExpect(jsonPath("_version", is(0)))
         .andExpect(jsonPath("metadata.createdDate", notNullValue()))
         .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
         .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
@@ -164,6 +172,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
         .andExpect(jsonPath("naturalId", is(dto.getNaturalId())))
         .andExpect(jsonPath("personalName", is(dto.getPersonalName())))
         .andExpect(jsonPath("sourceFileId").doesNotExist())
+        .andExpect(jsonPath("_version", is(0)))
         .andExpect(jsonPath("metadata.createdDate", notNullValue()))
         .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
         .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
@@ -212,6 +221,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
         .andExpect(jsonPath("sourceFileId", is(expected.getSourceFileId().toString())))
         .andExpect(jsonPath("personalName").doesNotExist())
         .andExpect(jsonPath("corporateName", is(expected.getCorporateName())))
+        .andExpect(jsonPath("_version", is(1)))
         .andExpect(jsonPath("metadata.createdDate", notNullValue()))
         .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
         .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
@@ -226,6 +236,40 @@ class AuthorityControllerIT extends IntegrationTestBase {
     assertEquals(expected.getSaftPersonalName(), resultDto.getSaftPersonalName());
     assertEquals(expected.getSftCorporateName(), resultDto.getSftCorporateName());
     assertEquals(expected.getSaftCorporateName(), resultDto.getSaftCorporateName());
+  }
+
+  @Test
+  @DisplayName("PUT: repeated update of Authority without modification")
+  void updateConcurrently_positive_notAllShouldSucceedAndAtLeastOneShouldFail() throws Exception {
+    var dto = prepareDto(0);
+    createAuthoritySourceFile();
+
+    doPost(authorityEndpoint(), dto);
+    var existingAsString = doGet(authorityEndpoint()).andReturn().getResponse().getContentAsString();
+    var collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
+    var expected = collection.getAuthorities().get(0);
+    var sources = List.of("source a", "source b", "source c", "source d");
+
+    int concurrency = 4;
+    ExecutorService executor = Executors.newFixedThreadPool(concurrency);
+    for (var source : sources) {
+      executor.execute(() -> {
+        expected.setSource(source);
+        doPut(authorityEndpoint(expected.getId()), expected);
+      });
+    }
+    executor.shutdown();
+    assertTrue(executor.awaitTermination(2, TimeUnit.MINUTES));
+
+    doGet(authorityEndpoint(expected.getId()))
+        .andExpect(jsonPath("_version", lessThan(concurrency)))
+        .andExpect(jsonPath("source",
+            anyOf(equalTo("source a"), equalTo("source b"),
+                equalTo("source c"), equalTo("source d"))))
+        .andExpect(jsonPath("metadata.createdDate", notNullValue()))
+        .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
+        .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
+        .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
   }
 
   @Test

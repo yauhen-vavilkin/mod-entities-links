@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -52,8 +53,9 @@ public class Authority extends MetadataEntity {
   @Column(name = "heading_type")
   private String headingType;
 
-  @Column(name = "_version")
-  private Integer version;
+  @Version
+  @Column(name = "_version", nullable = false)
+  private int version;
 
   @Column(name = "subject_heading_code")
   private Character subjectHeadingCode;

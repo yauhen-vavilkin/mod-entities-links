@@ -9,20 +9,25 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
-import org.folio.entlinks.domain.repository.AuthorityStorageRepository;
+import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.spring.data.OffsetRequest;
 import org.folio.tenant.domain.dto.Parameter;
 import org.springframework.data.domain.Page;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
 @Log4j2
 public class AuthorityService {
 
-  private final AuthorityStorageRepository repository;
+  private final AuthorityRepository repository;
 
   public Page<Authority> getAll(Integer offset, Integer limit, String cql) {
     log.debug("getAll:: Attempts to find all Authority by [offset: {}, limit: {}, cql: {}]", offset, limit,
@@ -53,8 +58,13 @@ public class AuthorityService {
     return repository.save(entity);
   }
 
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  @Retryable(
+      retryFor = ObjectOptimisticLockingFailureException.class,
+      maxAttempts = 2,
+      backoff = @Backoff(delay = 500))
   public Authority update(UUID id, Authority modified) {
-    log.debug("update:: Attempting to update Authority [id: {}]", id);
+    log.debug("update:: Attempting to update Authority [authority: {}]", modified);
 
     if (!Objects.equals(id, modified.getId())) {
       throw new RequestBodyValidationException("Request should have id = " + id,

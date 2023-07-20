@@ -56,7 +56,7 @@ public interface AuthorityMapper {
   }
 
   default AuthoritySourceFile toAuthoritySourceFile(AuthorityDto dto) {
-    if ( dto == null || dto.getSourceFileId() == null ) {
+    if (dto == null || dto.getSourceFileId() == null) {
       return null;
     }
 
