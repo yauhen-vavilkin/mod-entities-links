@@ -51,7 +51,7 @@ public class AuthorityService {
 
     UUID id = entity.getId();
     if (id != null && repository.existsById(id)) {
-      throw new RequestBodyValidationException("AuthoritySourceFile already exists",
+      throw new RequestBodyValidationException("Authority already exists",
           List.of(new Parameter("id").value(String.valueOf(id))));
     }
 

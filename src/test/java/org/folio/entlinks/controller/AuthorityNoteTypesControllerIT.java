@@ -98,7 +98,7 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("Get Collection: find all note types sorted by name and limited with offset")
   void getCollection_positive_entitiesSortedByNameAndLimitedWithOffset() throws Exception {
-    createAuthorityNoteTypes();
+    var noteTypes = createAuthorityNoteTypes();
 
     var cqlQuery = "(cql.allRecords=1)sortby name/sort.descending";
     var limit = "1";
@@ -111,19 +111,18 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
         .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdByUserId", is(USER_ID)))
         .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedByUserId", is(USER_ID)))
         .andExpect(jsonPath("authorityNoteTypes[1]").doesNotExist())
-        .andExpect(jsonPath("totalRecords").value(1));
+        .andExpect(jsonPath("totalRecords").value(noteTypes.size()));
   }
 
   @ParameterizedTest
   @CsvSource({
-    "0, 3, descending, 3, name3",
-    "1, 3, ascending, 2, name2",
-    "2, 2, descending, 1, name1"
+    "0, 3, descending, name3",
+    "1, 3, ascending, name2",
+    "2, 2, descending, name1"
   })
   @DisplayName("Get Collection: return list of note types for the given limit and offset")
   void getCollection_positive_entitiesSortedByNameAndLimitedWithOffset(String offset, String limit, String sortOrder,
-                                                                       String totalRecords, String firstNoteTypeName)
-      throws Exception {
+                                                                       String firstNoteTypeName) throws Exception {
     createAuthorityNoteTypes();
 
     var cqlQuery = "(cql.allRecords=1)sortby name/sort." + sortOrder;
@@ -133,7 +132,7 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
         .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedDate", notNullValue()))
         .andExpect(jsonPath("authorityNoteTypes[0].metadata.createdByUserId", is(USER_ID)))
         .andExpect(jsonPath("authorityNoteTypes[0].metadata.updatedByUserId", is(USER_ID)))
-        .andExpect(jsonPath("totalRecords").value(Integer.valueOf(totalRecords)));
+        .andExpect(jsonPath("totalRecords").value(3));
   }
 
   // Tests for Get By ID

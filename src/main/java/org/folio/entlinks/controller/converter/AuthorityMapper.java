@@ -18,6 +18,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
+import org.springframework.data.domain.Page;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
 public interface AuthorityMapper {
@@ -50,9 +51,9 @@ public interface AuthorityMapper {
   List<AuthorityDto> toDtoList(Iterable<Authority> authorityStorageIterable);
 
   default AuthorityDtoCollection toAuthorityCollection(
-      Iterable<Authority> authorityStorageIterable) {
-    var authorityDtos = toDtoList(authorityStorageIterable);
-    return new AuthorityDtoCollection(authorityDtos, authorityDtos.size());
+      Page<Authority> authorityStorageIterable) {
+    var authorityDtos = toDtoList(authorityStorageIterable.getContent());
+    return new AuthorityDtoCollection(authorityDtos, (int) authorityStorageIterable.getTotalElements());
   }
 
   default AuthoritySourceFile toAuthoritySourceFile(AuthorityDto dto) {

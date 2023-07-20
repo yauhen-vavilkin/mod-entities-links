@@ -13,6 +13,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.springframework.data.domain.Page;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface AuthorityNoteTypeMapper {
@@ -40,9 +41,9 @@ public interface AuthorityNoteTypeMapper {
   List<AuthorityNoteTypeDto> toDtoList(Iterable<AuthorityNoteType> authorityNoteTypeIterable);
 
   default AuthorityNoteTypeDtoCollection toAuthorityNoteTypeCollection(
-    Iterable<AuthorityNoteType> authorityNoteTypeIterable) {
-    var noteTypes = toDtoList(authorityNoteTypeIterable);
-    return new AuthorityNoteTypeDtoCollection(noteTypes, noteTypes.size());
+    Page<AuthorityNoteType> authorityNoteTypes) {
+    var noteTypes = toDtoList(authorityNoteTypes);
+    return new AuthorityNoteTypeDtoCollection(noteTypes, (int) authorityNoteTypes.getTotalElements());
   }
 
   default OffsetDateTime map(Timestamp timestamp) {

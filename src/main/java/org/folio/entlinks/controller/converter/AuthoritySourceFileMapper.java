@@ -18,6 +18,7 @@ import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
+import org.springframework.data.domain.Page;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
 public interface AuthoritySourceFileMapper {
@@ -70,9 +71,10 @@ public interface AuthoritySourceFileMapper {
   }
 
   default AuthoritySourceFileDtoCollection toAuthoritySourceFileCollection(
-    Iterable<AuthoritySourceFile> authoritySourceFileIterable) {
-    var sourceFileDtos = toDtoList(authoritySourceFileIterable);
-    return new AuthoritySourceFileDtoCollection(sourceFileDtos.size()).authoritySourceFiles(sourceFileDtos);
+    Page<AuthoritySourceFile> authoritySourceFiles) {
+    var sourceFileDtos = toDtoList(authoritySourceFiles);
+    return new AuthoritySourceFileDtoCollection((int) authoritySourceFiles.getTotalElements())
+        .authoritySourceFiles(sourceFileDtos);
   }
 
   default Set<AuthoritySourceFileCode> toEntityCodes(List<String> codes) {
