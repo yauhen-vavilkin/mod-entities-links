@@ -418,7 +418,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     entity.setName(SOURCE_FILE_NAMES[i]);
     entity.setSource(SOURCE_FILE_SOURCES[i].getValue());
     entity.setType(SOURCE_FILE_TYPES[i]);
-    entity.setBaseUrl(SOURCE_FILE_URLS[i]);
+    entity.setBaseUrl(SOURCE_FILE_URLS[i]  + "/");
 
     var code = prepareAuthoritySourceFileCode(i);
     entity.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
