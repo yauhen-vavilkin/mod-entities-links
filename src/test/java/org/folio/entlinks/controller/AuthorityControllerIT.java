@@ -95,14 +95,13 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
   @ParameterizedTest
   @CsvSource({
-    "0, 3, descending, 3, source3",
-    "1, 3, ascending, 2, source2",
-    "2, 2, descending, 1, source1"
+    "0, 3, descending, source3",
+    "1, 3, ascending, source2",
+    "2, 2, descending, source1"
   })
   @DisplayName("Get Collection: return list of authorities for the given limit and offset")
   void getCollection_positive_entitiesSortedByNameAndLimitedWithOffset(String offset, String limit, String sortOrder,
-                                                                       String totalRecords, String firstNoteTypeName)
-      throws Exception {
+                                                                       String firstNoteTypeName) throws Exception {
     createAuthorities();
 
     var cqlQuery = "(cql.allRecords=1)sortby source/sort." + sortOrder;
@@ -110,7 +109,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
         .andExpect(jsonPath("authorities[0].source", is(firstNoteTypeName)))
         .andExpect(jsonPath("authorities[0].metadata.createdDate", notNullValue()))
         .andExpect(jsonPath("authorities[0].metadata.createdByUserId", is(USER_ID)))
-        .andExpect(jsonPath("totalRecords").value(Integer.valueOf(totalRecords)));
+        .andExpect(jsonPath("totalRecords").value(3));
   }
 
   // Tests for Get By ID

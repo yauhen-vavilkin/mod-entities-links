@@ -83,14 +83,13 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
 
   @ParameterizedTest
   @CsvSource({
-    "0, 3, descending, 3, name3",
-    "1, 3, ascending, 2, name2",
-    "2, 2, descending, 1, name1"
+    "0, 3, descending, name3",
+    "1, 3, ascending, name2",
+    "2, 2, descending, name1"
   })
   @DisplayName("Get Collection: return list of source files for the given limit and offset")
   void getCollection_positive_entitiesSortedByNameAndLimitedWithOffset(String offset, String limit, String sortOrder,
-                                                                       String totalRecords, String firstNoteTypeName)
-      throws Exception {
+                                                                       String firstNoteTypeName) throws Exception {
     createAuthoritySourceTypes();
 
     var cqlQuery = "(cql.allRecords=1)sortby name/sort." + sortOrder;
@@ -98,7 +97,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
         .andExpect(jsonPath("authoritySourceFiles[0].name", is(firstNoteTypeName)))
         .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdDate", notNullValue()))
         .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdByUserId", is(USER_ID)))
-        .andExpect(jsonPath("totalRecords").value(Integer.valueOf(totalRecords)));
+        .andExpect(jsonPath("totalRecords").value(3));
   }
 
   // Tests for Get By ID
