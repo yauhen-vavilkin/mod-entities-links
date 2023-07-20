@@ -7,9 +7,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.retry.annotation.EnableRetry;
 
 @Configuration
 @EnableJpaAuditing(auditorAwareRef = "auditorProvider")
+@EnableRetry
 public class JpaConfig {
 
   @Bean

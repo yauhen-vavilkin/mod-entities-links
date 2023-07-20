@@ -24,7 +24,7 @@
       <column name="source" type="varchar(250)"/>
       <column name="heading" type="varchar(250)"/>
       <column name="heading_type" type="varchar(250)"/>
-      <column name="_version" type="integer" defaultValue="0"/>
+      <column name="_version" type="integer"/>
       <column name="subject_heading_code" type="char"/>
       <column name="sft_headings" type="jsonb"/>
       <column name="saft_headings" type="jsonb"/>

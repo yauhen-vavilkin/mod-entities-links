@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
-import org.folio.entlinks.domain.repository.AuthorityStorageRepository;
+import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.spring.test.type.UnitTest;
@@ -30,7 +30,7 @@ import org.springframework.data.domain.Pageable;
 class AuthorityServiceTest {
 
   @Mock
-  private AuthorityStorageRepository repository;
+  private AuthorityRepository repository;
 
   @InjectMocks
   private AuthorityService service;

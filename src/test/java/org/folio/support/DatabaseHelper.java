@@ -84,12 +84,12 @@ public class DatabaseHelper {
 
   public void saveAuthority(String tenant, Authority entity) {
     var sql = "INSERT INTO " + getTable(tenant, AUTHORITY_TABLE)
-        +  " (id, natural_id, source, heading, heading_type, subject_heading_code, created_date, "
+        +  " (id, _version, natural_id, source, heading, heading_type, subject_heading_code, created_date, "
         + "created_by_user_id, updated_date, updated_by_user_id) "
-        + "VALUES (?,?,?,?,?,?,?,?,?,?)";
-    jdbcTemplate.update(sql, entity.getId(), entity.getNaturalId(), entity.getSource(), entity.getHeading(),
-        entity.getHeadingType(), entity.getSubjectHeadingCode(), entity.getCreatedDate(), entity.getCreatedByUserId(),
-        entity.getUpdatedDate(), entity.getUpdatedByUserId());
+        + "VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+    jdbcTemplate.update(sql, entity.getId(), entity.getVersion(), entity.getNaturalId(), entity.getSource(),
+        entity.getHeading(), entity.getHeadingType(), entity.getSubjectHeadingCode(), entity.getCreatedDate(),
+        entity.getCreatedByUserId(), entity.getUpdatedDate(), entity.getUpdatedByUserId());
   }
 
   public AuthorityNoteType getAuthorityNoteTypeById(UUID id, String tenant) {
