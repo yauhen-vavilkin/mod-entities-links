@@ -20,6 +20,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.Hibernate;
 
 @Getter
@@ -27,6 +28,7 @@ import org.hibernate.Hibernate;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 @Table(name = "authority_source_file", uniqueConstraints = {
   @UniqueConstraint(name = "uc_authoritysourcefile_base_url", columnNames = {"base_url"}),
   @UniqueConstraint(name = "uc_authoritysourcefile_name", columnNames = {"name"})
