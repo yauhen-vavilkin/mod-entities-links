@@ -5,6 +5,7 @@ import static org.folio.entlinks.utils.ServiceUtils.initId;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import javax.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
@@ -17,8 +18,6 @@ import org.folio.spring.data.OffsetRequest;
 import org.folio.tenant.domain.dto.Parameter;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Nonnull;
 
 @Service
 @AllArgsConstructor
@@ -47,6 +46,10 @@ public class AuthoritySourceFileService {
 
   public AuthoritySourceFile getByName(String name) {
     log.debug("getById:: Loading AuthoritySourceFile by Name [name: {}]", name);
+
+    if (StringUtils.isBlank(name)) {
+      return null;
+    }
 
     return repository.findByName(name).orElse(null);
   }
