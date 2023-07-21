@@ -1,0 +1,10 @@
+{
+  "id": "cb58492d-018e-442d-9ce3-35aabfc524aa",
+  "name": "Art & architecture thesaurus (AAT)",
+  "codes": [
+    "aat"
+  ],
+  "type": "Subjects",
+  "baseUrl": "vocab.getty.edu/aat/",
+  "source": "folio"
+}

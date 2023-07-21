@@ -1,11 +1,14 @@
 package org.folio.entlinks.service.authority;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -75,6 +78,27 @@ class AuthorityNoteTypeServiceTest {
 
     assertThrows(AuthorityNoteTypeNotFoundException.class, () -> service.getById(id));
     verify(repository).findById(any(UUID.class));
+  }
+
+  @Test
+  void shouldGetAuthorityNoteTypeByName() {
+    var entity = new AuthorityNoteType();
+    var typeName = "type_name";
+    when(repository.findByName(typeName)).thenReturn(Optional.of(entity));
+
+    var found = service.getByName(typeName);
+
+    assertEquals(entity, found);
+    verify(repository).findByName(typeName);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotGetAuthorityNoteTypeForNullName() {
+    var notFound = service.getByName(null);
+
+    assertNull(notFound);
+    verifyNoInteractions(repository);
   }
 
   @Test
