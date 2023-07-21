@@ -1,6 +1,7 @@
 package org.folio.entlinks.service.tenant;
 
 import lombok.extern.log4j.Log4j2;
+import org.folio.entlinks.service.ReferenceDataLoader;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.liquibase.FolioSpringLiquibase;
 import org.folio.spring.service.TenantService;
@@ -19,17 +20,20 @@ public class ExtendedTenantService extends TenantService {
   private final PrepareSystemUserService prepareSystemUserService;
   private final FolioExecutionContext folioExecutionContext;
   private final KafkaAdminService kafkaAdminService;
+  private final ReferenceDataLoader referenceDataLoader;
 
   public ExtendedTenantService(JdbcTemplate jdbcTemplate,
                                FolioExecutionContext context,
                                KafkaAdminService kafkaAdminService,
                                FolioSpringLiquibase folioSpringLiquibase,
                                FolioExecutionContext folioExecutionContext,
-                               PrepareSystemUserService prepareSystemUserService) {
+                               PrepareSystemUserService prepareSystemUserService,
+                               ReferenceDataLoader referenceDataLoader) {
     super(jdbcTemplate, context, folioSpringLiquibase);
     this.prepareSystemUserService = prepareSystemUserService;
     this.folioExecutionContext = folioExecutionContext;
     this.kafkaAdminService = kafkaAdminService;
+    this.referenceDataLoader = referenceDataLoader;
   }
 
   @Override
@@ -44,5 +48,11 @@ public class ExtendedTenantService extends TenantService {
   protected void afterTenantDeletion(TenantAttributes tenantAttributes) {
     var tenantId = context.getTenantId();
     kafkaAdminService.deleteTopics(tenantId);
+  }
+
+  @Override
+  public void loadReferenceData() {
+    super.loadReferenceData();
+    referenceDataLoader.loadRefData();
   }
 }

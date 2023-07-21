@@ -18,6 +18,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Nonnull;
+
 @Service
 @AllArgsConstructor
 @Log4j2
@@ -42,6 +44,16 @@ public class AuthorityNoteTypeService {
     return repository.findById(id).orElseThrow(() -> new AuthorityNoteTypeNotFoundException(id));
   }
 
+  public AuthorityNoteType getByName(String name) {
+    log.debug("getById:: Loading Authority Note Type by Name [name: {}]", name);
+
+    if (StringUtils.isBlank(name)) {
+      return null;
+    }
+
+    return repository.findByName(name).orElse(null);
+  }
+
   @Transactional
   public AuthorityNoteType create(AuthorityNoteType entity) {
     log.debug("create:: Attempting to create AuthorityNoteType [entity: {}]", entity);
@@ -52,7 +64,7 @@ public class AuthorityNoteTypeService {
   }
 
   @Transactional
-  public AuthorityNoteType update(UUID id, AuthorityNoteType authorityNoteType) {
+  public AuthorityNoteType update(@Nonnull UUID id, AuthorityNoteType authorityNoteType) {
     log.debug("update:: Attempting to update AuthorityNoteType [id: {}]", id);
 
     if (!Objects.equals(id, authorityNoteType.getId())) {
