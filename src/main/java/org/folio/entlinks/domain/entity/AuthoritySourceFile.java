@@ -4,11 +4,12 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -21,7 +22,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.folio.entlinks.domain.entity.base.Identifiable;
 import org.hibernate.Hibernate;
+import org.springframework.data.domain.Persistable;
 
 @Getter
 @Setter
@@ -33,10 +36,9 @@ import org.hibernate.Hibernate;
   @UniqueConstraint(name = "uc_authoritysourcefile_base_url", columnNames = {"base_url"}),
   @UniqueConstraint(name = "uc_authoritysourcefile_name", columnNames = {"name"})
 })
-public class AuthoritySourceFile extends MetadataEntity {
+public class AuthoritySourceFile extends MetadataEntity implements Persistable<UUID>, Identifiable<UUID> {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "id", nullable = false)
   private UUID id;
 
@@ -52,11 +54,16 @@ public class AuthoritySourceFile extends MetadataEntity {
   @Column(name = "source", length = 100)
   private String source;
 
+  @ToString.Exclude
   @OneToMany(mappedBy = "authoritySourceFile", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
   private Set<AuthoritySourceFileCode> authoritySourceFileCodes = new LinkedHashSet<>();
 
+  @ToString.Exclude
   @OneToMany(mappedBy = "authoritySourceFile", fetch = FetchType.LAZY)
   private Set<Authority> authorities = new LinkedHashSet<>();
+
+  @Transient
+  private boolean isNew = true;
 
   public AuthoritySourceFile(AuthoritySourceFile other) {
     this.id = other.id;
@@ -79,21 +86,6 @@ public class AuthoritySourceFile extends MetadataEntity {
     code.setAuthoritySourceFile(this);
   }
 
-  public void removeCode(AuthoritySourceFileCode code) {
-    authoritySourceFileCodes.remove(code);
-    code.setAuthoritySourceFile(null);
-  }
-
-  public void addAuthorityStorage(Authority authority) {
-    authorities.add(authority);
-    authority.setAuthoritySourceFile(this);
-  }
-
-  public void removeAuthorityStorage(Authority authority) {
-    authorities.remove(authority);
-    authority.setAuthoritySourceFile(null);
-  }
-
   @Override
   public int hashCode() {
     return Objects.hashCode(id);
@@ -109,5 +101,11 @@ public class AuthoritySourceFile extends MetadataEntity {
     }
     AuthoritySourceFile that = (AuthoritySourceFile) o;
     return id != null && Objects.equals(id, that.id);
+  }
+
+  @PostLoad
+  @PrePersist
+  void markNotNew() {
+    this.isNew = false;
   }
 }

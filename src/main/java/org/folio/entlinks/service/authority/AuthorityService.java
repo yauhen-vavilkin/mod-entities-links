@@ -1,5 +1,7 @@
 package org.folio.entlinks.service.authority;
 
+import static org.folio.entlinks.utils.ServiceUtils.initId;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -10,7 +12,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
+import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
+import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.spring.data.OffsetRequest;
 import org.folio.tenant.domain.dto.Parameter;
@@ -28,10 +32,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthorityService {
 
   private final AuthorityRepository repository;
+  private final AuthoritySourceFileRepository sourceFileRepository;
 
   public Page<Authority> getAll(Integer offset, Integer limit, String cql) {
     log.debug("getAll:: Attempts to find all Authority by [offset: {}, limit: {}, cql: {}]", offset, limit,
-        cql);
+      cql);
 
     if (StringUtils.isBlank(cql)) {
       return repository.findAll(new OffsetRequest(offset, limit));
@@ -48,28 +53,24 @@ public class AuthorityService {
 
   public Authority create(Authority entity) {
     log.debug("create:: Attempting to create Authority [entity: {}]", entity);
-
-    UUID id = entity.getId();
-    if (id != null && repository.existsById(id)) {
-      throw new RequestBodyValidationException("Authority already exists",
-          List.of(new Parameter("id").value(String.valueOf(id))));
-    }
-
+    validateSourceFile(entity);
+    initId(entity);
     return repository.save(entity);
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @Retryable(
-      retryFor = ObjectOptimisticLockingFailureException.class,
-      maxAttempts = 2,
-      backoff = @Backoff(delay = 500))
+    retryFor = ObjectOptimisticLockingFailureException.class,
+    maxAttempts = 2,
+    backoff = @Backoff(delay = 500))
   public Authority update(UUID id, Authority modified) {
     log.debug("update:: Attempting to update Authority [authority: {}]", modified);
 
     if (!Objects.equals(id, modified.getId())) {
       throw new RequestBodyValidationException("Request should have id = " + id,
-          List.of(new Parameter("id").value(String.valueOf(modified.getId()))));
+        List.of(new Parameter("id").value(String.valueOf(modified.getId()))));
     }
+    validateSourceFile(modified);
 
     var existing = repository.findById(id).orElseThrow(() -> new AuthorityNotFoundException(id));
 
@@ -100,11 +101,21 @@ public class AuthorityService {
     existing.setNotes(modified.getNotes());
 
     Optional.ofNullable(modified.getAuthoritySourceFile())
-        .map(AuthoritySourceFile::getId)
-        .ifPresent(sourceFileId ->  {
-          var sourceFile = new AuthoritySourceFile();
-          sourceFile.setId(sourceFileId);
-          existing.setAuthoritySourceFile(sourceFile);
-        });
+      .map(AuthoritySourceFile::getId)
+      .ifPresent(sourceFileId -> {
+        var sourceFile = new AuthoritySourceFile();
+        sourceFile.setId(sourceFileId);
+        existing.setAuthoritySourceFile(sourceFile);
+      });
+  }
+
+  private void validateSourceFile(Authority authority) {
+    if (authority.getAuthoritySourceFile() != null) {
+      var id = authority.getAuthoritySourceFile().getId();
+      if (id != null && !sourceFileRepository.existsById(id)) {
+        throw new AuthoritySourceFileNotFoundException(id);
+
+      }
+    }
   }
 }

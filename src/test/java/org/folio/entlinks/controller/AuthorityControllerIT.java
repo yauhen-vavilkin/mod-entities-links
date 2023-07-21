@@ -1,6 +1,7 @@
 package org.folio.entlinks.controller;
 
 import static java.util.UUID.randomUUID;
+import static org.folio.entlinks.config.constants.ErrorCode.DUPLICATE_AUTHORITY_ID;
 import static org.folio.entlinks.config.constants.ErrorCode.VIOLATION_OF_RELATION_BETWEEN_AUTHORITY_AND_SOURCE_FILE;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
@@ -37,6 +38,7 @@ import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
+import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
@@ -50,12 +52,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-
 @IntegrationTest
 @DatabaseCleanup(tables = {
   DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE,
   DatabaseHelper.AUTHORITY_TABLE,
-  DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE })
+  DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class AuthorityControllerIT extends IntegrationTestBase {
 
   private static final String CREATED_DATE = "2021-10-28T06:31:31+05:00";
@@ -65,7 +66,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   private static final String[] SOURCES = new String[] {"source1", "source2", "source3"};
   private static final String[] NATURAL_IDS = new String[] {"naturalId1", "naturalId2", "naturalId3"};
   private static final String[] HEADINGS =
-      new String[] {"headingPersonalName", "headingCorporateName", "headingGenreTerm"};
+    new String[] {"headingPersonalName", "headingCorporateName", "headingGenreTerm"};
   private static final String[] HEADING_TYPES = new String[] {"personalName", "corporateName", "genreTerm"};
   private static final Character[] HEADING_CODES = new Character[] {'a', 'b', 'c'};
 
@@ -75,7 +76,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @DisplayName("Get Collection: find no Authority")
   void getCollection_positive_noEntitiesFound() throws Exception {
     doGet(authorityEndpoint())
-        .andExpect(jsonPath("totalRecords", is(0)));
+      .andExpect(jsonPath("totalRecords", is(0)));
   }
 
   @Test
@@ -84,13 +85,13 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var createdEntities = createAuthorities();
 
     tryGet(authorityEndpoint())
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("totalRecords", is(createdEntities.size())))
-        .andExpect(jsonPath("authorities[0].metadata", notNullValue()))
-        .andExpect(jsonPath("authorities[0].metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("authorities[0].metadata.createdByUserId", is(USER_ID)))
-        .andExpect(jsonPath("authorities[0].metadata.updatedDate", notNullValue()))
-        .andExpect(jsonPath("authorities[0].metadata.updatedByUserId", is(USER_ID)));
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("totalRecords", is(createdEntities.size())))
+      .andExpect(jsonPath("authorities[0].metadata", notNullValue()))
+      .andExpect(jsonPath("authorities[0].metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("authorities[0].metadata.createdByUserId", is(USER_ID)))
+      .andExpect(jsonPath("authorities[0].metadata.updatedDate", notNullValue()))
+      .andExpect(jsonPath("authorities[0].metadata.updatedByUserId", is(USER_ID)));
   }
 
   @ParameterizedTest
@@ -106,10 +107,10 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
     var cqlQuery = "(cql.allRecords=1)sortby source/sort." + sortOrder;
     doGet(authorityEndpoint() + "?limit={l}&offset={o}&query={cql}", limit, offset, cqlQuery)
-        .andExpect(jsonPath("authorities[0].source", is(firstNoteTypeName)))
-        .andExpect(jsonPath("authorities[0].metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("authorities[0].metadata.createdByUserId", is(USER_ID)))
-        .andExpect(jsonPath("totalRecords").value(3));
+      .andExpect(jsonPath("authorities[0].source", is(firstNoteTypeName)))
+      .andExpect(jsonPath("authorities[0].metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("authorities[0].metadata.createdByUserId", is(USER_ID)))
+      .andExpect(jsonPath("totalRecords").value(3));
   }
 
   // Tests for Get By ID
@@ -121,33 +122,66 @@ class AuthorityControllerIT extends IntegrationTestBase {
     createAuthority(authority);
 
     doGet(authorityEndpoint(authority.getId()))
-        .andExpect(jsonPath("source", is(authority.getSource())))
-        .andExpect(jsonPath("naturalId", is(authority.getNaturalId())))
-        .andExpect(jsonPath("metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
+      .andExpect(jsonPath("source", is(authority.getSource())))
+      .andExpect(jsonPath("naturalId", is(authority.getNaturalId())))
+      .andExpect(jsonPath("metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
   }
 
   // Tests for POST
 
   @Test
-  @DisplayName("POST: create new Authority")
-  void createAuthority_positive_entityCreated() throws Exception {
+  @DisplayName("POST: create new Authority with defined ID")
+  void createAuthority_positive_entityCreatedWithProvidedId() throws Exception {
+    assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
+
+    var dto = prepareDto(0);
+    var id = randomUUID();
+    dto.setId(id);
+    createAuthoritySourceFile();
+
+    var content = doPost(authorityEndpoint(), dto)
+      .andExpect(jsonPath("id", is(id.toString())))
+      .andExpect(jsonPath("source", is(dto.getSource())))
+      .andExpect(jsonPath("naturalId", is(dto.getNaturalId())))
+      .andExpect(jsonPath("personalName", is(dto.getPersonalName())))
+      .andExpect(jsonPath("sourceFileId", is(dto.getSourceFileId().toString())))
+      .andExpect(jsonPath("_version", is(0)))
+      .andExpect(jsonPath("metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
+      .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
+      .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)))
+      .andReturn().getResponse().getContentAsString();
+
+    var created = objectMapper.readValue(content, AuthorityDto.class);
+
+    assertEquals(1, databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID));
+    assertEquals(dto.getNotes(), created.getNotes());
+    assertEquals(dto.getIdentifiers(), created.getIdentifiers());
+    assertEquals(dto.getSftPersonalName(), created.getSftPersonalName());
+    assertEquals(dto.getSaftPersonalName(), created.getSaftPersonalName());
+  }
+
+  @Test
+  @DisplayName("POST: create new Authority without defined ID")
+  void createAuthority_positive_entityCreatedWithNewId() throws Exception {
     assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
 
     var dto = prepareDto(0);
     createAuthoritySourceFile();
 
     var content = doPost(authorityEndpoint(), dto)
-        .andExpect(jsonPath("source", is(dto.getSource())))
-        .andExpect(jsonPath("naturalId", is(dto.getNaturalId())))
-        .andExpect(jsonPath("personalName", is(dto.getPersonalName())))
-        .andExpect(jsonPath("sourceFileId", is(dto.getSourceFileId().toString())))
-        .andExpect(jsonPath("_version", is(0)))
-        .andExpect(jsonPath("metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
-        .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
-        .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)))
-        .andReturn().getResponse().getContentAsString();
+      .andExpect(jsonPath("id", notNullValue()))
+      .andExpect(jsonPath("source", is(dto.getSource())))
+      .andExpect(jsonPath("naturalId", is(dto.getNaturalId())))
+      .andExpect(jsonPath("personalName", is(dto.getPersonalName())))
+      .andExpect(jsonPath("sourceFileId", is(dto.getSourceFileId().toString())))
+      .andExpect(jsonPath("_version", is(0)))
+      .andExpect(jsonPath("metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
+      .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
+      .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)))
+      .andReturn().getResponse().getContentAsString();
 
     var created = objectMapper.readValue(content, AuthorityDto.class);
 
@@ -167,15 +201,15 @@ class AuthorityControllerIT extends IntegrationTestBase {
     dto.setSourceFileId(null);
 
     doPost(authorityEndpoint(), dto)
-        .andExpect(jsonPath("source", is(dto.getSource())))
-        .andExpect(jsonPath("naturalId", is(dto.getNaturalId())))
-        .andExpect(jsonPath("personalName", is(dto.getPersonalName())))
-        .andExpect(jsonPath("sourceFileId").doesNotExist())
-        .andExpect(jsonPath("_version", is(0)))
-        .andExpect(jsonPath("metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
-        .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
-        .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
+      .andExpect(jsonPath("source", is(dto.getSource())))
+      .andExpect(jsonPath("naturalId", is(dto.getNaturalId())))
+      .andExpect(jsonPath("personalName", is(dto.getPersonalName())))
+      .andExpect(jsonPath("sourceFileId").doesNotExist())
+      .andExpect(jsonPath("_version", is(0)))
+      .andExpect(jsonPath("metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
+      .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
+      .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
 
     assertEquals(1, databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID));
   }
@@ -186,12 +220,30 @@ class AuthorityControllerIT extends IntegrationTestBase {
     assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
 
     var dto = prepareDto(0);
-    dto.setSourceFileId(UUID.randomUUID());
+    var sourceFileId = randomUUID();
+    dto.setSourceFileId(sourceFileId);
 
     tryPost(authorityEndpoint(), dto)
-        .andExpect(status().isUnprocessableEntity())
-        .andExpect(errorMessageMatch(is(VIOLATION_OF_RELATION_BETWEEN_AUTHORITY_AND_SOURCE_FILE.getMessage())))
-        .andExpect(exceptionMatch(DataIntegrityViolationException.class));
+      .andExpect(status().isNotFound())
+      .andExpect(errorMessageMatch(is("Authority Source File with ID [" + sourceFileId + "] was not found")))
+      .andExpect(exceptionMatch(AuthoritySourceFileNotFoundException.class));
+  }
+
+  @Test
+  @DisplayName("POST: create new Authority with non-existing source file")
+  void createAuthority_negative_notCreatedWithDuplicatedId() throws Exception {
+    assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
+
+    var dto = prepareDto(0);
+    dto.setId(randomUUID());
+    dto.setSourceFileId(null);
+
+    doPost(authorityEndpoint(), dto);
+
+    tryPost(authorityEndpoint(), dto)
+      .andExpect(status().isUnprocessableEntity())
+      .andExpect(errorMessageMatch(is(DUPLICATE_AUTHORITY_ID.getMessage())))
+      .andExpect(exceptionMatch(DataIntegrityViolationException.class));
   }
 
   // Tests for PUT
@@ -215,17 +267,17 @@ class AuthorityControllerIT extends IntegrationTestBase {
     tryPut(authorityEndpoint(expected.getId()), expected).andExpect(status().isAccepted());
 
     var content = doGet(authorityEndpoint(expected.getId()))
-        .andExpect(jsonPath("source", is(expected.getSource())))
-        .andExpect(jsonPath("naturalId", is(expected.getNaturalId())))
-        .andExpect(jsonPath("sourceFileId", is(expected.getSourceFileId().toString())))
-        .andExpect(jsonPath("personalName").doesNotExist())
-        .andExpect(jsonPath("corporateName", is(expected.getCorporateName())))
-        .andExpect(jsonPath("_version", is(1)))
-        .andExpect(jsonPath("metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
-        .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
-        .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)))
-        .andReturn().getResponse().getContentAsString();
+      .andExpect(jsonPath("source", is(expected.getSource())))
+      .andExpect(jsonPath("naturalId", is(expected.getNaturalId())))
+      .andExpect(jsonPath("sourceFileId", is(expected.getSourceFileId().toString())))
+      .andExpect(jsonPath("personalName").doesNotExist())
+      .andExpect(jsonPath("corporateName", is(expected.getCorporateName())))
+      .andExpect(jsonPath("_version", is(1)))
+      .andExpect(jsonPath("metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
+      .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
+      .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)))
+      .andReturn().getResponse().getContentAsString();
 
     var resultDto = objectMapper.readValue(content, AuthorityDto.class);
 
@@ -261,14 +313,14 @@ class AuthorityControllerIT extends IntegrationTestBase {
     assertTrue(executor.awaitTermination(2, TimeUnit.MINUTES));
 
     doGet(authorityEndpoint(expected.getId()))
-        .andExpect(jsonPath("_version", lessThan(concurrency)))
-        .andExpect(jsonPath("source",
-            anyOf(equalTo("source a"), equalTo("source b"),
-                equalTo("source c"), equalTo("source d"))))
-        .andExpect(jsonPath("metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
-        .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
-        .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
+      .andExpect(jsonPath("_version", lessThan(concurrency)))
+      .andExpect(jsonPath("source",
+        anyOf(equalTo("source a"), equalTo("source b"),
+          equalTo("source c"), equalTo("source d"))))
+      .andExpect(jsonPath("metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
+      .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
+      .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
   }
 
   @Test
@@ -281,12 +333,13 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var existingAsString = doGet(authorityEndpoint()).andReturn().getResponse().getContentAsString();
     var collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
     var expected = collection.getAuthorities().get(0);
-    expected.setSourceFileId(UUID.randomUUID());
+    var sourceFileId = randomUUID();
+    expected.setSourceFileId(sourceFileId);
 
     tryPut(authorityEndpoint(expected.getId()), expected)
-        .andExpect(status().isUnprocessableEntity())
-        .andExpect(errorMessageMatch(is(VIOLATION_OF_RELATION_BETWEEN_AUTHORITY_AND_SOURCE_FILE.getMessage())))
-        .andExpect(exceptionMatch(DataIntegrityViolationException.class));
+      .andExpect(status().isNotFound())
+      .andExpect(errorMessageMatch(is("Authority Source File with ID [" + sourceFileId + "] was not found")))
+      .andExpect(exceptionMatch(AuthoritySourceFileNotFoundException.class));
   }
 
   @Test
@@ -296,8 +349,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var dto = new AuthorityDto().id(id);
 
     tryPut(authorityEndpoint(id), dto).andExpect(status().isNotFound())
-        .andExpect(exceptionMatch(AuthorityNotFoundException.class))
-        .andExpect(errorMessageMatch(containsString("was not found")));
+      .andExpect(exceptionMatch(AuthorityNotFoundException.class))
+      .andExpect(errorMessageMatch(containsString("was not found")));
   }
 
   // Tests for DELETE
@@ -319,8 +372,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
   void deleteAuthority_negative_entityNotFound() throws Exception {
 
     tryDelete(authorityEndpoint(UUID.randomUUID())).andExpect(status().isNotFound())
-        .andExpect(exceptionMatch(AuthorityNotFoundException.class))
-        .andExpect(errorMessageMatch(containsString("was not found")));
+      .andExpect(exceptionMatch(AuthorityNotFoundException.class))
+      .andExpect(errorMessageMatch(containsString("was not found")));
   }
 
   @Test
@@ -328,9 +381,9 @@ class AuthorityControllerIT extends IntegrationTestBase {
   void deleteAuthority_negative_invalidProvidedRequestId() throws Exception {
 
     tryDelete(authorityEndpoint() + "/{id}", "invalid-uuid").andExpect(status().isBadRequest())
-        .andExpect(exceptionMatch(MethodArgumentTypeMismatchException.class))
-        .andExpect(errorMessageMatch(containsString(
-            "Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'")));
+      .andExpect(exceptionMatch(MethodArgumentTypeMismatchException.class))
+      .andExpect(errorMessageMatch(containsString(
+        "Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'")));
   }
 
   @Test
@@ -341,16 +394,16 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
     doPost(authorityEndpoint(), dto);
     var existingAsString = doGet(authorityEndpoint())
-        .andReturn().getResponse().getContentAsString();
+      .andReturn().getResponse().getContentAsString();
     var collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
     var expected = collection.getAuthorities().get(0);
 
     assertEquals(dto.getSourceFileId(), expected.getSourceFileId());
 
     tryDelete(authoritySourceFilesEndpoint(expected.getSourceFileId()))
-        .andExpect(status().isUnprocessableEntity())
-        .andExpect(errorMessageMatch(is(VIOLATION_OF_RELATION_BETWEEN_AUTHORITY_AND_SOURCE_FILE.getMessage())))
-        .andExpect(exceptionMatch(DataIntegrityViolationException.class));
+      .andExpect(status().isUnprocessableEntity())
+      .andExpect(errorMessageMatch(is(VIOLATION_OF_RELATION_BETWEEN_AUTHORITY_AND_SOURCE_FILE.getMessage())))
+      .andExpect(exceptionMatch(DataIntegrityViolationException.class));
   }
 
   private AuthorityDto prepareDto(int i) {

@@ -3,6 +3,7 @@ package org.folio.entlinks.controller;
 import static java.util.Collections.emptyList;
 import static org.apache.logging.log4j.Level.DEBUG;
 import static org.apache.logging.log4j.Level.WARN;
+import static org.folio.entlinks.config.constants.ErrorCode.DUPLICATE_AUTHORITY_ID;
 import static org.folio.entlinks.config.constants.ErrorCode.DUPLICATE_AUTHORITY_SOURCE_FILE_CODE;
 import static org.folio.entlinks.config.constants.ErrorCode.DUPLICATE_AUTHORITY_SOURCE_FILE_NAME;
 import static org.folio.entlinks.config.constants.ErrorCode.DUPLICATE_AUTHORITY_SOURCE_FILE_URL;
@@ -48,6 +49,7 @@ public class ApiErrorHandler {
     "authority_source_file_name_unq", DUPLICATE_AUTHORITY_SOURCE_FILE_NAME,
     "authority_source_file_base_url_unq", DUPLICATE_AUTHORITY_SOURCE_FILE_URL,
     "authority_source_file_code_unq", DUPLICATE_AUTHORITY_SOURCE_FILE_CODE,
+    "pk_authority_storage", DUPLICATE_AUTHORITY_ID,
       "authority_storage_source_file_id_foreign_key", VIOLATION_OF_RELATION_BETWEEN_AUTHORITY_AND_SOURCE_FILE);
 
   @ExceptionHandler(Exception.class)

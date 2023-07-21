@@ -3,12 +3,13 @@ package org.folio.entlinks.domain.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.persistence.Version;
 import java.util.List;
 import java.util.Objects;
@@ -19,9 +20,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.folio.entlinks.domain.entity.base.Identifiable;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.springframework.data.domain.Persistable;
 
 @Getter
 @Setter
@@ -30,16 +33,16 @@ import org.hibernate.type.SqlTypes;
 @NoArgsConstructor
 @ToString
 @Table(name = "authority")
-public class Authority extends MetadataEntity {
+public class Authority extends MetadataEntity implements Persistable<UUID>, Identifiable<UUID> {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "id", nullable = false)
   private UUID id;
 
   @Column(name = "natural_id")
   private String naturalId;
 
+  @ToString.Exclude
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "source_file_id", nullable = false)
   private AuthoritySourceFile authoritySourceFile;
@@ -75,6 +78,9 @@ public class Authority extends MetadataEntity {
   @Column(name = "notes")
   @JdbcTypeCode(SqlTypes.JSON)
   private List<AuthorityNote> notes;
+
+  @Transient
+  private boolean isNew = true;
 
   public Authority(Authority other) {
     this.id = other.id;
@@ -114,5 +120,11 @@ public class Authority extends MetadataEntity {
     }
     Authority that = (Authority) o;
     return id != null && Objects.equals(id, that.id);
+  }
+
+  @PostLoad
+  @PrePersist
+  void markNotNew() {
+    this.isNew = false;
   }
 }

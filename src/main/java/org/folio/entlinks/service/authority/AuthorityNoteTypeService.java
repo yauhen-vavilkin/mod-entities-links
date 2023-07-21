@@ -1,5 +1,7 @@
 package org.folio.entlinks.service.authority;
 
+import static org.folio.entlinks.utils.ServiceUtils.initId;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -44,11 +46,7 @@ public class AuthorityNoteTypeService {
   public AuthorityNoteType create(AuthorityNoteType entity) {
     log.debug("create:: Attempting to create AuthorityNoteType [entity: {}]", entity);
 
-    UUID id = entity.getId();
-    if (id != null && repository.existsById(id)) {
-      throw new RequestBodyValidationException("AuthorityNoteType already exists",
-        List.of(new Parameter("id").value(String.valueOf(id))));
-    }
+    initId(entity);
 
     return repository.save(entity);
   }

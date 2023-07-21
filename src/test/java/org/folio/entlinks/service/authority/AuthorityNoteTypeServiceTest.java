@@ -18,6 +18,7 @@ import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.spring.test.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -81,23 +82,12 @@ class AuthorityNoteTypeServiceTest {
     var expected = new AuthorityNoteType();
     when(repository.save(any(AuthorityNoteType.class))).thenReturn(expected);
 
+    var argumentCaptor = ArgumentCaptor.forClass(AuthorityNoteType.class);
     var created = service.create(new AuthorityNoteType());
 
     assertThat(created).isEqualTo(expected);
-    verify(repository).save(any(AuthorityNoteType.class));
-  }
-
-  @Test
-  void shouldThrowExceptionWhileCreatingWhenEntityAlreadyExists() {
-    var entity = new AuthorityNoteType();
-    UUID id = UUID.randomUUID();
-    entity.setId(id);
-    when(repository.existsById(id)).thenReturn(true);
-
-    var thrown = assertThrows(RequestBodyValidationException.class, () -> service.create(entity));
-    assertThat(thrown.getInvalidParameters()).hasSize(1);
-    assertThat(thrown.getInvalidParameters().get(0).getKey()).isEqualTo("id");
-    assertThat(thrown.getInvalidParameters().get(0).getValue()).isEqualTo(id.toString());
+    verify(repository).save(argumentCaptor.capture());
+    assertThat(argumentCaptor.getValue().getId()).isNotNull();
   }
 
   @Test
