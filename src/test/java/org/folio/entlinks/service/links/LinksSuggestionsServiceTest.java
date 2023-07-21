@@ -24,6 +24,7 @@ import org.folio.entlinks.integration.dto.FieldParsedContent;
 import org.folio.entlinks.integration.dto.SourceParsedContent;
 import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
 import org.folio.spring.test.type.UnitTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -203,6 +204,36 @@ class LinksSuggestionsServiceTest {
     assertEquals(BASE_URL + NATURAL_ID, bibSubfields.get("0").get(0));
     assertFalse(bibSubfields.containsKey("a"));
     assertTrue(bibSubfields.containsKey("b"));
+  }
+
+  @Test
+  void shouldFillErrorDetailsWithNoSuggestions_onlyForFieldWithNoError() {
+    var bibs = List.of(getBibParsedRecordContent("100", getActualLinksDetails()),
+        getBibParsedRecordContent("101", getActualLinksDetails().errorCause("test")));
+
+    linksSuggestionService.fillErrorDetailsWithNoSuggestions(bibs, "0");
+
+    assertEquals("101", bibs.get(0).getFields().get(0).getLinkDetails().getErrorCause());
+    assertEquals("test", bibs.get(1).getFields().get(0).getLinkDetails().getErrorCause());
+  }
+
+  @Test
+  void shouldFillErrorDetailsWithDisabledAutoLinking() {
+    var field = new FieldParsedContent("100", "//", "//",
+        Map.of(NATURAL_ID_SUBFIELD, List.of(NATURAL_ID)), null);
+
+    linksSuggestionService.fillErrorDetailsWithDisabledAutoLinking(field, "0");
+
+    assertEquals("103", field.getLinkDetails().getErrorCause());
+  }
+
+  @Test
+  void shouldNotFillErrorDetailsWithDisabledAutoLinking_whenNoSubfield() {
+    var field = new FieldParsedContent("100", "//", "//", Map.of(), null);
+
+    linksSuggestionService.fillErrorDetailsWithDisabledAutoLinking(field, "0");
+
+    assertNull(field.getLinkDetails());
   }
 
   private AuthorityParsedContent getAuthorityParsedRecordContent(String authorityField) {

@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -174,6 +175,23 @@ class LinksSuggestionsServiceDelegateTest {
     verify(sourceStorageClient, times(0)).fetchParsedRecordsInBatch(any());
   }
 
+  @Test
+  void suggestLinksForMarcRecords_shouldFillError_ifAutoLinkingDisabled() {
+    var record = getRecord("100", Map.of("0", "test"));
+    var rules = List.of(getRule("100", false));
+
+    when(linkingRulesService.getLinkingRules()).thenReturn(rules);
+    when(dataRepository.findByNaturalIds(emptySet())).thenReturn(emptyList());
+
+    var parsedContentCollection = new ParsedRecordContentCollection().records(List.of(record));
+    serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
+
+    verify(dataRepository).findByNaturalIds(emptySet());
+    verifyNoInteractions(searchService);
+    verifyNoInteractions(sourceStorageClient);
+    verify(suggestionService).fillErrorDetailsWithDisabledAutoLinking(any(), any());
+  }
+
   private ParsedRecordContent getRecord(String bibField) {
     return getRecord(bibField, Map.of("a", "test"));
   }
@@ -188,6 +206,10 @@ class LinksSuggestionsServiceDelegateTest {
   }
 
   private InstanceAuthorityLinkingRule getRule(String bibField) {
+    return getRule(bibField, true);
+  }
+
+  private InstanceAuthorityLinkingRule getRule(String bibField, Boolean autoLinkingEnabled) {
     var modification = new SubfieldModification().source("a").target("b");
     var existence = Map.of("a", true);
 
@@ -195,7 +217,7 @@ class LinksSuggestionsServiceDelegateTest {
     rule.setId(1);
     rule.setBibField(bibField);
     rule.setAuthorityField("100");
-    rule.setAutoLinkingEnabled(true);
+    rule.setAutoLinkingEnabled(autoLinkingEnabled);
     rule.setAuthoritySubfields(new char[] {'a', 'b'});
     rule.setSubfieldModifications(List.of(modification));
     rule.setSubfieldsExistenceValidations(existence);

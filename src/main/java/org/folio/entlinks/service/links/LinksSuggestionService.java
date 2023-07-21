@@ -3,6 +3,7 @@ package org.folio.entlinks.service.links;
 import static java.util.Objects.isNull;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.BooleanUtils.isFalse;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.entlinks.domain.dto.LinkStatus.ERROR;
 import static org.folio.entlinks.domain.dto.LinkStatus.NEW;
 import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.DISABLED_AUTO_LINKING;
@@ -64,9 +65,24 @@ public class LinksSuggestionService {
   public void fillErrorDetailsWithNoSuggestions(List<SourceParsedContent> marcBibsContent,
                                                 String linkingMatchSubfield) {
     marcBibsContent.stream()
-      .flatMap(bibContent -> bibContent.getFields().stream())
-      .filter(fieldContent -> containsSubfield(fieldContent, linkingMatchSubfield))
-      .forEach(bibField -> bibField.setLinkDetails(getErrorDetails(NO_SUGGESTIONS)));
+        .flatMap(bibContent -> bibContent.getFields().stream())
+        .filter(fieldContent -> containsSubfield(fieldContent, linkingMatchSubfield))
+        .filter(fieldContent -> Optional.ofNullable(fieldContent.getLinkDetails())
+            .map(linkDetails -> isEmpty(linkDetails.getErrorCause()))
+            .orElse(true))
+        .forEach(bibField -> bibField.setLinkDetails(getErrorDetails(NO_SUGGESTIONS)));
+  }
+
+  /**
+   * Fill bib fields with no suggestions error detail, if it contains subfields.
+   *
+   * @param field list of bib records {@link FieldParsedContent}
+   */
+  public void fillErrorDetailsWithDisabledAutoLinking(FieldParsedContent field,
+                                                      String linkingMatchSubfield) {
+    if (containsSubfield(field, linkingMatchSubfield)) {
+      field.setLinkDetails(getErrorDetails(DISABLED_AUTO_LINKING));
+    }
   }
 
   private void suggestAuthorityForBibFields(List<FieldParsedContent> bibFields,
