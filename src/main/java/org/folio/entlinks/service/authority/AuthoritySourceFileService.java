@@ -18,6 +18,8 @@ import org.folio.tenant.domain.dto.Parameter;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Nonnull;
+
 @Service
 @AllArgsConstructor
 @Log4j2
@@ -43,6 +45,12 @@ public class AuthoritySourceFileService {
     return repository.findById(id).orElseThrow(() -> new AuthoritySourceFileNotFoundException(id));
   }
 
+  public AuthoritySourceFile getByName(String name) {
+    log.debug("getById:: Loading AuthoritySourceFile by Name [name: {}]", name);
+
+    return repository.findByName(name).orElse(null);
+  }
+
   public AuthoritySourceFile create(AuthoritySourceFile entity) {
     log.debug("create:: Attempting to create AuthoritySourceFile [entity: {}]", entity);
 
@@ -55,7 +63,7 @@ public class AuthoritySourceFileService {
     return repository.save(entity);
   }
 
-  public AuthoritySourceFile update(UUID id, AuthoritySourceFile modified) {
+  public AuthoritySourceFile update(@Nonnull UUID id, AuthoritySourceFile modified) {
     log.debug("update:: Attempting to update AuthoritySourceFile [id: {}]", id);
 
     if (!Objects.equals(id, modified.getId())) {

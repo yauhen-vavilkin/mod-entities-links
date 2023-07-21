@@ -28,7 +28,8 @@ public class AuthorityNoteTypeServiceDelegate {
   }
 
   public AuthorityNoteTypeDto createAuthorityNoteType(AuthorityNoteTypeDto authorityNoteTypeDto) {
-    var created = service.create(mapper.toEntity(authorityNoteTypeDto));
+    var entity = mapper.toEntity(authorityNoteTypeDto);
+    var created = service.create(entity);
     return mapper.toDto(created);
   }
 

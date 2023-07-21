@@ -14,7 +14,9 @@ import java.util.UUID;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
+import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
+import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.spring.test.type.UnitTest;
 import org.junit.jupiter.api.Test;
@@ -32,6 +34,9 @@ class AuthorityServiceTest {
 
   @Mock
   private AuthorityRepository repository;
+
+  @Mock
+  private AuthoritySourceFileRepository sourceFileRepository;
 
   @InjectMocks
   private AuthorityService service;
@@ -88,13 +93,29 @@ class AuthorityServiceTest {
     newEntity.setAuthoritySourceFile(sourceFile);
 
     when(repository.save(any(Authority.class))).thenReturn(expected);
+    when(sourceFileRepository.existsById(any(UUID.class))).thenReturn(true);
     var argumentCaptor = ArgumentCaptor.forClass(Authority.class);
 
     var created = service.create(newEntity);
 
     assertThat(created).isEqualTo(expected);
+    verify(sourceFileRepository).existsById(any(UUID.class));
     verify(repository).save(argumentCaptor.capture());
     assertThat(argumentCaptor.getValue().getId()).isNotNull();
+  }
+
+  @Test
+  void shouldThrowExceptionIfSourceFileDoesNotExist() {
+    var sourceFile = new AuthoritySourceFile();
+    sourceFile.setId(UUID.randomUUID());
+    var newEntity = new Authority();
+    newEntity.setAuthoritySourceFile(sourceFile);
+    when(sourceFileRepository.existsById(any(UUID.class))).thenReturn(false);
+
+    assertThrows(AuthoritySourceFileNotFoundException.class, () -> service.create(newEntity));
+
+    verify(sourceFileRepository).existsById(any(UUID.class));
+    verifyNoInteractions(repository);
   }
 
   @Test
@@ -111,6 +132,7 @@ class AuthorityServiceTest {
     entity.setAuthoritySourceFile(sourceFile);
 
     when(repository.findById(id)).thenReturn(Optional.of(expected));
+    when(sourceFileRepository.existsById(any(UUID.class))).thenReturn(true);
     when(repository.save(expected)).thenReturn(expected);
 
     var updated = service.update(id, entity);
@@ -118,6 +140,7 @@ class AuthorityServiceTest {
     assertThat(updated).isEqualTo(expected);
     assertThat(updated.getAuthoritySourceFile()).isEqualTo(sourceFile);
     verify(repository).findById(id);
+    verify(sourceFileRepository).existsById(any(UUID.class));
     verify(repository).save(expected);
   }
 
