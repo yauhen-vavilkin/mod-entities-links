@@ -11,7 +11,9 @@ public enum ErrorCode {
   DUPLICATE_AUTHORITY_SOURCE_FILE_CODE("106", "Authority source file with the given 'code' already exists."),
   DUPLICATE_NOTE_TYPE_NAME("107", "Authority note type with the given 'name' already exists."),
   VIOLATION_OF_RELATION_BETWEEN_AUTHORITY_AND_SOURCE_FILE("108",
-      "Cannot complete operation on the entity due to it's relation with Authority/Authority Source File.");
+      "Cannot complete operation on the entity due to it's relation with Authority/Authority Source File."),
+  DUPLICATE_AUTHORITY_ID("109",
+      "Authority with the given 'id' already exists.");
 
   @Getter
   private final String code;

@@ -1,6 +1,5 @@
 package org.folio.entlinks.domain.entity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -32,7 +31,7 @@ public class AuthoritySourceFileCode {
   @Column(name = "id", nullable = false)
   private Integer id;
 
-  @ManyToOne(cascade = CascadeType.PERSIST, optional = false, fetch = FetchType.LAZY)
+  @ManyToOne(optional = false, fetch = FetchType.LAZY)
   @JoinColumn(name = "authority_source_file_id", nullable = false)
   private AuthoritySourceFile authoritySourceFile;
 
