@@ -49,7 +49,7 @@ class ReferenceDataLoaderTest {
     var module = new SimpleModule(
         "CustomDeserializer",
         new Version(1, 0, 0, null, null, null));
-    module.addDeserializer(AuthoritySourceFile.class, new CustomCarDeserializer());
+    module.addDeserializer(AuthoritySourceFile.class, new CustomAuthoritySourceFileDeserializer());
     OBJECT_MAPPER.registerModule(module);
   }
 
@@ -87,13 +87,13 @@ class ReferenceDataLoaderTest {
     assertEquals("folio", loadedSourceFile.getSource());
   }
 
-  static class CustomCarDeserializer extends StdDeserializer<AuthoritySourceFile> {
+  static class CustomAuthoritySourceFileDeserializer extends StdDeserializer<AuthoritySourceFile> {
 
-    CustomCarDeserializer() {
+    CustomAuthoritySourceFileDeserializer() {
       this(null);
     }
 
-    CustomCarDeserializer(Class<?> vc) {
+    CustomAuthoritySourceFileDeserializer(Class<?> vc) {
       super(vc);
     }
 
