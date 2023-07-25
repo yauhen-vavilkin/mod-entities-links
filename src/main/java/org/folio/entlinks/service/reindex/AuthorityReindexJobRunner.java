@@ -9,7 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.entlinks.domain.dto.Authority;
+import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.ReindexJob;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.reindex.event.DomainEvent;
