@@ -1,5 +1,6 @@
 package org.folio.entlinks.controller;
 
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.folio.entlinks.controller.delegate.ReindexServiceDelegate;
 import org.folio.entlinks.domain.dto.ReindexJobDto;
@@ -18,11 +19,22 @@ public class AuthorityStorageReindexController implements AuthorityStorageReinde
 
   @Override
   public ResponseEntity<ReindexJobDtoCollection> getReindexJobs(String query, Integer offset, Integer limit) {
-    return AuthorityStorageReindexApi.super.getReindexJobs(query, offset, limit);
+    return ResponseEntity.ok(reindexServiceDelegate.retrieveReindexJobs(query, offset, limit));
   }
 
   @Override
   public ResponseEntity<ReindexJobDto> submitReindexJob() {
     return ResponseEntity.ok(reindexServiceDelegate.startAuthoritiesReindex());
+  }
+
+  @Override
+  public ResponseEntity<Void> deleteReindexJob(UUID id) {
+    reindexServiceDelegate.deleteReindexJob(id);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Override
+  public ResponseEntity<ReindexJobDto> getReindexJob(UUID id) {
+    return ResponseEntity.ok(reindexServiceDelegate.getReindexJobById(id));
   }
 }
