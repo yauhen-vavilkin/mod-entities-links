@@ -1,8 +1,10 @@
 package org.folio.entlinks.controller.delegate;
 
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.folio.entlinks.controller.converter.ReindexJobMapper;
 import org.folio.entlinks.domain.dto.ReindexJobDto;
+import org.folio.entlinks.domain.dto.ReindexJobDtoCollection;
 import org.folio.entlinks.domain.entity.ReindexJobResource;
 import org.folio.entlinks.service.reindex.AuthorityReindexJobRunner;
 import org.folio.entlinks.service.reindex.ReindexService;
@@ -24,4 +26,17 @@ public class ReindexServiceDelegate {
     return jobMapper.toDto(reindexJob);
   }
 
+  public ReindexJobDtoCollection retrieveReindexJobs(String query, Integer offset, Integer limit) {
+    var jobs = service.getAllReindexJobs(query, offset, limit);
+    return jobMapper.toReindexJobCollection(jobs);
+  }
+
+  public ReindexJobDto getReindexJobById(UUID id) {
+    var job = service.getById(id);
+    return jobMapper.toDto(job);
+  }
+
+  public void deleteReindexJob(UUID id) {
+    service.cancelReindex(id);
+  }
 }

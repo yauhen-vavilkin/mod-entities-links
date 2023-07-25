@@ -296,8 +296,11 @@ paths:
   /authority-storage/authorities/{id}:
     $ref: './paths/authority-storage/authorities-by-id.yaml'
 
-  /authority/reindex:
+  /authority-storage/reindex:
     $ref: './paths/authority-storage-reindex/reindex.yaml'
+
+  /authority-storage/reindex/{id}:
+    $ref: './paths/authority-storage-reindex/reindex-by-id.yaml'
 
   /authority-note-types:
     $ref: './paths/authority-note-types/authority-note-types.yaml'

@@ -1,0 +1,32 @@
+parameters:
+  - $ref: '../../parameters/record-id-param.yaml'
+get:
+  operationId: getReindexJob
+  tags:
+    - authority-storage-reindex
+  responses:
+    '200':
+      description: Retrieved record
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/authority-storage-reindex/reindexJobDto.yaml'
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '404':
+      $ref: '../../responses/notFoundResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'
+delete:
+  operationId: deleteReindexJob
+  tags:
+    - authority-storage-reindex
+  responses:
+    '204':
+      description: Record successfully deleted
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '404':
+      $ref: '../../responses/notFoundResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'
