@@ -79,6 +79,36 @@ class LinksSuggestionsServiceTest {
 
   @ParameterizedTest
   @ValueSource(strings = {NATURAL_ID_SUBFIELD, ID_SUBFIELD})
+  void fillLinkDetailsWithSuggestedAuthorities_shouldUpdateAndRemoveControlledSubfield(String linkingMatchSubfield) {
+    var rules = getMapRule("100", "100");
+    var initialBibSubfields = new HashMap<String, List<String>>();
+    initialBibSubfields.put("c", List.of("c value"));
+    var bib = getBibParsedRecordContent("100", initialBibSubfields, null);
+    var authority = getAuthorityParsedRecordContent("100");
+    var sourceFile = new AuthoritySourceFile(SOURCE_FILE_ID, BASE_URL, SOURCE_FILE_NAME, codes("e1"));
+
+    when(sourceFilesService.fetchAuthoritySources()).thenReturn(Map.of(sourceFile.id(), sourceFile));
+
+    linksSuggestionService
+      .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
+
+    var bibField = bib.getFields().get(0);
+    var linkDetails = bibField.getLinkDetails();
+    assertEquals(LinkStatus.NEW, linkDetails.getStatus());
+    assertEquals(AUTHORITY_ID, linkDetails.getAuthorityId());
+    assertEquals(NATURAL_ID, linkDetails.getAuthorityNaturalId());
+    assertEquals(1, linkDetails.getLinkingRuleId());
+    assertNull(linkDetails.getErrorCause());
+
+    var bibSubfields = bibField.getSubfields();
+    assertEquals(AUTHORITY_ID.toString(), bibSubfields.get("9").get(0));
+    assertEquals(BASE_URL + NATURAL_ID, bibSubfields.get("0").get(0));
+    assertFalse(bibSubfields.containsKey("c"));
+    assertTrue(bibSubfields.containsKey("b"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {NATURAL_ID_SUBFIELD, ID_SUBFIELD})
   void fillLinkDetailsWithSuggestedAuthorities_shouldFillLinkDetails_withActualLink(String linkingMatchSubfield) {
     var rules = getMapRule("100", "100");
     var bib = getBibParsedRecordContent("100", getActualLinksDetails());
@@ -247,7 +277,11 @@ class LinksSuggestionsServiceTest {
   }
 
   private SourceParsedContent getBibParsedRecordContent(String bibField, LinkDetails linkDetails) {
-    var subfields = new HashMap<String, List<String>>();
+    return getBibParsedRecordContent(bibField, new HashMap<>(), linkDetails);
+  }
+
+  private SourceParsedContent getBibParsedRecordContent(String bibField, Map<String, List<String>> subfields,
+                                                        LinkDetails linkDetails) {
     subfields.put(NATURAL_ID_SUBFIELD, List.of(NATURAL_ID));
     subfields.put(ID_SUBFIELD, List.of(AUTHORITY_ID.toString()));
     var field = new FieldParsedContent(bibField, "//", "//", subfields, linkDetails);
@@ -270,7 +304,7 @@ class LinksSuggestionsServiceTest {
     rule.setBibField(bibField);
     rule.setAuthorityField(authorityField);
     rule.setAutoLinkingEnabled(true);
-    rule.setAuthoritySubfields(new char[] {'a', 'b'});
+    rule.setAuthoritySubfields(new char[] {'a', 'c'});
     rule.setSubfieldModifications(List.of(modification));
     rule.setSubfieldsExistenceValidations(existence);
 

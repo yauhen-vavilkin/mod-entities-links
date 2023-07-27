@@ -11,10 +11,13 @@ import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.MO
 import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.NO_SUGGESTIONS;
 import static org.folio.entlinks.utils.FieldUtils.getSubfield0Value;
 
+import com.google.common.primitives.Chars;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.domain.dto.LinkDetails;
@@ -170,21 +173,41 @@ public class LinksSuggestionService {
     }
 
     var zeroValue = getSubfield0Value(sourceFilesService.fetchAuthoritySources(), authority.getNaturalId());
-    bibSubfields.putAll(optionalField.get().getSubfields());
     bibSubfields.put("0", List.of(zeroValue));
     bibSubfields.put("9", List.of(authority.getId().toString()));
 
-    modifySubfields(bibSubfields, rule);
+    modifySubfields(optionalField.get().getSubfields(), bibSubfields, rule);
   }
 
-  private void modifySubfields(Map<String, List<String>> bibSubfields, InstanceAuthorityLinkingRule rule) {
+  private void modifySubfields(Map<String, List<String>> authoritySubfieldsMap, Map<String, List<String>> bibSubfields,
+                               InstanceAuthorityLinkingRule rule) {
+    var ruleAuthoritySubfields = Chars.asList(rule.getAuthoritySubfields()).stream()
+        .map(Object::toString)
+        .collect(Collectors.toList());
+    var authoritySubfieldsCopy = new HashMap<>(authoritySubfieldsMap);
+
     var modifications = rule.getSubfieldModifications();
     if (isNotEmpty(modifications)) {
       modifications.forEach(modification -> {
-        var modifiedSubfield = bibSubfields.remove(modification.getSource());
-        bibSubfields.put(modification.getTarget(), modifiedSubfield);
+        var authoritySubfields = authoritySubfieldsCopy.remove(modification.getSource());
+        if (isNotEmpty(authoritySubfields)) {
+          bibSubfields.put(modification.getTarget(), authoritySubfields);
+        } else {
+          bibSubfields.remove(modification.getTarget());
+        }
+        ruleAuthoritySubfields.remove(modification.getSource());
       });
     }
+
+    ruleAuthoritySubfields.forEach(subfield -> {
+      var authoritySubfields = authoritySubfieldsCopy.remove(subfield);
+      if (isNotEmpty(authoritySubfields)) {
+        bibSubfields.put(subfield, authoritySubfields);
+      } else {
+        bibSubfields.remove(subfield);
+      }
+    });
+
   }
 
   private List<AuthorityParsedContent> filterSuitableAuthorities(FieldParsedContent bibField,
