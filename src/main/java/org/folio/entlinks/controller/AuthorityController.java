@@ -19,19 +19,19 @@ public class AuthorityController implements AuthorityStorageApi {
 
   @Override
   public ResponseEntity<AuthorityDto> createAuthority(AuthorityDto authority) {
-    var created = delegate.createAuthorityStorage(authority);
+    var created = delegate.createAuthority(authority);
     return ResponseEntity.ok(created);
   }
 
   @Override
   public ResponseEntity<Void> deleteAuthority(UUID id) {
-    delegate.deleteAuthorityStorageById(id);
+    delegate.deleteAuthorityById(id);
     return ResponseEntity.noContent().build();
   }
 
   @Override
   public ResponseEntity<AuthorityDto> getAuthority(UUID id) {
-    var authority = delegate.getAuthorityStorageById(id);
+    var authority = delegate.getAuthorityById(id);
     return ResponseEntity.ok(authority);
   }
 
@@ -42,7 +42,7 @@ public class AuthorityController implements AuthorityStorageApi {
 
   @Override
   public ResponseEntity<Void> updateAuthority(UUID id, AuthorityDto authority) {
-    delegate.updateAuthorityStorage(id, authority);
+    delegate.updateAuthority(id, authority);
     return ResponseEntity.accepted().build();
   }
 }

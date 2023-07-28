@@ -50,6 +50,9 @@ folio:
       - name: links.instance-authority-stats
         numPartitions: 1
         replicationFactor:
+      - name: authorities.authority
+        numPartitions: 1
+        replicationFactor:
     listener:
       authority:
         concurrency: 1
