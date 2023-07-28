@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -142,16 +143,19 @@ class AuthorityServiceTest {
     verify(repository).findById(id);
     verify(sourceFileRepository).existsById(any(UUID.class));
     verify(repository).save(expected);
+    verifyNoMoreInteractions(repository);
+    verifyNoMoreInteractions(sourceFileRepository);
   }
 
   @Test
-  void shouldThrowExceptionEntityIdDiffersFromProvidedId() {
+  void shouldThrowExceptionIfEntityIdDiffersFromProvidedId() {
     var entity = new Authority();
     UUID id = UUID.randomUUID();
     UUID differentId = UUID.randomUUID();
     entity.setId(id);
 
     var thrown = assertThrows(RequestBodyValidationException.class, () -> service.update(differentId, entity));
+
     assertThat(thrown.getInvalidParameters()).hasSize(1);
     assertThat(thrown.getInvalidParameters().get(0).getKey()).isEqualTo("id");
     assertThat(thrown.getInvalidParameters().get(0).getValue()).isEqualTo(id.toString());
@@ -175,6 +179,9 @@ class AuthorityServiceTest {
     when(repository.existsById(any(UUID.class))).thenReturn(false);
 
     var thrown = assertThrows(AuthorityNotFoundException.class, () -> service.deleteById(id));
+
     assertThat(thrown.getMessage()).containsOnlyOnce(id.toString());
+    verify(repository).existsById(any(UUID.class));
+    verifyNoMoreInteractions(repository);
   }
 }

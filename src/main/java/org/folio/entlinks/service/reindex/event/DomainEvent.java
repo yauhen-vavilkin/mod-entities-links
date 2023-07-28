@@ -5,6 +5,7 @@ import static org.folio.entlinks.service.reindex.event.DomainEventType.DELETE;
 import static org.folio.entlinks.service.reindex.event.DomainEventType.REINDEX;
 import static org.folio.entlinks.service.reindex.event.DomainEventType.UPDATE;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -22,7 +23,11 @@ public class DomainEvent<T> implements BaseEvent {
   private String tenant;
   private String ts;
 
-  public DomainEvent(T oldEntity, T newEntity, DomainEventType type, String tenant) {
+  @JsonCreator
+  public DomainEvent(@JsonProperty("old") T oldEntity,
+                     @JsonProperty("new") T newEntity,
+                     @JsonProperty("type") DomainEventType type,
+                     @JsonProperty("tenant") String tenant) {
     this.oldEntity = oldEntity;
     this.newEntity = newEntity;
     this.type = type;
