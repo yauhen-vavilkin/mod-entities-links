@@ -2,19 +2,22 @@ package org.folio.entlinks.service.reindex;
 
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.entlinks.controller.converter.AuthorityMapper;
+import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.ReindexJob;
-import org.folio.entlinks.domain.repository.AuthorityRepository;
-import org.folio.entlinks.integration.kafka.EventProducer;
-import org.folio.entlinks.service.reindex.event.DomainEvent;
-import org.folio.entlinks.service.reindex.event.DomainEventType;
+import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.context.annotation.Scope;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Log4j2
 @Component
@@ -22,13 +25,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthorityReindexJobRunner implements ReindexJobRunner {
 
-  private static final String REINDEX_JOB_ID_HEADER = "reindex-job-id";
-  private static final String DOMAIN_EVENT_TYPE_HEADER = "domain-event-type";
+  private static final String COUNT_QUERY = "SELECT COUNT(*) FROM %s_mod_entities_links.authority";
+  private static final String SELECT_QUERY = "SELECT * FROM %s_mod_entities_links.authority";
 
-  private final AuthorityRepository repository;
-  private final EventProducer<DomainEvent<?>> eventProducer;
+  private final JdbcTemplate jdbcTemplate;
   private final FolioExecutionContext folioExecutionContext;
   private final ReindexService reindexService;
+  private final AuthorityDomainEventPublisher eventPublisher;
+  private final AuthorityMapper mapper;
 
   @Async
   @Override
@@ -41,14 +45,15 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
 
   //@Transactional(readOnly = true)
   private void streamAuthorities(ReindexContext context) {
-    var totalRecords = repository.count();
+    var totalRecords = jdbcTemplate.queryForObject(String.format(COUNT_QUERY, context.getTenantId()), Integer.class);
     log.info("reindex::count={}", totalRecords);
-    ReindexJobProgressTracker progressTracker = new ReindexJobProgressTracker((int) totalRecords);
+    ReindexJobProgressTracker progressTracker = new ReindexJobProgressTracker(totalRecords == null ? 0 : totalRecords);
 
-    try (var authorityStream = repository.streamAll()) {
+    try (var authorityStream = jdbcTemplate.queryForStream(String.format(SELECT_QUERY, context.getTenantId()),
+        (rs, rowNum) -> toAuthority(rs))) {
       authorityStream
         .forEach(authority -> {
-          publishEvent(authority, context);
+          eventPublisher.publishReindexEvent(authority, context);
           progressTracker.incrementProcessedCount();
           reindexService.logJobProgress(progressTracker, context.getJobId());
         });
@@ -62,16 +67,46 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
     reindexService.logJobSuccess(context.getJobId());
   }
 
-  private void publishEvent(Authority authority, ReindexContext context) {
-    var id = authority.getId();
-    if (id == null) {
-      log.warn("Persisted Authority cannot have null id: {}", authority);
-      return;
+  private AuthorityDto toAuthority(ResultSet rs) {
+    var authority = new Authority();
+    try {
+      var id = rs.getString("id");
+      authority.setId(UUID.fromString(id));
+      var naturalId = rs.getString("natural_id");
+      authority.setNaturalId(naturalId);
+      var sourceFileId = rs.getString("source_file_id");
+      var sourceFile = new AuthoritySourceFile();
+      sourceFile.setId(UUID.fromString(sourceFileId));
+      authority.setAuthoritySourceFile(sourceFile);
+      var source = rs.getString("source");
+      authority.setSource(source);
+      var heading = rs.getString("heading");
+      authority.setHeading(heading);
+      var headingType = rs.getString("heading_type");
+      authority.setHeadingType(headingType);
+      var version = rs.getInt("_version");
+      authority.setVersion(version);
+      var subjectHeadingCode = rs.getString("subject_heading_code");
+      authority.setSubjectHeadingCode(subjectHeadingCode != null ? subjectHeadingCode.charAt(0) : null);
+
+      /*var array = rs.getArray("sft_headings");
+      var sftHeadings = (HeadingRef[]) array.getArray();
+      array = rs.getArray("saft_headings");
+      var saftHeadings = (HeadingRef[]) array.getArray();
+      array = rs.getArray("identifiers");
+      var identifiers = (AuthorityIdentifier[]) array.getArray();
+      array = rs.getArray("notes");
+      var notes = (AuthorityNote[]) array.getArray();
+
+      authority.setSftHeadings(Arrays.asList(sftHeadings));
+      authority.setSaftHeadings(Arrays.asList(saftHeadings));
+      authority.setIdentifiers(Arrays.asList(identifiers));
+      authority.setNotes(Arrays.asList(notes));*/
+    } catch (SQLException e) {
+      log.warn(e);
+      throw new RuntimeException(e);
     }
 
-    log.info("reindex::process authority id={}", id);
-    var domainEvent = DomainEvent.reindexEvent(context.getTenantId(), authority);
-    eventProducer.sendMessage(id.toString(), domainEvent,
-        REINDEX_JOB_ID_HEADER, context.getJobId(), DOMAIN_EVENT_TYPE_HEADER, DomainEventType.REINDEX);
+    return mapper.toDto(authority);
   }
 }

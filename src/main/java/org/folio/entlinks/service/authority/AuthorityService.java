@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import javax.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
@@ -51,6 +52,7 @@ public class AuthorityService {
     return repository.findById(id).orElseThrow(() -> new AuthorityNotFoundException(id));
   }
 
+  @Transactional
   public Authority create(Authority entity) {
     log.debug("create:: Attempting to create Authority [entity: {}]", entity);
     validateSourceFile(entity);
@@ -63,7 +65,7 @@ public class AuthorityService {
     retryFor = ObjectOptimisticLockingFailureException.class,
     maxAttempts = 2,
     backoff = @Backoff(delay = 500))
-  public Authority update(UUID id, Authority modified) {
+  public Authority update(@Nonnull UUID id, Authority modified) {
     log.debug("update:: Attempting to update Authority [authority: {}]", modified);
 
     if (!Objects.equals(id, modified.getId())) {
@@ -114,7 +116,6 @@ public class AuthorityService {
       var id = authority.getAuthoritySourceFile().getId();
       if (id != null && !sourceFileRepository.existsById(id)) {
         throw new AuthoritySourceFileNotFoundException(id);
-
       }
     }
   }
