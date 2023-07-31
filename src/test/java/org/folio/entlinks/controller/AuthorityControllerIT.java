@@ -3,6 +3,9 @@ package org.folio.entlinks.controller;
 import static java.util.UUID.randomUUID;
 import static org.folio.entlinks.config.constants.ErrorCode.DUPLICATE_AUTHORITY_ID;
 import static org.folio.entlinks.config.constants.ErrorCode.VIOLATION_OF_RELATION_BETWEEN_AUTHORITY_AND_SOURCE_FILE;
+import static org.folio.entlinks.service.reindex.event.DomainEventType.CREATE;
+import static org.folio.entlinks.service.reindex.event.DomainEventType.DELETE;
+import static org.folio.entlinks.service.reindex.event.DomainEventType.UPDATE;
 import static org.folio.support.KafkaTestUtils.createAndStartTestConsumer;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
@@ -15,11 +18,9 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,7 +30,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -38,11 +38,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.header.Header;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
 import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
@@ -54,7 +52,6 @@ import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.service.reindex.event.DomainEvent;
-import org.folio.entlinks.service.reindex.event.DomainEventType;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
@@ -83,7 +80,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
   private static final String CREATED_DATE = "2021-10-28T06:31:31+05:00";
 
-  private static final UUID SOURCE_FILE_ID = randomUUID();
+  private static final UUID[] SOURCE_FILE_ID = new UUID[] {randomUUID(), randomUUID(), randomUUID()};
   private static final UUID[] IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID()};
   private static final String[] SOURCES = new String[] {"source1", "source2", "source3"};
   private static final String[] NATURAL_IDS = new String[] {"naturalId1", "naturalId2", "naturalId3"};
@@ -91,7 +88,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
     new String[] {"headingPersonalName", "headingCorporateName", "headingGenreTerm"};
   private static final String[] HEADING_TYPES = new String[] {"personalName", "corporateName", "genreTerm"};
   private static final Character[] HEADING_CODES = new Character[] {'a', 'b', 'c'};
-  private static final String DOMAIN_EVENT_HEADER_KEY = "domain-event-type";
+  private static final List<String> DOMAIN_EVENT_HEADER_KEYS =
+      List.of(XOkapiHeaders.TENANT, XOkapiHeaders.URL, XOkapiHeaders.USER_ID, DOMAIN_EVENT_HEADER_KEY);
 
   private KafkaMessageListenerContainer<String, DomainEvent> container;
   private BlockingQueue<ConsumerRecord<String, DomainEvent>> consumerRecords;
@@ -176,7 +174,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var dto = prepareDto(0);
     var id = randomUUID();
     dto.setId(id);
-    createAuthoritySourceFile();
+    createAuthoritySourceFile(0);
 
     var content = doPost(authorityEndpoint(), dto)
       .andExpect(jsonPath("id", is(id.toString())))
@@ -194,7 +192,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var created = objectMapper.readValue(content, AuthorityDto.class);
     var receivedEvent = getReceivedEvent();
 
-    verifyReceivedDomainEvent(receivedEvent, DomainEventType.CREATE, created);
+    verifyReceivedDomainEvent(receivedEvent, CREATE, DOMAIN_EVENT_HEADER_KEYS, created, AuthorityDto.class);
     assertEquals(1, databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID));
     assertEquals(dto.getNotes(), created.getNotes());
     assertEquals(dto.getIdentifiers(), created.getIdentifiers());
@@ -208,7 +206,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
 
     var dto = prepareDto(0);
-    createAuthoritySourceFile();
+    createAuthoritySourceFile(0);
 
     var content = doPost(authorityEndpoint(), dto)
       .andExpect(jsonPath("id", notNullValue()))
@@ -296,7 +294,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   void updateAuthority_positive_entityUpdated() throws Exception {
     getReceivedEvent();
     var dto = prepareDto(0);
-    createAuthoritySourceFile();
+    createAuthoritySourceFile(0);
 
     doPost(authorityEndpoint(), dto);
     getReceivedEvent();
@@ -327,7 +325,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var receivedEvent = getReceivedEvent();
     var resultDto = objectMapper.readValue(content, AuthorityDto.class);
 
-    verifyReceivedDomainEvent(receivedEvent, DomainEventType.UPDATE, resultDto);
+    verifyReceivedDomainEvent(receivedEvent, UPDATE, DOMAIN_EVENT_HEADER_KEYS, resultDto, AuthorityDto.class);
     assertEquals(expected.getNotes(), resultDto.getNotes());
     assertEquals(expected.getIdentifiers(), resultDto.getIdentifiers());
     assertEquals(expected.getSftPersonalName(), resultDto.getSftPersonalName());
@@ -340,7 +338,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @DisplayName("PUT: repeated update of Authority without modification")
   void updateConcurrently_positive_notAllShouldSucceedAndAtLeastOneShouldFail() throws Exception {
     var dto = prepareDto(0);
-    createAuthoritySourceFile();
+    createAuthoritySourceFile(0);
 
     doPost(authorityEndpoint(), dto);
     getReceivedEvent();
@@ -375,7 +373,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @DisplayName("PUT: update Authority with non-existing source file id")
   void updateAuthority_negative_notUpdatedWithNonExistingSourceFile() throws Exception {
     var dto = prepareDto(0);
-    createAuthoritySourceFile();
+    createAuthoritySourceFile(0);
 
     doPost(authorityEndpoint(), dto);
     getReceivedEvent();
@@ -409,7 +407,6 @@ class AuthorityControllerIT extends IntegrationTestBase {
   void deleteAuthority_positive_deleteExistingEntity() throws UnsupportedEncodingException, JsonProcessingException {
     var authority = prepareAuthority(0);
     createAuthority(authority);
-    createAuthoritySourceFile();
 
     var contentAsString = doGet(authorityEndpoint(authority.getId())).andReturn().getResponse().getContentAsString();
     var existingDto = objectMapper.readValue(contentAsString, AuthorityDto.class);
@@ -419,7 +416,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
     assertEquals(0, databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID));
 
-    verifyReceivedDomainEvent(receivedEvent, DomainEventType.DELETE, existingDto);
+    verifyReceivedDomainEvent(receivedEvent, DELETE, DOMAIN_EVENT_HEADER_KEYS, existingDto, AuthorityDto.class);
   }
 
   @Test
@@ -445,7 +442,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @DisplayName("DELETE: Authority Source File cannot be deleted when it is linked by Authority")
   void deleteAuthoritySourceFile_negative_failDeletingSourceFileLinkedByAuthority() throws Exception {
     var dto = prepareDto(0);
-    createAuthoritySourceFile();
+    createAuthoritySourceFile(0);
 
     doPost(authorityEndpoint(), dto);
     getReceivedEvent();
@@ -467,7 +464,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     dto.setPersonalName(HEADINGS[i]);
     dto.setSource(SOURCES[i]);
     dto.setNaturalId(NATURAL_IDS[i]);
-    dto.sourceFileId(SOURCE_FILE_ID);
+    dto.sourceFileId(SOURCE_FILE_ID[i]);
     dto.setSftPersonalName(List.of("sftPersonalName"));
     dto.setSaftPersonalName(List.of("saftPersonalName"));
     dto.setSftMeetingName(List.of("sftMeetingName"));
@@ -496,6 +493,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     entity.setCreatedByUserId(UUID.fromString(USER_ID));
     entity.setUpdatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
     entity.setUpdatedByUserId(UUID.fromString(USER_ID));
+    entity.setAuthoritySourceFile(createAuthoritySourceFile(i));
     return entity;
   }
 
@@ -515,17 +513,17 @@ class AuthorityControllerIT extends IntegrationTestBase {
     return List.of(entity1, entity2, entity3);
   }
 
-  private AuthoritySourceFile createAuthoritySourceFile() {
+  private AuthoritySourceFile createAuthoritySourceFile(int i) {
     var entity = new AuthoritySourceFile();
-    entity.setId(SOURCE_FILE_ID);
-    entity.setName("name");
+    entity.setId(SOURCE_FILE_ID[i]);
+    entity.setName("name" + i);
     entity.setSource(AuthoritySourceFileDto.SourceEnum.FOLIO.getValue());
     entity.setType("type");
-    entity.setBaseUrl("url");
+    entity.setBaseUrl("url" + i);
 
     var code = new AuthoritySourceFileCode();
     code.setId(1);
-    code.setCode("code");
+    code.setCode("code" + i);
     entity.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
     entity.setCreatedByUserId(UUID.fromString(USER_ID));
     entity.setUpdatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
@@ -533,7 +531,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     entity.setAuthoritySourceFileCodes(Set.of(code));
 
     databaseHelper.saveAuthoritySourceFile(TENANT_ID, entity);
-    databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, SOURCE_FILE_ID, code);
+    databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, SOURCE_FILE_ID[i], code);
     return entity;
   }
 
@@ -551,27 +549,4 @@ class AuthorityControllerIT extends IntegrationTestBase {
     return consumerRecords.poll(10, TimeUnit.SECONDS);
   }
 
-  private void verifyReceivedDomainEvent(ConsumerRecord<String, DomainEvent> receivedEvent,
-                                         DomainEventType eventType, AuthorityDto dto) throws JsonProcessingException {
-    assertNotNull(receivedEvent);
-    var headerKeys = Arrays.stream(receivedEvent.headers().toArray())
-        .map(Header::key)
-        .collect(Collectors.toSet());
-    var domainType = Arrays.stream(receivedEvent.headers().toArray())
-        .filter(header -> header.key().equals(DOMAIN_EVENT_HEADER_KEY))
-        .map(Header::value)
-        .map(String::new)
-        .findFirst().orElse("");
-
-    assertThat(headerKeys,
-        containsInAnyOrder(XOkapiHeaders.TENANT, XOkapiHeaders.URL, XOkapiHeaders.USER_ID, DOMAIN_EVENT_HEADER_KEY));
-    assertEquals(domainType, eventType.toString());
-
-    if (eventType == DomainEventType.CREATE || eventType == DomainEventType.UPDATE) {
-      assertNotNull(receivedEvent.value());
-      var event = (DomainEvent<AuthorityDto>) receivedEvent.value();
-      var eventDtoAsString = objectMapper.writeValueAsString(event.getNewEntity());
-      assertEquals(dto, objectMapper.readValue(eventDtoAsString, AuthorityDto.class));
-    }
-  }
 }

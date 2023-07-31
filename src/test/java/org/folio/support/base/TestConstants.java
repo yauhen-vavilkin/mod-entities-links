@@ -33,6 +33,7 @@ public class TestConstants {
   private static final String AUTHORITY_NOTE_TYPES_ENDPOINT = "/authority-note-types";
   private static final String AUTHORITY_SOURCE_FILES_ENDPOINT = "/authority-source-files";
   private static final String AUTHORITY_STORAGE_ENDPOINT = "/authority-storage/authorities";
+  private static final String AUTHORITY_STORAGE_REINDEX_ENDPOINT = "/authority-storage/reindex";
 
   public static String inventoryAuthorityTopic() {
     return fullTopicName(INVENTORY_AUTHORITY_TOPIC, TENANT_ID);
@@ -111,5 +112,13 @@ public class TestConstants {
 
   public static String authorityEndpoint(UUID id) {
     return AUTHORITY_STORAGE_ENDPOINT + "/" + id;
+  }
+
+  public static String authorityReindexEndpoint() {
+    return AUTHORITY_STORAGE_REINDEX_ENDPOINT;
+  }
+
+  public static String authorityReindexEndpoint(UUID id) {
+    return AUTHORITY_STORAGE_REINDEX_ENDPOINT + "/" + id;
   }
 }

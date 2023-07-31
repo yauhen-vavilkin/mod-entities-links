@@ -6,7 +6,7 @@
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
 
-  <changeSet id="1688496209132-1" author="pavel">
+  <changeSet id="MODELINKS-107@@create-reindex_job-table" author="Pavlo_Smahin">
     <createTable tableName="reindex_job">
         <column name="id" type="UUID">
             <constraints nullable="false" primaryKey="true" primaryKeyName="pk_reindex_job"/>
@@ -18,7 +18,7 @@
             <constraints nullable="false"/>
         </column>
         <column name="published" type="INT"/>
-        <column name="submitted_date" type="timestamp"/>
+        <column name="submitted_date" type="DATETIME"/>
     </createTable>
   </changeSet>
 </databaseChangeLog>
