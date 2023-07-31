@@ -8,7 +8,7 @@ import org.folio.entlinks.domain.dto.ReindexJobDtoCollection;
 import org.folio.entlinks.domain.entity.ReindexJobResource;
 import org.folio.entlinks.service.reindex.AuthorityReindexJobRunner;
 import org.folio.entlinks.service.reindex.ReindexService;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,12 +16,13 @@ import org.springframework.stereotype.Service;
 public class ReindexServiceDelegate {
 
   private final ReindexService service;
-  private final ApplicationContext applicationContext;
   private final ReindexJobMapper jobMapper;
+
+  @Autowired
+  private AuthorityReindexJobRunner jobRunner;
 
   public ReindexJobDto startAuthoritiesReindex() {
     var reindexJob = service.submitReindex(ReindexJobResource.AUTHORITY);
-    var jobRunner = applicationContext.getBean(AuthorityReindexJobRunner.class);
     jobRunner.startReindex(reindexJob);
     return jobMapper.toDto(reindexJob);
   }

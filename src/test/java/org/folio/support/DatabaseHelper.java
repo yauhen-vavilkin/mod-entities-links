@@ -11,6 +11,8 @@ import org.folio.entlinks.domain.entity.AuthorityData;
 import org.folio.entlinks.domain.entity.AuthorityNoteType;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
+import org.folio.entlinks.domain.entity.ReindexJob;
+import org.folio.entlinks.utils.DateUtils;
 import org.folio.spring.FolioModuleMetadata;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.jdbc.JdbcTestUtils;
@@ -24,6 +26,7 @@ public class DatabaseHelper {
   public static final String AUTHORITY_SOURCE_FILE_TABLE = "authority_source_file";
   public static final String AUTHORITY_SOURCE_FILE_CODE_TABLE = "authority_source_file_code";
   public static final String AUTHORITY_TABLE = "authority";
+  public static final String AUTHORITY_REINDEX_JOB_TABLE = "reindex_job";
 
   private final FolioModuleMetadata metadata;
   private final JdbcTemplate jdbcTemplate;
@@ -105,5 +108,12 @@ public class DatabaseHelper {
         return null;
       }
     });
+  }
+
+  public void saveAuthorityReindexJob(String tenant, ReindexJob job) {
+    var sql = "INSERT INTO " + getTable(tenant, AUTHORITY_REINDEX_JOB_TABLE)
+        + " (id, resource_name, job_status, published, submitted_date) VALUES (?,?,?,?,?)";
+    jdbcTemplate.update(sql, job.getId(), job.getResourceName().name(), job.getJobStatus().name(),
+        job.getPublished(), DateUtils.toTimestamp(job.getSubmittedDate()));
   }
 }

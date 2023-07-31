@@ -6,6 +6,7 @@ import static org.folio.entlinks.domain.entity.ReindexJobStatus.ID_PUBLISHING_FA
 import static org.folio.entlinks.domain.entity.ReindexJobStatus.IN_PROGRESS;
 import static org.folio.entlinks.domain.entity.ReindexJobStatus.PENDING_CANCEL;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -17,6 +18,7 @@ import org.folio.entlinks.exception.ReindexJobNotFoundException;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -28,8 +30,7 @@ public class ReindexService {
 
   @Transactional
   public ReindexJob submitReindex(ReindexJobResource reindexResourceName) {
-    var reindexJob = repository.save(buildInitialJob(reindexResourceName));
-    return reindexJob;
+    return repository.save(buildInitialJob(reindexResourceName));
   }
 
   public Page<ReindexJob> getAllReindexJobs(String query, Integer offset, Integer limit) {
@@ -53,7 +54,7 @@ public class ReindexService {
     if (jobOptional.isPresent()) {
       var reindexJob = jobOptional.get();
       if (reindexJob.getJobStatus() == IDS_PUBLISHED) {
-        throw new IllegalStateException("The job has been finished"); // TODO: possibly some specific exception?
+        throw new IllegalStateException("The job has been finished");
       }
       reindexJob.setJobStatus(PENDING_CANCEL);
       return repository.save(reindexJob);
@@ -93,12 +94,12 @@ public class ReindexService {
     log.debug("Job: {} has been failed", failedJob);
   }
 
-  @Transactional
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void logJobSuccess(UUID jobId) {
-    repository.findById(jobId)
-        .map(reindexJob -> reindexJob.withJobStatus(IDS_PUBLISHED))
-        .map(repository::save)
-        .orElseThrow(() -> new ReindexJobNotFoundException(jobId));
+    var existingJob = repository.findById(jobId).orElseThrow(() -> new ReindexJobNotFoundException(jobId));
+    existingJob.setJobStatus(IDS_PUBLISHED);
+
+    repository.save(existingJob);
   }
 
   private boolean shouldLogJobProgress(ReindexJobProgressTracker progressTracker) {
@@ -107,8 +108,9 @@ public class ReindexService {
 
   private ReindexJob buildInitialJob(ReindexJobResource reindexResourceName) {
     return new ReindexJob()
-      .withJobStatus(IN_PROGRESS)
-      .withResourceName(reindexResourceName)
-      .withPublished(0);
+        .withJobStatus(IN_PROGRESS)
+        .withResourceName(reindexResourceName)
+        .withPublished(0)
+        .withSubmittedDate(OffsetDateTime.now());
   }
 }

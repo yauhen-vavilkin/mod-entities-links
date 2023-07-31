@@ -2,12 +2,14 @@ package org.folio.support.base;
 
 import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.ONE_SECOND;
 import static org.awaitility.Durations.TEN_SECONDS;
 import static org.folio.support.JsonTestUtils.asJson;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -17,12 +19,20 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.awaitility.core.ThrowingRunnable;
+import org.folio.entlinks.service.reindex.event.DomainEvent;
+import org.folio.entlinks.service.reindex.event.DomainEventType;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.test.extension.EnableKafka;
@@ -62,6 +72,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @Import(IntegrationTestBase.KafkaTemplateTestConfiguration.class)
 public class IntegrationTestBase {
 
+  protected static final String DOMAIN_EVENT_HEADER_KEY = "domain-event-type";
   protected static MockMvc mockMvc;
   protected static OkapiConfiguration okapi;
   protected static KafkaTemplate<String, String> kafkaTemplate;
@@ -180,6 +191,35 @@ public class IntegrationTestBase {
 
   protected static void awaitUntilAsserted(ThrowingRunnable throwingRunnable) {
     await().pollInterval(ONE_SECOND).atMost(TEN_SECONDS).untilAsserted(throwingRunnable);
+  }
+
+  protected <T> void verifyReceivedDomainEvent(ConsumerRecord<String, DomainEvent> receivedEvent,
+                                             DomainEventType expectedEventType,
+                                             List<String> expectedHeaderKeys,
+                                             T expectedDto,
+                                             Class<T> dtoClassType) throws JsonProcessingException {
+    assertNotNull(receivedEvent);
+    var headerKeys = Arrays.stream(receivedEvent.headers().toArray())
+        .map(Header::key)
+        .collect(Collectors.toSet());
+    var domainType = Arrays.stream(receivedEvent.headers().toArray())
+        .filter(header -> header.key().equals(DOMAIN_EVENT_HEADER_KEY))
+        .map(Header::value)
+        .map(String::new)
+        .findFirst().orElse("");
+
+    assertThat(headerKeys).containsAll(expectedHeaderKeys);
+    assertThat(domainType).isEqualTo(expectedEventType.toString());
+
+    assertNotNull(receivedEvent.value());
+    var event = (DomainEvent<T>) receivedEvent.value();
+    var eventDtoAsString = "";
+    if (List.of(DomainEventType.CREATE, DomainEventType.UPDATE, DomainEventType.REINDEX).contains(expectedEventType)) {
+      eventDtoAsString = objectMapper.writeValueAsString(event.getNewEntity());
+    } else if (expectedEventType == DomainEventType.DELETE) {
+      eventDtoAsString = objectMapper.writeValueAsString(event.getOldEntity());
+    }
+    assertThat(expectedDto).isEqualTo(objectMapper.readValue(eventDtoAsString, dtoClassType));
   }
 
   @TestConfiguration

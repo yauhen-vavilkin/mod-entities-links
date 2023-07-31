@@ -85,16 +85,16 @@ public interface AuthorityMapper {
 
   @AfterMapping
   default void authorityPostProcess(AuthorityDto source, @MappingTarget Authority target) {
-    AuthorityStorageUtilityMapper.extractAuthorityHeading(source, target);
-    AuthorityStorageUtilityMapper.extractAuthoritySftHeadings(source, target);
-    AuthorityStorageUtilityMapper.extractAuthoritySaftHeadings(source, target);
+    AuthorityUtilityMapper.extractAuthorityHeading(source, target);
+    AuthorityUtilityMapper.extractAuthoritySftHeadings(source, target);
+    AuthorityUtilityMapper.extractAuthoritySaftHeadings(source, target);
   }
 
   @AfterMapping
   default void authorityDtoPostProcessing(Authority source, @MappingTarget AuthorityDto target) {
-    AuthorityStorageUtilityMapper.extractAuthorityDtoHeadingValue(source, target);
-    AuthorityStorageUtilityMapper.extractAuthorityDtoSftHeadings(source, target);
-    AuthorityStorageUtilityMapper.extractAuthorityDtoSaftHeadings(source, target);
+    AuthorityUtilityMapper.extractAuthorityDtoHeadingValue(source, target);
+    AuthorityUtilityMapper.extractAuthorityDtoSftHeadings(source, target);
+    AuthorityUtilityMapper.extractAuthorityDtoSaftHeadings(source, target);
   }
 
   default OffsetDateTime map(Timestamp timestamp) {
