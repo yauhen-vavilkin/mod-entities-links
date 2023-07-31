@@ -349,7 +349,7 @@ public class TestDataUtils {
       reindexJob.setJobStatus(ReindexJobStatus.IN_PROGRESS);
       reindexJob.setPublished(2);
       reindexJob.setResourceName(ReindexJobResource.AUTHORITY);
-      reindexJob.withSubmittedDate(OffsetDateTime.now());
+      reindexJob.setSubmittedDate(OffsetDateTime.now());
       return reindexJob;
     }
 

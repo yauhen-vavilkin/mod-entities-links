@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.entlinks.domain.dto.ReindexJobDto.JobStatusEnum.IDS_PUBLISHED;
 import static org.folio.support.KafkaTestUtils.createAndStartTestConsumer;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authorityDto;
+import static org.folio.support.TestDataUtils.AuthorityTestData.authorityReindexJob;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authoritySourceFile;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authoritySourceFileCode;
 import static org.folio.support.base.TestConstants.TENANT_ID;
@@ -36,7 +37,6 @@ import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
-import org.folio.support.TestDataUtils;
 import org.folio.support.base.IntegrationTestBase;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -94,7 +94,10 @@ class AuthorityStorageReindexControllerIT extends IntegrationTestBase {
     var resultCollectionDto = objectMapper.readValue(contentAsString, ReindexJobDtoCollection.class);
 
     assertThat(resultCollectionDto.getTotalRecords()).isEqualTo(1);
-    assertThat(resultCollectionDto.getReindexJobs().get(0)).isEqualTo(dto);
+    assertThat(resultCollectionDto.getReindexJobs().get(0).getSubmittedDate()).isNotNull();
+    assertThat(resultCollectionDto.getReindexJobs())
+        .usingRecursiveFieldByFieldElementComparatorIgnoringFields("submittedDate")
+        .isEqualTo(List.of(dto));
   }
 
   @Test
@@ -107,7 +110,11 @@ class AuthorityStorageReindexControllerIT extends IntegrationTestBase {
         .andReturn().getResponse().getContentAsString();
     var resultDto = objectMapper.readValue(contentAsString, ReindexJobDto.class);
 
-    assertThat(resultDto).isEqualTo(dto);
+    assertThat(resultDto.getSubmittedDate()).isNotNull();
+    assertThat(resultDto)
+        .usingRecursiveComparison()
+        .ignoringFields("submittedDate")
+        .isEqualTo(dto);
   }
 
   @Test
@@ -136,12 +143,12 @@ class AuthorityStorageReindexControllerIT extends IntegrationTestBase {
           .filter(dto -> dto.getId().toString().equals(receivedEvent.key()))
           .findFirst().get();
       verifyReceivedDomainEvent(receivedEvent, DomainEventType.REINDEX, DOMAIN_EVENT_HEADER_KEYS,
-          expectedDto, AuthorityDto.class);
+          expectedDto, AuthorityDto.class, "metadata.createdDate", "metadata.updatedDate");
     }
   }
 
   private ReindexJob createReindexJob() {
-    var entity = TestDataUtils.AuthorityTestData.authorityReindexJob();
+    var entity = authorityReindexJob();
     databaseHelper.saveAuthorityReindexJob(TENANT_ID, entity);
     return entity;
   }
