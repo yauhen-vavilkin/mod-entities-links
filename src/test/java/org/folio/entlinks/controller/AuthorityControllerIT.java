@@ -15,9 +15,7 @@ import static org.folio.support.base.TestConstants.authorityTopic;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -536,10 +534,6 @@ class AuthorityControllerIT extends IntegrationTestBase {
     databaseHelper.saveAuthoritySourceFile(TENANT_ID, entity);
     databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, SOURCE_FILE_ID[i], code);
     return entity;
-  }
-
-  private <T> ResultMatcher exceptionMatch(Class<T> type) {
-    return result -> assertThat(result.getResolvedException(), instanceOf(type));
   }
 
   private ResultMatcher errorMessageMatch(Matcher<String> errorMessageMatcher) {

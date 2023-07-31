@@ -9,6 +9,7 @@ import static org.awaitility.Durations.TEN_SECONDS;
 import static org.folio.support.JsonTestUtils.asJson;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -41,6 +42,7 @@ import org.folio.spring.test.extension.EnablePostgres;
 import org.folio.spring.test.extension.impl.OkapiConfiguration;
 import org.folio.support.DatabaseHelper;
 import org.folio.tenant.domain.dto.TenantAttributes;
+import org.hamcrest.MatcherAssert;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -61,6 +63,7 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @EnableKafka
@@ -227,6 +230,10 @@ public class IntegrationTestBase {
       comparison = comparison.ignoringFields(ignoreFields);
     }
     comparison.isEqualTo(expectedDto);
+  }
+
+  protected <T> ResultMatcher exceptionMatch(Class<T> type) {
+    return result -> MatcherAssert.assertThat(result.getResolvedException(), instanceOf(type));
   }
 
   @TestConfiguration

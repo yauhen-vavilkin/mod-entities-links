@@ -69,15 +69,6 @@
           "permissionsRequired": [
             "instance-authority-links.authorities.bulk.post"
           ]
-        },
-        {
-          "methods": [
-            "POST"
-          ],
-          "pathPattern": "/authority/reindex",
-          "permissionsRequired": [
-            "instance-authority-links.authorities.bulk.post"
-          ]
         }
       ]
     },
