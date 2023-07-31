@@ -192,7 +192,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var created = objectMapper.readValue(content, AuthorityDto.class);
     var receivedEvent = getReceivedEvent();
 
-    verifyReceivedDomainEvent(receivedEvent, CREATE, DOMAIN_EVENT_HEADER_KEYS, created, AuthorityDto.class);
+    verifyReceivedDomainEvent(receivedEvent, CREATE, DOMAIN_EVENT_HEADER_KEYS, created, AuthorityDto.class,
+        "metadata.createdDate", "metadata.updatedDate");
     assertEquals(1, databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID));
     assertEquals(dto.getNotes(), created.getNotes());
     assertEquals(dto.getIdentifiers(), created.getIdentifiers());
@@ -325,7 +326,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var receivedEvent = getReceivedEvent();
     var resultDto = objectMapper.readValue(content, AuthorityDto.class);
 
-    verifyReceivedDomainEvent(receivedEvent, UPDATE, DOMAIN_EVENT_HEADER_KEYS, resultDto, AuthorityDto.class);
+    verifyReceivedDomainEvent(receivedEvent, UPDATE, DOMAIN_EVENT_HEADER_KEYS, resultDto, AuthorityDto.class,
+        "metadata.createdDate", "metadata.updatedDate");
     assertEquals(expected.getNotes(), resultDto.getNotes());
     assertEquals(expected.getIdentifiers(), resultDto.getIdentifiers());
     assertEquals(expected.getSftPersonalName(), resultDto.getSftPersonalName());
@@ -416,7 +418,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
     assertEquals(0, databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID));
 
-    verifyReceivedDomainEvent(receivedEvent, DELETE, DOMAIN_EVENT_HEADER_KEYS, existingDto, AuthorityDto.class);
+    verifyReceivedDomainEvent(receivedEvent, DELETE, DOMAIN_EVENT_HEADER_KEYS, existingDto, AuthorityDto.class,
+        "metadata.createdDate", "metadata.updatedDate");
   }
 
   @Test
