@@ -194,10 +194,11 @@ public class IntegrationTestBase {
   }
 
   protected <T> void verifyReceivedDomainEvent(ConsumerRecord<String, DomainEvent> receivedEvent,
-                                             DomainEventType expectedEventType,
-                                             List<String> expectedHeaderKeys,
-                                             T expectedDto,
-                                             Class<T> dtoClassType) throws JsonProcessingException {
+                                               DomainEventType expectedEventType,
+                                               List<String> expectedHeaderKeys,
+                                               T expectedDto,
+                                               Class<T> dtoClassType,
+                                               String ... ignoreFields) throws JsonProcessingException {
     assertNotNull(receivedEvent);
     var headerKeys = Arrays.stream(receivedEvent.headers().toArray())
         .map(Header::key)
@@ -219,7 +220,13 @@ public class IntegrationTestBase {
     } else if (expectedEventType == DomainEventType.DELETE) {
       eventDtoAsString = objectMapper.writeValueAsString(event.getOldEntity());
     }
-    assertThat(expectedDto).isEqualTo(objectMapper.readValue(eventDtoAsString, dtoClassType));
+    var dtoFromEvent = objectMapper.readValue(eventDtoAsString, dtoClassType);
+
+    var comparison = assertThat(dtoFromEvent).usingRecursiveComparison();
+    if (ignoreFields.length > 0) {
+      comparison = comparison.ignoringFields(ignoreFields);
+    }
+    comparison.isEqualTo(expectedDto);
   }
 
   @TestConfiguration
