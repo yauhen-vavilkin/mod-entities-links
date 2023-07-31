@@ -6,7 +6,6 @@ import static org.folio.support.base.TestConstants.USER_ID;
 import static org.folio.support.base.TestConstants.authoritySourceFilesEndpoint;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -446,10 +445,6 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     for (var code : entity.getAuthoritySourceFileCodes()) {
       databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, entity.getId(), code);
     }
-  }
-
-  private <T> ResultMatcher exceptionMatch(Class<T> type) {
-    return result -> assertThat(result.getResolvedException(), instanceOf(type));
   }
 
   private ResultMatcher errorMessageMatch(Matcher<String> errorMessageMatcher) {

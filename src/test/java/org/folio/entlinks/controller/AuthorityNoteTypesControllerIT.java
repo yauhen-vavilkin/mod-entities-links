@@ -5,9 +5,7 @@ import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 import static org.folio.support.base.TestConstants.authorityNoteTypesEndpoint;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -318,10 +316,6 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
 
   private void createAuthorityNoteType(AuthorityNoteType noteType) {
     databaseHelper.saveAuthorityNoteType(TENANT_ID, noteType);
-  }
-
-  private <T> ResultMatcher exceptionMatch(Class<T> type) {
-    return result -> assertThat(result.getResolvedException(), instanceOf(type));
   }
 
   private ResultMatcher errorMessageMatch(Matcher<String> errorMessageMatcher) {
