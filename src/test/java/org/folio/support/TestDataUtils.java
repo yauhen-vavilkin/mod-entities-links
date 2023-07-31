@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ACTUAL;
 import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
 import static org.folio.support.base.TestConstants.TENANT_ID;
+import static org.folio.support.base.TestConstants.USER_ID;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -17,6 +18,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,7 +27,11 @@ import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
+import org.folio.entlinks.domain.dto.AuthorityDto;
+import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
+import org.folio.entlinks.domain.dto.AuthorityDtoNote;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
+import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthorityStatsDto;
 import org.folio.entlinks.domain.dto.BibStatsDto;
 import org.folio.entlinks.domain.dto.BibStatsDtoCollection;
@@ -41,13 +47,19 @@ import org.folio.entlinks.domain.dto.RecordType;
 import org.folio.entlinks.domain.dto.StrippedParsedRecord;
 import org.folio.entlinks.domain.dto.StrippedParsedRecordCollection;
 import org.folio.entlinks.domain.dto.StrippedParsedRecordParsedRecord;
+import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityData;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.domain.entity.AuthorityDataStatStatus;
+import org.folio.entlinks.domain.entity.AuthoritySourceFile;
+import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
+import org.folio.entlinks.domain.entity.ReindexJob;
+import org.folio.entlinks.domain.entity.ReindexJobResource;
+import org.folio.entlinks.domain.entity.ReindexJobStatus;
 import org.folio.spring.tools.client.UsersClient;
 import org.folio.spring.tools.model.ResultList;
 
@@ -266,6 +278,108 @@ public class TestDataUtils {
           .externalIdsHolder(new ExternalIdsHolder().authorityId(link.getAuthorityData().getId()));
       })
       .toList();
+  }
+
+  @UtilityClass
+  public class AuthorityTestData {
+    private static final String CREATED_DATE = "2021-10-28T06:31:31+05:00";
+
+    private static final UUID[] AUTHORITY_IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID()};
+    private static final String[] SOURCES = new String[] {"source1", "source2", "source3"};
+    private static final String[] NATURAL_IDS = new String[] {"naturalId1", "naturalId2", "naturalId3"};
+    private static final String[] HEADINGS =
+        new String[] {"headingPersonalName", "headingCorporateName", "headingGenreTerm"};
+    private static final String[] HEADING_TYPES = new String[] {"personalName", "corporateName", "genreTerm"};
+    private static final Character[] HEADING_CODES = new Character[] {'a', 'b', 'c'};
+
+    private static final UUID[] SOURCE_FILE_IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID()};
+    private static final Integer[] SOURCE_FILE_CODE_IDS = new Integer[] {1, 2, 3};
+    private static final String[] SOURCE_FILE_CODES = new String[] {"code1", "code2", "code3"};
+    private static final String[] SOURCE_FILE_NAMES = new String[] {"name1", "name2", "name3"};
+    private static final AuthoritySourceFileDto.SourceEnum[] SOURCE_FILE_SOURCES =
+        new AuthoritySourceFileDto.SourceEnum[] {AuthoritySourceFileDto.SourceEnum.FOLIO,
+          AuthoritySourceFileDto.SourceEnum.LOCAL, AuthoritySourceFileDto.SourceEnum.FOLIO};
+    private static final String[] SOURCE_FILE_TYPES = new String[] {"type1", "type2", "type3"};
+    private static final String[] SOURCE_FILE_URLS = new String[] {"baseUrl1", "baseUrl2", "baseUrl3"};
+
+    public static Authority authority(int authorityIdNum, int sourceFileIdNum) {
+      var entity = new Authority();
+      entity.setId(AUTHORITY_IDS[authorityIdNum]);
+      entity.setSource(SOURCES[authorityIdNum]);
+      entity.setNaturalId(NATURAL_IDS[authorityIdNum]);
+      entity.setHeading(HEADINGS[authorityIdNum]);
+      entity.setHeadingType(HEADING_TYPES[authorityIdNum]);
+      entity.setSubjectHeadingCode(HEADING_CODES[authorityIdNum]);
+      entity.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
+      entity.setCreatedByUserId(UUID.fromString(USER_ID));
+      entity.setUpdatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
+      entity.setUpdatedByUserId(UUID.fromString(USER_ID));
+      entity.setAuthoritySourceFile(authoritySourceFile(sourceFileIdNum));
+      return entity;
+    }
+
+    public static AuthoritySourceFile authoritySourceFile(int sourceFileIdNum) {
+      var entity = new AuthoritySourceFile();
+      entity.setId(SOURCE_FILE_IDS[sourceFileIdNum]);
+      entity.setName(SOURCE_FILE_NAMES[sourceFileIdNum]);
+      entity.setSource(SOURCE_FILE_SOURCES[sourceFileIdNum].getValue());
+      entity.setType(SOURCE_FILE_TYPES[sourceFileIdNum]);
+      entity.setBaseUrl(SOURCE_FILE_URLS[sourceFileIdNum]  + "/");
+
+      var code = authoritySourceFileCode(sourceFileIdNum);
+      entity.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
+      entity.setCreatedByUserId(UUID.fromString(USER_ID));
+      entity.setUpdatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
+      entity.setUpdatedByUserId(UUID.fromString(USER_ID));
+      entity.setAuthoritySourceFileCodes(Set.of(code));
+
+      return entity;
+    }
+
+    public static AuthoritySourceFileCode authoritySourceFileCode(int sourceFileCodeIdNum) {
+      var code = new AuthoritySourceFileCode();
+      code.setId(SOURCE_FILE_CODE_IDS[sourceFileCodeIdNum]);
+      code.setCode(SOURCE_FILE_CODES[sourceFileCodeIdNum]);
+      return code;
+    }
+
+    public static ReindexJob authorityReindexJob() {
+      var reindexJob = new ReindexJob();
+      reindexJob.setId(UUID.randomUUID());
+      reindexJob.setJobStatus(ReindexJobStatus.IN_PROGRESS);
+      reindexJob.setPublished(2);
+      reindexJob.setResourceName(ReindexJobResource.AUTHORITY);
+      reindexJob.setSubmittedDate(OffsetDateTime.now());
+      return reindexJob;
+    }
+
+    public static AuthorityDto authorityDto(int authorityIdNum, int sourceFileIdNum) {
+      var dto = new AuthorityDto();
+      dto.setId(AUTHORITY_IDS[authorityIdNum]);
+      dto.setPersonalName(HEADINGS[authorityIdNum]);
+      dto.setSource(SOURCES[authorityIdNum]);
+      dto.setNaturalId(NATURAL_IDS[authorityIdNum]);
+      dto.sourceFileId(SOURCE_FILE_IDS[sourceFileIdNum]);
+      dto.setSubjectHeadings("a");
+
+      var noteDto = new AuthorityDtoNote(UUID.randomUUID(), "note");
+      noteDto.setStaffOnly(false);
+      dto.setNotes(List.of(noteDto));
+
+      var identifier = new AuthorityDtoIdentifier("identifier_value", UUID.randomUUID());
+      dto.setIdentifiers(List.of(identifier));
+
+      dto.addSftPersonalNameItem("sftPersonalName1");
+      dto.addSftPersonalNameItem("sftPersonalName2");
+      dto.addSaftPersonalNameItem("saftPersonalName1");
+      dto.addSaftPersonalNameItem("saftPersonalName2");
+      dto.addSftMeetingNameItem("sftMeetingNameItem1");
+      dto.addSftMeetingNameItem("sftMeetingNameItem2");
+      dto.addSaftMeetingNameItem("sftMeetingNameItem1");
+      dto.addSaftMeetingNameItem("sftMeetingNameItem2");
+
+      return dto;
+    }
   }
 
   public record Link(UUID authorityId, String tag, String naturalId,

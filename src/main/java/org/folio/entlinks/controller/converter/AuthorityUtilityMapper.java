@@ -24,7 +24,7 @@ import org.folio.entlinks.domain.entity.HeadingRef;
 
 @UtilityClass
 @Log4j2
-public class AuthorityStorageUtilityMapper {
+public class AuthorityUtilityMapper {
 
   public static void extractAuthorityHeading(AuthorityDto source, Authority target) {
     if (Objects.nonNull(source.getPersonalName())) {

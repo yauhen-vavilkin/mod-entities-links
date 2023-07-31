@@ -2,15 +2,21 @@ package org.folio.entlinks.service.reindex;
 
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.controller.converter.AuthorityMapper;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.entity.AuthorityIdentifier;
+import org.folio.entlinks.domain.entity.AuthorityNote;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
+import org.folio.entlinks.domain.entity.HeadingRef;
 import org.folio.entlinks.domain.entity.ReindexJob;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.spring.FolioExecutionContext;
@@ -18,6 +24,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Log4j2
 @Component
@@ -33,9 +40,11 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
   private final ReindexService reindexService;
   private final AuthorityDomainEventPublisher eventPublisher;
   private final AuthorityMapper mapper;
+  private final ObjectMapper objectMapper;
 
   @Async
   @Override
+  @Transactional
   public void startReindex(ReindexJob reindexJob) {
     log.info("reindex::started");
     var reindexContext = new ReindexContext(reindexJob, folioExecutionContext);
@@ -43,14 +52,19 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
     log.info("reindex::ended");
   }
 
-  //@Transactional(readOnly = true)
-  private void streamAuthorities(ReindexContext context) {
+  @Transactional(readOnly = true)
+  public void streamAuthorities(ReindexContext context) {
     var totalRecords = jdbcTemplate.queryForObject(String.format(COUNT_QUERY, context.getTenantId()), Integer.class);
     log.info("reindex::count={}", totalRecords);
     ReindexJobProgressTracker progressTracker = new ReindexJobProgressTracker(totalRecords == null ? 0 : totalRecords);
 
-    try (var authorityStream = jdbcTemplate.queryForStream(String.format(SELECT_QUERY, context.getTenantId()),
-        (rs, rowNum) -> toAuthority(rs))) {
+    TypeReference<HeadingRef[]> headingTypeRef = new TypeReference<>() { };
+    TypeReference<AuthorityIdentifier[]> identifierTypeRef = new TypeReference<>() { };
+    TypeReference<AuthorityNote[]> noteTypeRef = new TypeReference<>() { };
+    jdbcTemplate.setFetchSize(50);
+    var query = String.format(SELECT_QUERY, context.getTenantId());
+    try (var authorityStream = jdbcTemplate.queryForStream(query,
+        (rs, rowNum) -> toAuthority(rs, headingTypeRef, identifierTypeRef, noteTypeRef))) {
       authorityStream
         .forEach(authority -> {
           eventPublisher.publishReindexEvent(authority, context);
@@ -63,21 +77,25 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
       return;
     }
 
-    // should we check progressTracker.getProcessedCount() == progressTracker.getTotalRecords() and then log success ?
     reindexService.logJobSuccess(context.getJobId());
   }
 
-  private AuthorityDto toAuthority(ResultSet rs) {
+  private AuthorityDto toAuthority(ResultSet rs,
+                                   TypeReference<HeadingRef[]> headingRefType,
+                                   TypeReference<AuthorityIdentifier[]> identifierTypeRef,
+                                   TypeReference<AuthorityNote[]> noteTypeRef) {
     var authority = new Authority();
     try {
       var id = rs.getString("id");
       authority.setId(UUID.fromString(id));
       var naturalId = rs.getString("natural_id");
       authority.setNaturalId(naturalId);
-      var sourceFileId = rs.getString("source_file_id");
-      var sourceFile = new AuthoritySourceFile();
-      sourceFile.setId(UUID.fromString(sourceFileId));
-      authority.setAuthoritySourceFile(sourceFile);
+      Optional.ofNullable(rs.getString("source_file_id"))
+          .ifPresent(sourceFileId -> {
+            var sourceFile = new AuthoritySourceFile();
+            sourceFile.setId(UUID.fromString(sourceFileId));
+            authority.setAuthoritySourceFile(sourceFile);
+          });
       var source = rs.getString("source");
       authority.setSource(source);
       var heading = rs.getString("heading");
@@ -89,20 +107,28 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
       var subjectHeadingCode = rs.getString("subject_heading_code");
       authority.setSubjectHeadingCode(subjectHeadingCode != null ? subjectHeadingCode.charAt(0) : null);
 
-      /*var array = rs.getArray("sft_headings");
-      var sftHeadings = (HeadingRef[]) array.getArray();
-      array = rs.getArray("saft_headings");
-      var saftHeadings = (HeadingRef[]) array.getArray();
-      array = rs.getArray("identifiers");
-      var identifiers = (AuthorityIdentifier[]) array.getArray();
-      array = rs.getArray("notes");
-      var notes = (AuthorityNote[]) array.getArray();
-
+      var array = rs.getArray("sft_headings");
+      var sftHeadings = objectMapper.readValue(array.toString(), headingRefType);
       authority.setSftHeadings(Arrays.asList(sftHeadings));
+      array = rs.getArray("saft_headings");
+      var saftHeadings = objectMapper.readValue(array.toString(), headingRefType);
       authority.setSaftHeadings(Arrays.asList(saftHeadings));
+      array = rs.getArray("identifiers");
+      var identifiers = objectMapper.readValue(array.toString(), identifierTypeRef);
       authority.setIdentifiers(Arrays.asList(identifiers));
-      authority.setNotes(Arrays.asList(notes));*/
-    } catch (SQLException e) {
+      array = rs.getArray("notes");
+      var notes = objectMapper.readValue(array.toString(), noteTypeRef);
+      authority.setNotes(Arrays.asList(notes));
+
+      var createdDate = rs.getTimestamp("created_date");
+      authority.setCreatedDate(createdDate);
+      var createdBy = rs.getString("created_by_user_id");
+      authority.setCreatedByUserId(createdBy != null ? UUID.fromString(createdBy) : null);
+      var updatedDate = rs.getTimestamp("updated_date");
+      authority.setUpdatedDate(updatedDate);
+      var updatedBy = rs.getString("updated_by_user_id");
+      authority.setUpdatedByUserId(updatedBy != null ? UUID.fromString(updatedBy) : null);
+    } catch (Exception e) {
       log.warn(e);
       throw new RuntimeException(e);
     }
