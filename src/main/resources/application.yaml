@@ -73,7 +73,7 @@ folio:
   kafka:
     topics:
       - name: authorities.authority
-        numPartitions: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS:1}
+        numPartitions: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS:50}
         replicationFactor: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_REPLICATION_FACTOR:}
       - name: links.instance-authority
         numPartitions: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS:10}

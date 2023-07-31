@@ -283,6 +283,32 @@
           "permissionsRequired": []
         }
       ]
+    },
+    {
+      "id": "authority-reindex",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/authority-storage/reindex",
+          "permissionsRequired": ["authority-storage.authority.reindex.post"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authority-storage/reindex",
+          "permissionsRequired": ["authority-storage.authority.reindex.collection.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authority-storage/reindex/{id}",
+          "permissionsRequired": ["authority-storage.authority.reindex.item.get"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/authority-storage/reindex/{id}",
+          "permissionsRequired": ["authority-storage.authority.reindex.item.delete"]
+        }
+      ]
     }
   ],
   "permissionSets": [
