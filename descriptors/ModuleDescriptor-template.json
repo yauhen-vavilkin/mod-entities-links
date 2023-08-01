@@ -363,6 +363,121 @@
         "instance-authority-links.instance-statistics.collection.get",
         "instance-authority-links.suggestions.post"
       ]
+    },
+    {
+      "permissionName": "inventory-storage.authorities.collection.get",
+      "displayName": "inventory storage - get authority collection",
+      "description": "get authority collection from the storage"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.item.get",
+      "displayName": "inventory storage - get individual authority record",
+      "description": "get individual authority record from the storage"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.item.post",
+      "displayName": "inventory storage - create individual authority record",
+      "description": "create individual authority record in the storage"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.item.put",
+      "displayName": "inventory storage - modify authority record",
+      "description": "modify authority record in the storage"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.item.delete",
+      "displayName": "inventory storage - delete individual authority record",
+      "description": "delete individual authority record from the storage"
+    },
+    {
+      "permissionName": "authority-storage.authority.reindex.item.delete",
+      "displayName": "inventory storage - cancel reindex job",
+      "description": "cancel a running reindexing job"
+    },
+    {
+      "permissionName": "authority-storage.authority.reindex.item.get",
+      "displayName": "inventory storage - get reindex job by id",
+      "description": "get reindex job by id"
+    },
+    {
+      "permissionName": "authority-storage.authority.reindex.post",
+      "displayName": "inventory storage - submit reindex authority job",
+      "description": "submit reindex authority job"
+    },
+    {
+      "permissionName": "authority-storage.authority.reindex.collection.get",
+      "displayName": "inventory storage - get reindex authority jobs",
+      "description": "get reindex authority jobs"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.all",
+      "displayName": "inventory storage module - all authorities permissions",
+      "description": "Entire set of permissions needed to use authorities in the inventory storage module",
+      "subPermissions": [
+        "inventory-storage.authorities.item.get",
+        "inventory-storage.authorities.item.post",
+        "inventory-storage.authorities.item.put",
+        "inventory-storage.authorities.item.delete",
+        "authority-storage.authority.reindex.post",
+        "authority-storage.authority.reindex.item.get",
+        "authority-storage.authority.reindex.item.delete",
+        "authority-storage.authority.reindex.collection.get"
+      ]
+    },
+    {
+      "permissionName": "inventory-storage.authority-note-types.collection.get",
+      "displayName": "inventory storage - get authority-note-type collection",
+      "description": "get authority-note-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-note-types.item.get",
+      "displayName": "inventory storage - get individual authority-note-type",
+      "description": "get individual authority-note-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-note-types.item.post",
+      "displayName": "inventory storage - create individual authority-note-type",
+      "description": "create individual authority-note-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-note-types.item.put",
+      "displayName": "inventory storage - modify authority-note-type",
+      "description": "modify authority-note-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-note-types.item.delete",
+      "displayName": "inventory storage - delete individual authority-note-type",
+      "description": "delete individual authority-note-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-source-files.collection.get",
+      "displayName": "inventory storage - get authority-source-file collection",
+      "description": "get authority-source-file collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-source-files.item.get",
+      "displayName": "inventory storage - get individual authority-source-file",
+      "description": "get individual authority-source-file from storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-source-files.item.post",
+      "displayName": "inventory storage - create individual authority-source-file",
+      "description": "create individual authority-source-file in storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-source-files.item.put",
+      "displayName": "inventory storage - modify authority-source-file",
+      "description": "modify authority-source-file in storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-source-files.item.patch",
+      "displayName": "inventory storage - patch authority-source-file",
+      "description": "patch authority-source-file in storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-source-files.item.delete",
+      "displayName": "inventory storage - delete individual authority-source-file",
+      "description": "delete individual authority-source-file from storage"
     }
   ],
   "launchDescriptor": {
