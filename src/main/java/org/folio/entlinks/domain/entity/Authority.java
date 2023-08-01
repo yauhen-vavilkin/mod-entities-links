@@ -35,47 +35,60 @@ import org.springframework.data.domain.Persistable;
 @Table(name = "authority")
 public class Authority extends MetadataEntity implements Persistable<UUID>, Identifiable<UUID> {
 
+  public static final String ID_COLUMN = "id";
+  public static final String NATURAL_ID_COLUMN = "natural_id";
+  public static final String SOURCE_FILE_COLUMN = "source_file_id";
+  public static final String SOURCE_COLUMN = "source";
+  public static final String HEADING_COLUMN = "heading";
+  public static final String HEADING_TYPE_COLUMN = "heading_type";
+  public static final String VERSION_COLUMN = "_version";
+  public static final String SUBJECT_HEADING_CODE_COLUMN = "subject_heading_code";
+  public static final String SFT_HEADINGS_COLUMN = "sft_headings";
+  public static final String SAFT_HEADINGS_COLUMN = "saft_headings";
+  public static final String IDENTIFIERS_COLUMN = "identifiers";
+  public static final String NOTES_COLUMN = "notes";
+
   @Id
-  @Column(name = "id", nullable = false)
+  @Column(name = ID_COLUMN, nullable = false)
   private UUID id;
 
-  @Column(name = "natural_id")
+  @Column(name = NATURAL_ID_COLUMN)
   private String naturalId;
 
   @ToString.Exclude
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "source_file_id", nullable = false)
+  @JoinColumn(name = SOURCE_FILE_COLUMN, nullable = false)
   private AuthoritySourceFile authoritySourceFile;
 
-  @Column(name = "source")
+  @Column(name = SOURCE_COLUMN)
   private String source;
 
-  @Column(name = "heading")
+  @Column(name = HEADING_COLUMN)
   private String heading;
 
-  @Column(name = "heading_type")
+  @Column(name = HEADING_TYPE_COLUMN)
   private String headingType;
 
   @Version
-  @Column(name = "_version", nullable = false)
+  @Column(name = VERSION_COLUMN, nullable = false)
   private int version;
 
-  @Column(name = "subject_heading_code")
+  @Column(name = SUBJECT_HEADING_CODE_COLUMN)
   private Character subjectHeadingCode;
 
-  @Column(name = "sft_headings")
+  @Column(name = SFT_HEADINGS_COLUMN)
   @JdbcTypeCode(SqlTypes.JSON)
   private List<HeadingRef> sftHeadings;
 
-  @Column(name = "saft_headings")
+  @Column(name = SAFT_HEADINGS_COLUMN)
   @JdbcTypeCode(SqlTypes.JSON)
   private List<HeadingRef> saftHeadings;
 
-  @Column(name = "identifiers")
+  @Column(name = IDENTIFIERS_COLUMN)
   @JdbcTypeCode(SqlTypes.JSON)
   private List<AuthorityIdentifier> identifiers;
 
-  @Column(name = "notes")
+  @Column(name = NOTES_COLUMN)
   @JdbcTypeCode(SqlTypes.JSON)
   private List<AuthorityNote> notes;
 

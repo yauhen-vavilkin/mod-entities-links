@@ -19,6 +19,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 public class MetadataEntity {
 
+  public static final String CREATED_DATE_COLUMN = "created_date";
+  public static final String UPDATED_DATE_COLUMN = "updated_date";
+  public static final String CREATED_BY_USER_COLUMN = "created_by_user_id";
+  public static final String UPDATED_BY_USER_COLUMN = "updated_by_user_id";
+
   @CreatedDate
   @Column(name = "created_date", nullable = false, updatable = false)
   private Timestamp createdDate;
