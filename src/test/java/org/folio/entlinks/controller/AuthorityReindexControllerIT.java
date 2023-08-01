@@ -60,7 +60,7 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
   DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE,
   DatabaseHelper.AUTHORITY_TABLE,
   DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
-class AuthorityStorageReindexControllerIT extends IntegrationTestBase {
+class AuthorityReindexControllerIT extends IntegrationTestBase {
 
   private static final List<String> DOMAIN_EVENT_HEADER_KEYS =
       List.of(XOkapiHeaders.TENANT, XOkapiHeaders.URL, XOkapiHeaders.USER_ID, DOMAIN_EVENT_HEADER_KEY);

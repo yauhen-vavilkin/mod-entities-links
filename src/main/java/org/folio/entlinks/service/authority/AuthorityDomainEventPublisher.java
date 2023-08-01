@@ -28,7 +28,7 @@ public class AuthorityDomainEventPublisher {
       return;
     }
 
-    log.info("publishCreated::process authority id={}", id);
+    log.debug("publishCreated::process authority id={}", id);
 
     var domainEvent = DomainEvent.createEvent(created, folioExecutionContext.getTenantId());
     eventProducer.sendMessage(id.toString(), domainEvent,
@@ -42,8 +42,7 @@ public class AuthorityDomainEventPublisher {
       return;
     }
 
-    log.info("publishUpdated::process authority id={}", id);
-
+    log.debug("publishUpdated::process authority id={}", id);
 
     var domainEvent = DomainEvent.updateEvent(oldAuthority, updatedAuthority, folioExecutionContext.getTenantId());
     eventProducer.sendMessage(id.toString(), domainEvent,
@@ -57,7 +56,7 @@ public class AuthorityDomainEventPublisher {
       return;
     }
 
-    log.info("publishRemoved::process authority id={}", id);
+    log.debug("publishRemoved::process authority id={}", id);
 
     var domainEvent = DomainEvent.deleteEvent(authorityDto, folioExecutionContext.getTenantId());
     eventProducer.sendMessage(id.toString(), domainEvent,
@@ -71,7 +70,7 @@ public class AuthorityDomainEventPublisher {
       return;
     }
 
-    log.info("reindex::process authority id={}", id);
+    log.debug("reindex::process authority id={}", id);
     var domainEvent = DomainEvent.reindexEvent(context.getTenantId(), authority);
     eventProducer.sendMessage(id.toString(), domainEvent,
         REINDEX_JOB_ID_HEADER, context.getJobId(), DOMAIN_EVENT_TYPE_HEADER, DomainEventType.REINDEX);

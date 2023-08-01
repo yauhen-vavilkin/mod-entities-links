@@ -17,6 +17,7 @@ import org.folio.entlinks.domain.entity.AuthorityIdentifier;
 import org.folio.entlinks.domain.entity.AuthorityNote;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.HeadingRef;
+import org.folio.entlinks.domain.entity.MetadataEntity;
 import org.folio.entlinks.domain.entity.ReindexJob;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.spring.FolioExecutionContext;
@@ -32,8 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthorityReindexJobRunner implements ReindexJobRunner {
 
-  private static final String COUNT_QUERY = "SELECT COUNT(*) FROM %s_mod_entities_links.authority";
-  private static final String SELECT_QUERY = "SELECT * FROM %s_mod_entities_links.authority";
+  private static final String COUNT_QUERY_TEMPLATE = "SELECT COUNT(*) FROM %s_mod_entities_links.authority";
+  private static final String SELECT_QUERY_TEMPLATE = "SELECT * FROM %s_mod_entities_links.authority";
 
   private final JdbcTemplate jdbcTemplate;
   private final FolioExecutionContext folioExecutionContext;
@@ -54,7 +55,7 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
 
   @Transactional(readOnly = true)
   public void streamAuthorities(ReindexContext context) {
-    var totalRecords = jdbcTemplate.queryForObject(String.format(COUNT_QUERY, context.getTenantId()), Integer.class);
+    var totalRecords = jdbcTemplate.queryForObject(countQuery(context.getTenantId()), Integer.class);
     log.info("reindex::count={}", totalRecords);
     ReindexJobProgressTracker progressTracker = new ReindexJobProgressTracker(totalRecords == null ? 0 : totalRecords);
 
@@ -62,7 +63,7 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
     TypeReference<AuthorityIdentifier[]> identifierTypeRef = new TypeReference<>() { };
     TypeReference<AuthorityNote[]> noteTypeRef = new TypeReference<>() { };
     jdbcTemplate.setFetchSize(50);
-    var query = String.format(SELECT_QUERY, context.getTenantId());
+    var query = selectQuery(context.getTenantId());
     try (var authorityStream = jdbcTemplate.queryForStream(query,
         (rs, rowNum) -> toAuthority(rs, headingTypeRef, identifierTypeRef, noteTypeRef))) {
       authorityStream
@@ -86,47 +87,47 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
                                    TypeReference<AuthorityNote[]> noteTypeRef) {
     var authority = new Authority();
     try {
-      var id = rs.getString("id");
+      var id = rs.getString(Authority.ID_COLUMN);
       authority.setId(UUID.fromString(id));
-      var naturalId = rs.getString("natural_id");
+      var naturalId = rs.getString(Authority.NATURAL_ID_COLUMN);
       authority.setNaturalId(naturalId);
-      Optional.ofNullable(rs.getString("source_file_id"))
+      Optional.ofNullable(rs.getString(Authority.SOURCE_FILE_COLUMN))
           .ifPresent(sourceFileId -> {
             var sourceFile = new AuthoritySourceFile();
             sourceFile.setId(UUID.fromString(sourceFileId));
             authority.setAuthoritySourceFile(sourceFile);
           });
-      var source = rs.getString("source");
+      var source = rs.getString(Authority.SOURCE_COLUMN);
       authority.setSource(source);
-      var heading = rs.getString("heading");
+      var heading = rs.getString(Authority.HEADING_COLUMN);
       authority.setHeading(heading);
-      var headingType = rs.getString("heading_type");
+      var headingType = rs.getString(Authority.HEADING_TYPE_COLUMN);
       authority.setHeadingType(headingType);
-      var version = rs.getInt("_version");
+      var version = rs.getInt(Authority.VERSION_COLUMN);
       authority.setVersion(version);
-      var subjectHeadingCode = rs.getString("subject_heading_code");
+      var subjectHeadingCode = rs.getString(Authority.SUBJECT_HEADING_CODE_COLUMN);
       authority.setSubjectHeadingCode(subjectHeadingCode != null ? subjectHeadingCode.charAt(0) : null);
 
-      var array = rs.getArray("sft_headings");
+      var array = rs.getArray(Authority.SFT_HEADINGS_COLUMN);
       var sftHeadings = objectMapper.readValue(array.toString(), headingRefType);
       authority.setSftHeadings(Arrays.asList(sftHeadings));
-      array = rs.getArray("saft_headings");
+      array = rs.getArray(Authority.SAFT_HEADINGS_COLUMN);
       var saftHeadings = objectMapper.readValue(array.toString(), headingRefType);
       authority.setSaftHeadings(Arrays.asList(saftHeadings));
-      array = rs.getArray("identifiers");
+      array = rs.getArray(Authority.IDENTIFIERS_COLUMN);
       var identifiers = objectMapper.readValue(array.toString(), identifierTypeRef);
       authority.setIdentifiers(Arrays.asList(identifiers));
-      array = rs.getArray("notes");
+      array = rs.getArray(Authority.NOTES_COLUMN);
       var notes = objectMapper.readValue(array.toString(), noteTypeRef);
       authority.setNotes(Arrays.asList(notes));
 
-      var createdDate = rs.getTimestamp("created_date");
+      var createdDate = rs.getTimestamp(MetadataEntity.CREATED_DATE_COLUMN);
       authority.setCreatedDate(createdDate);
-      var createdBy = rs.getString("created_by_user_id");
+      var createdBy = rs.getString(MetadataEntity.CREATED_BY_USER_COLUMN);
       authority.setCreatedByUserId(createdBy != null ? UUID.fromString(createdBy) : null);
-      var updatedDate = rs.getTimestamp("updated_date");
+      var updatedDate = rs.getTimestamp(MetadataEntity.UPDATED_DATE_COLUMN);
       authority.setUpdatedDate(updatedDate);
-      var updatedBy = rs.getString("updated_by_user_id");
+      var updatedBy = rs.getString(MetadataEntity.UPDATED_BY_USER_COLUMN);
       authority.setUpdatedByUserId(updatedBy != null ? UUID.fromString(updatedBy) : null);
     } catch (Exception e) {
       log.warn(e);
@@ -134,5 +135,13 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
     }
 
     return mapper.toDto(authority);
+  }
+
+  private String countQuery(String tenant) {
+    return String.format(COUNT_QUERY_TEMPLATE, tenant);
+  }
+
+  private String selectQuery(String tenant) {
+    return String.format(SELECT_QUERY_TEMPLATE, tenant);
   }
 }

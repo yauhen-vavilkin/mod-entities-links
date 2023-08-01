@@ -81,6 +81,7 @@ public class AuthorityService {
     return repository.save(existing);
   }
 
+  @Transactional
   public void deleteById(UUID id) {
     log.debug("deleteById:: Attempt to delete Authority by [id: {}]", id);
 
