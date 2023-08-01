@@ -7,6 +7,7 @@ import static org.folio.entlinks.service.reindex.event.DomainEventType.CREATE;
 import static org.folio.entlinks.service.reindex.event.DomainEventType.DELETE;
 import static org.folio.entlinks.service.reindex.event.DomainEventType.UPDATE;
 import static org.folio.support.KafkaTestUtils.createAndStartTestConsumer;
+import static org.folio.support.TestDataUtils.AuthorityTestData.authorityDto;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
@@ -26,10 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.UnsupportedEncodingException;
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -41,12 +39,7 @@ import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
-import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
-import org.folio.entlinks.domain.dto.AuthorityDtoNote;
-import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.entity.Authority;
-import org.folio.entlinks.domain.entity.AuthoritySourceFile;
-import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.service.reindex.event.DomainEvent;
@@ -54,6 +47,7 @@ import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
+import org.folio.support.TestDataUtils;
 import org.folio.support.base.IntegrationTestBase;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.AfterEach;
@@ -76,16 +70,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
   DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class AuthorityControllerIT extends IntegrationTestBase {
 
-  private static final String CREATED_DATE = "2021-10-28T06:31:31+05:00";
-
-  private static final UUID[] SOURCE_FILE_ID = new UUID[] {randomUUID(), randomUUID(), randomUUID()};
-  private static final UUID[] IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID()};
-  private static final String[] SOURCES = new String[] {"source1", "source2", "source3"};
-  private static final String[] NATURAL_IDS = new String[] {"naturalId1", "naturalId2", "naturalId3"};
-  private static final String[] HEADINGS =
-    new String[] {"headingPersonalName", "headingCorporateName", "headingGenreTerm"};
-  private static final String[] HEADING_TYPES = new String[] {"personalName", "corporateName", "genreTerm"};
-  private static final Character[] HEADING_CODES = new Character[] {'a', 'b', 'c'};
   private static final List<String> DOMAIN_EVENT_HEADER_KEYS =
       List.of(XOkapiHeaders.TENANT, XOkapiHeaders.URL, XOkapiHeaders.USER_ID, DOMAIN_EVENT_HEADER_KEY);
 
@@ -152,8 +136,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("Get By ID: return authority by given ID")
   void getById_positive_foundByIdForExistingEntity() throws Exception {
-    var authority = prepareAuthority(0);
-    createAuthority(authority);
+    var authority = createAuthority(0);
 
     doGet(authorityEndpoint(authority.getId()))
       .andExpect(jsonPath("source", is(authority.getSource())))
@@ -169,10 +152,10 @@ class AuthorityControllerIT extends IntegrationTestBase {
   void createAuthority_positive_entityCreatedWithProvidedId() throws Exception {
     assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
 
-    var dto = prepareDto(0);
+    var dto = authorityDto(0, 0);
     var id = randomUUID();
     dto.setId(id);
-    createAuthoritySourceFile(0);
+    createAuthoritySourceFile();
 
     var content = doPost(authorityEndpoint(), dto)
       .andExpect(jsonPath("id", is(id.toString())))
@@ -204,8 +187,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
   void createAuthority_positive_entityCreatedWithNewId() throws Exception {
     assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
 
-    var dto = prepareDto(0);
-    createAuthoritySourceFile(0);
+    var dto = authorityDto(0, 0);
+    createAuthoritySourceFile();
 
     var content = doPost(authorityEndpoint(), dto)
       .andExpect(jsonPath("id", notNullValue()))
@@ -235,7 +218,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   void createAuthority_positive_entityWithoutSourceFileRelationShouldBeCreated() throws Exception {
     assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
 
-    var dto = prepareDto(0);
+    var dto = authorityDto(0, 0);
     dto.setSourceFileId(null);
 
     doPost(authorityEndpoint(), dto)
@@ -258,7 +241,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   void createAuthority_negative_notCreatedWithNonExistingSourceFile() throws Exception {
     assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
 
-    var dto = prepareDto(0);
+    var dto = authorityDto(0, 0);
     var sourceFileId = randomUUID();
     dto.setSourceFileId(sourceFileId);
 
@@ -273,7 +256,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   void createAuthority_negative_notCreatedWithDuplicatedId() throws Exception {
     assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
 
-    var dto = prepareDto(0);
+    var dto = authorityDto(0, 0);
     dto.setId(randomUUID());
     dto.setSourceFileId(null);
 
@@ -292,8 +275,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @DisplayName("PUT: update existing Authority entity")
   void updateAuthority_positive_entityUpdated() throws Exception {
     getReceivedEvent();
-    var dto = prepareDto(0);
-    createAuthoritySourceFile(0);
+    var dto = authorityDto(0, 0);
+    createAuthoritySourceFile();
 
     doPost(authorityEndpoint(), dto);
     getReceivedEvent();
@@ -302,7 +285,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var expected = collection.getAuthorities().get(0);
     expected.setSource("updated source");
     expected.setPersonalName(null);
-    expected.setCorporateName(HEADINGS[1]);
+    expected.setCorporateName("headingCorporateName");
     expected.setSftCorporateName(List.of("sftCorporateName"));
     expected.setSaftCorporateName(List.of("saftCorporateName"));
 
@@ -337,8 +320,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("PUT: repeated update of Authority without modification")
   void updateConcurrently_positive_notAllShouldSucceedAndAtLeastOneShouldFail() throws Exception {
-    var dto = prepareDto(0);
-    createAuthoritySourceFile(0);
+    var dto = authorityDto(0, 0);
+    createAuthoritySourceFile();
 
     doPost(authorityEndpoint(), dto);
     getReceivedEvent();
@@ -372,8 +355,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("PUT: update Authority with non-existing source file id")
   void updateAuthority_negative_notUpdatedWithNonExistingSourceFile() throws Exception {
-    var dto = prepareDto(0);
-    createAuthoritySourceFile(0);
+    var dto = authorityDto(0, 0);
+    createAuthoritySourceFile();
 
     doPost(authorityEndpoint(), dto);
     getReceivedEvent();
@@ -405,8 +388,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("DELETE: Should delete existing authority")
   void deleteAuthority_positive_deleteExistingEntity() throws UnsupportedEncodingException, JsonProcessingException {
-    var authority = prepareAuthority(0);
-    createAuthority(authority);
+    var authority = createAuthority(0);
 
     var contentAsString = doGet(authorityEndpoint(authority.getId())).andReturn().getResponse().getContentAsString();
     var existingDto = objectMapper.readValue(contentAsString, AuthorityDto.class);
@@ -442,8 +424,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("DELETE: Authority Source File cannot be deleted when it is linked by Authority")
   void deleteAuthoritySourceFile_negative_failDeletingSourceFileLinkedByAuthority() throws Exception {
-    var dto = prepareDto(0);
-    createAuthoritySourceFile(0);
+    var dto = authorityDto(0, 0);
+    createAuthoritySourceFile();
 
     doPost(authorityEndpoint(), dto);
     getReceivedEvent();
@@ -460,80 +442,36 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andExpect(exceptionMatch(DataIntegrityViolationException.class));
   }
 
-  private AuthorityDto prepareDto(int i) {
-    var dto = new AuthorityDto();
-    dto.setPersonalName(HEADINGS[i]);
-    dto.setSource(SOURCES[i]);
-    dto.setNaturalId(NATURAL_IDS[i]);
-    dto.sourceFileId(SOURCE_FILE_ID[i]);
-    dto.setSftPersonalName(List.of("sftPersonalName"));
-    dto.setSaftPersonalName(List.of("saftPersonalName"));
-    dto.setSftMeetingName(List.of("sftMeetingName"));
-    dto.setSaftMeetingName(List.of("saftMeetingName"));
-    dto.setSubjectHeadings("a");
+  private Authority createAuthority(int num) {
+    var entity = TestDataUtils.AuthorityTestData.authority(num, num);
+    var sourceFile = entity.getAuthoritySourceFile();
 
-    var noteDto = new AuthorityDtoNote(UUID.randomUUID(), "note");
-    noteDto.setStaffOnly(false);
-    dto.setNotes(List.of(noteDto));
+    if (sourceFile != null) {
+      databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile);
+      if (!sourceFile.getAuthoritySourceFileCodes().isEmpty()) {
+        sourceFile.getAuthoritySourceFileCodes().forEach(code ->
+            databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, sourceFile.getId(), code));
+      }
+    }
 
-    var identifier = new AuthorityDtoIdentifier("identifier_value", UUID.randomUUID());
-    dto.setIdentifiers(List.of(identifier));
-
-    return dto;
-  }
-
-  private Authority prepareAuthority(int i) {
-    var entity = new Authority();
-    entity.setId(IDS[i]);
-    entity.setSource(SOURCES[i]);
-    entity.setNaturalId(NATURAL_IDS[i]);
-    entity.setHeading(HEADINGS[i]);
-    entity.setHeadingType(HEADING_TYPES[i]);
-    entity.setSubjectHeadingCode(HEADING_CODES[i]);
-    entity.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
-    entity.setCreatedByUserId(UUID.fromString(USER_ID));
-    entity.setUpdatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
-    entity.setUpdatedByUserId(UUID.fromString(USER_ID));
-    entity.setAuthoritySourceFile(createAuthoritySourceFile(i));
+    databaseHelper.saveAuthority(TENANT_ID, entity);
     return entity;
   }
 
-  private void createAuthority(Authority entity) {
-    databaseHelper.saveAuthority(TENANT_ID, entity);
-  }
-
   private List<Authority> createAuthorities() {
-    var entity1 = prepareAuthority(0);
-    var entity2 = prepareAuthority(1);
-    var entity3 = prepareAuthority(2);
-
-    createAuthority(entity1);
-    createAuthority(entity2);
-    createAuthority(entity3);
+    var entity1 = createAuthority(0);
+    var entity2 = createAuthority(1);
+    var entity3 = createAuthority(2);
 
     return List.of(entity1, entity2, entity3);
   }
 
-  private AuthoritySourceFile createAuthoritySourceFile(int i) {
-    var entity = new AuthoritySourceFile();
-    entity.setId(SOURCE_FILE_ID[i]);
-    entity.setName("name" + i);
-    entity.setSource(AuthoritySourceFileDto.SourceEnum.FOLIO.getValue());
-    entity.setType("type");
-    entity.setBaseUrl("url" + i);
-
-    var code = new AuthoritySourceFileCode();
-    code.setId(1);
-    code.setCode("code" + i);
-    entity.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
-    entity.setCreatedByUserId(UUID.fromString(USER_ID));
-    entity.setUpdatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
-    entity.setUpdatedByUserId(UUID.fromString(USER_ID));
-    entity.setAuthoritySourceFileCodes(Set.of(code));
+  private void createAuthoritySourceFile() {
+    var entity = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
 
     databaseHelper.saveAuthoritySourceFile(TENANT_ID, entity);
-    databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, SOURCE_FILE_ID[i], code);
-    return entity;
+    entity.getAuthoritySourceFileCodes().forEach(code ->
+        databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, entity.getId(), code));
   }
 
   private ResultMatcher errorMessageMatch(Matcher<String> errorMessageMatcher) {

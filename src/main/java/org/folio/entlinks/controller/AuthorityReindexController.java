@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RestController
 @RequiredArgsConstructor
-public class AuthorityStorageReindexController implements AuthorityStorageReindexApi {
+public class AuthorityReindexController implements AuthorityStorageReindexApi {
 
   private final ReindexServiceDelegate reindexServiceDelegate;
 
