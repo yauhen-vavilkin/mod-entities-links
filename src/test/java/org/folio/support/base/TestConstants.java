@@ -63,6 +63,10 @@ public class TestConstants {
     return LINKS_SUGGESTIONS_ENDPOINT + "?authoritySearchParameter=" + authoritySearchParameter;
   }
 
+  public static String linksSuggestionsEndpoint(Boolean ignoreAutoLinkingEnabled) {
+    return LINKS_SUGGESTIONS_ENDPOINT + "?ignoreAutoLinkingEnabled=" + ignoreAutoLinkingEnabled;
+  }
+
   public static String linkingRulesEndpoint() {
     return LINKING_RULES_ENDPOINT;
   }
