@@ -16,10 +16,11 @@ public class LinksSuggestionsController implements LinksSuggestionsApi {
 
   @Override
   public ResponseEntity<ParsedRecordContentCollection> suggestLinksForMarcRecord(
-    ParsedRecordContentCollection parsedRecordContentCollection, AuthoritySearchParameter authoritySearchParameter) {
+    ParsedRecordContentCollection parsedRecordContentCollection, AuthoritySearchParameter authoritySearchParameter,
+    Boolean ignoreAutoLinkingEnabled) {
     return ResponseEntity.ok(
       delegateServiceHelper.getDelegate(authoritySearchParameter)
-        .suggestLinksForMarcRecords(parsedRecordContentCollection)
+        .suggestLinksForMarcRecords(parsedRecordContentCollection, ignoreAutoLinkingEnabled)
     );
   }
 }

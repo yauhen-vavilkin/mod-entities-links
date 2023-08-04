@@ -3,6 +3,7 @@ package org.folio.entlinks.service.links;
 import static java.util.Objects.isNull;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.BooleanUtils.isFalse;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.entlinks.config.constants.ErrorCode.DISABLED_AUTO_LINKING;
 import static org.folio.entlinks.config.constants.ErrorCode.MORE_THAN_ONE_SUGGESTIONS;
 import static org.folio.entlinks.config.constants.ErrorCode.NO_SUGGESTIONS;
@@ -10,10 +11,13 @@ import static org.folio.entlinks.domain.dto.LinkStatus.ERROR;
 import static org.folio.entlinks.domain.dto.LinkStatus.NEW;
 import static org.folio.entlinks.utils.FieldUtils.getSubfield0Value;
 
+import com.google.common.primitives.Chars;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.config.constants.ErrorCode;
@@ -46,12 +50,13 @@ public class LinksSuggestionService {
   public void fillLinkDetailsWithSuggestedAuthorities(List<SourceParsedContent> marcBibsContent,
                                                       List<AuthorityParsedContent> marcAuthoritiesContent,
                                                       Map<String, List<InstanceAuthorityLinkingRule>> rules,
-                                                      String linkingMatchSubfield) {
+                                                      String linkingMatchSubfield,
+                                                      Boolean ignoreAutoLinkingEnabled) {
     marcBibsContent.stream()
       .flatMap(bibContent -> bibContent.getFields().stream())
       .forEach(bibField -> suggestAuthorityForBibFields(
         List.of(bibField), marcAuthoritiesContent, rules.get(bibField.getTag()),
-        linkingMatchSubfield
+        linkingMatchSubfield, ignoreAutoLinkingEnabled
       ));
   }
 
@@ -63,20 +68,36 @@ public class LinksSuggestionService {
   public void fillErrorDetailsWithNoSuggestions(List<SourceParsedContent> marcBibsContent,
                                                 String linkingMatchSubfield) {
     marcBibsContent.stream()
-      .flatMap(bibContent -> bibContent.getFields().stream())
-      .filter(fieldContent -> containsSubfield(fieldContent, linkingMatchSubfield))
-      .forEach(bibField -> bibField.setLinkDetails(getErrorDetails(NO_SUGGESTIONS)));
+        .flatMap(bibContent -> bibContent.getFields().stream())
+        .filter(fieldContent -> containsSubfield(fieldContent, linkingMatchSubfield))
+        .filter(fieldContent -> Optional.ofNullable(fieldContent.getLinkDetails())
+            .map(linkDetails -> isEmpty(linkDetails.getErrorCause()))
+            .orElse(true))
+        .forEach(bibField -> bibField.setLinkDetails(getErrorDetails(NO_SUGGESTIONS)));
+  }
+
+  /**
+   * Fill bib fields with no suggestions error detail, if it contains subfields.
+   *
+   * @param field list of bib records {@link FieldParsedContent}
+   */
+  public void fillErrorDetailsWithDisabledAutoLinking(FieldParsedContent field,
+                                                      String linkingMatchSubfield) {
+    if (containsSubfield(field, linkingMatchSubfield)) {
+      field.setLinkDetails(getErrorDetails(DISABLED_AUTO_LINKING));
+    }
   }
 
   private void suggestAuthorityForBibFields(List<FieldParsedContent> bibFields,
                                             List<AuthorityParsedContent> marcAuthoritiesContent,
                                             List<InstanceAuthorityLinkingRule> rules,
-                                            String linkingMatchSubfield) {
+                                            String linkingMatchSubfield,
+                                            Boolean ignoreAutoLinkingEnabled) {
     if (isNotEmpty(rules) && isNotEmpty(bibFields)) {
       for (InstanceAuthorityLinkingRule rule : rules) {
         for (FieldParsedContent bibField : bibFields) {
           if (isBibFieldLinkable(bibField, linkingMatchSubfield)) {
-            suggestAuthorityForBibField(bibField, marcAuthoritiesContent, rule);
+            suggestAuthorityForBibField(bibField, marcAuthoritiesContent, rule, ignoreAutoLinkingEnabled);
           }
         }
       }
@@ -95,8 +116,9 @@ public class LinksSuggestionService {
 
   private void suggestAuthorityForBibField(FieldParsedContent bibField,
                                            List<AuthorityParsedContent> marcAuthoritiesContent,
-                                           InstanceAuthorityLinkingRule rule) {
-    if (isFalse(rule.getAutoLinkingEnabled())) {
+                                           InstanceAuthorityLinkingRule rule,
+                                           Boolean ignoreAutoLinkingEnabled) {
+    if (isFalse(ignoreAutoLinkingEnabled) && isFalse(rule.getAutoLinkingEnabled())) {
       var errorDetails = getErrorDetails(DISABLED_AUTO_LINKING);
       bibField.setLinkDetails(errorDetails);
       log.info("Field {}: auto linking feature is disabled", rule.getBibField());
@@ -151,21 +173,41 @@ public class LinksSuggestionService {
     }
 
     var zeroValue = getSubfield0Value(sourceFilesService.fetchAuthoritySources(), authority.getNaturalId());
-    bibSubfields.putAll(optionalField.get().getSubfields());
     bibSubfields.put("0", List.of(zeroValue));
     bibSubfields.put("9", List.of(authority.getId().toString()));
 
-    modifySubfields(bibSubfields, rule);
+    modifySubfields(optionalField.get().getSubfields(), bibSubfields, rule);
   }
 
-  private void modifySubfields(Map<String, List<String>> bibSubfields, InstanceAuthorityLinkingRule rule) {
+  private void modifySubfields(Map<String, List<String>> authoritySubfieldsMap, Map<String, List<String>> bibSubfields,
+                               InstanceAuthorityLinkingRule rule) {
+    var ruleAuthoritySubfields = Chars.asList(rule.getAuthoritySubfields()).stream()
+        .map(Object::toString)
+        .collect(Collectors.toList());
+    var authoritySubfieldsCopy = new HashMap<>(authoritySubfieldsMap);
+
     var modifications = rule.getSubfieldModifications();
     if (isNotEmpty(modifications)) {
       modifications.forEach(modification -> {
-        var modifiedSubfield = bibSubfields.remove(modification.getSource());
-        bibSubfields.put(modification.getTarget(), modifiedSubfield);
+        var authoritySubfields = authoritySubfieldsCopy.remove(modification.getSource());
+        if (isNotEmpty(authoritySubfields)) {
+          bibSubfields.put(modification.getTarget(), authoritySubfields);
+        } else {
+          bibSubfields.remove(modification.getTarget());
+        }
+        ruleAuthoritySubfields.remove(modification.getSource());
       });
     }
+
+    ruleAuthoritySubfields.forEach(subfield -> {
+      var authoritySubfields = authoritySubfieldsCopy.remove(subfield);
+      if (isNotEmpty(authoritySubfields)) {
+        bibSubfields.put(subfield, authoritySubfields);
+      } else {
+        bibSubfields.remove(subfield);
+      }
+    });
+
   }
 
   private List<AuthorityParsedContent> filterSuitableAuthorities(FieldParsedContent bibField,

@@ -1,6 +1,6 @@
 package org.folio.entlinks.controller.delegate.suggestion;
 
-import static java.util.Objects.nonNull;
+import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.collections4.CollectionUtils.removeAll;
@@ -44,13 +44,14 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
   private final SourceStorageClient sourceStorageClient;
   private final SourceContentMapper contentMapper;
 
-  public ParsedRecordContentCollection suggestLinksForMarcRecords(ParsedRecordContentCollection contentCollection) {
+  public ParsedRecordContentCollection suggestLinksForMarcRecords(
+      ParsedRecordContentCollection contentCollection, Boolean ignoreAutoLinkingEnabled) {
     log.info("{}: Links suggestion started for {} bibs",
       this.getClass().getSimpleName(), contentCollection.getRecords().size());
     var rules = rulesToBibFieldMap(linkingRulesService.getLinkingRules());
     var marcBibsContent = contentMapper.convertToParsedContent(contentCollection);
 
-    var authoritySearchIds = extractIdsOfLinkableFields(marcBibsContent, rules);
+    var authoritySearchIds = extractIdsOfLinkableFields(marcBibsContent, rules, ignoreAutoLinkingEnabled);
     log.info("{} authority search ids was extracted", authoritySearchIds.size());
 
     var authorities = findAuthorities(authoritySearchIds);
@@ -60,7 +61,7 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
       var marcAuthorities = fetchAuthorityParsedRecords(authorities);
       var marcAuthoritiesContent = contentMapper.convertToAuthorityParsedContent(marcAuthorities, authorities);
       suggestionService.fillLinkDetailsWithSuggestedAuthorities(marcBibsContent, marcAuthoritiesContent, rules,
-        getSearchSubfield());
+        getSearchSubfield(), ignoreAutoLinkingEnabled);
     } else {
       suggestionService.fillErrorDetailsWithNoSuggestions(marcBibsContent, getSearchSubfield());
     }
@@ -111,10 +112,11 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
   protected abstract List<AuthorityData> searchAuthorities(Set<T> ids);
 
   private Set<T> extractIdsOfLinkableFields(List<SourceParsedContent> contentCollection,
-                                                 Map<String, List<InstanceAuthorityLinkingRule>> rules) {
+                                            Map<String, List<InstanceAuthorityLinkingRule>> rules,
+                                            Boolean ignoreAutoLinkingEnabled) {
     return contentCollection.stream()
       .flatMap(bibRecord -> bibRecord.getFields().stream())
-      .filter(field -> isAutoLinkingEnabled(rules.get(field.getTag())))
+      .filter(field -> isAutoLinkingEnabled(field, rules, ignoreAutoLinkingEnabled))
       .map(this::extractIds)
       .filter(CollectionUtils::isNotEmpty)
       .flatMap(Set::stream)
@@ -123,10 +125,19 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
 
   protected abstract Set<T> extractIds(FieldParsedContent field);
 
-  private boolean isAutoLinkingEnabled(List<InstanceAuthorityLinkingRule> rules) {
-    if (nonNull(rules)) {
-      return rules.stream().anyMatch(InstanceAuthorityLinkingRule::getAutoLinkingEnabled);
+  private boolean isAutoLinkingEnabled(FieldParsedContent field, Map<String, List<InstanceAuthorityLinkingRule>> rules,
+                                       Boolean ignoreAutoLinkingEnabled) {
+    var rulesForField = rules.get(field.getTag());
+    if (isNull(rulesForField)) {
+      return false;
     }
+
+    if (Boolean.TRUE.equals(ignoreAutoLinkingEnabled)
+        || rulesForField.stream().anyMatch(InstanceAuthorityLinkingRule::getAutoLinkingEnabled)) {
+      return true;
+    }
+
+    suggestionService.fillErrorDetailsWithDisabledAutoLinking(field, getSearchSubfield());
     return false;
   }
 

@@ -155,6 +155,39 @@ class LinksSuggestionsIT extends IntegrationTestBase {
         .records(List.of(expectedRecord)), objectMapper)));
   }
 
+  @Test
+  @SneakyThrows
+  void getAuthDataStat_shouldSuggestNewLink_whenAutoLinkingIgnored() {
+    var givenSubfields = Map.of("0", "oneAuthority");
+    var givenRecord = getRecord("600", null, givenSubfields);
+
+    var expectedLinkDetails = getLinkDetails(NEW, "oneAuthority", 8);
+    var expectedSubfields = Map.of("a", "new $a value", "0", BASE_URL + "oneAuthority", "9", LINKABLE_AUTHORITY_ID);
+    var expectedRecord = getRecord("600", expectedLinkDetails, expectedSubfields);
+
+    var requestBody = new ParsedRecordContentCollection().records(List.of(givenRecord));
+    doPost(linksSuggestionsEndpoint(true), requestBody)
+        .andExpect(status().isOk())
+        .andExpect(content().json(asJson(new ParsedRecordContentCollection()
+            .records(List.of(expectedRecord)), objectMapper)));
+  }
+
+  @Test
+  @SneakyThrows
+  void getAuthDataStat_shouldFillErrorDetails_whenAutoLinkingDisabled_andOnlyOneRecord() {
+    var givenSubfields = Map.of("0", "oneAuthority");
+    var givenRecord = getRecord("600", null, givenSubfields);
+
+    var expectedLinkDetails = new LinkDetails().status(ERROR).errorCause(DISABLED_AUTO_LINKING.getCode());
+    var expectedRecord = getRecord("600", expectedLinkDetails, givenSubfields);
+
+    var requestBody = new ParsedRecordContentCollection().records(List.of(givenRecord));
+    doPost(linksSuggestionsEndpoint(), requestBody)
+        .andExpect(status().isOk())
+        .andExpect(content().json(asJson(new ParsedRecordContentCollection()
+            .records(List.of(expectedRecord)), objectMapper)));
+  }
+
   private ParsedRecordContent getRecord(String bibField, LinkDetails linkDetails, Map<String, String> subfields) {
     var field = new FieldContent();
     field.setLinkDetails(linkDetails);
@@ -166,9 +199,13 @@ class LinksSuggestionsIT extends IntegrationTestBase {
   }
 
   private LinkDetails getLinkDetails(LinkStatus linkStatus, String naturalId) {
-    return new LinkDetails().linkingRuleId(1)
-      .authorityId(UUID.fromString(LINKABLE_AUTHORITY_ID))
-      .authorityNaturalId(naturalId)
-      .status(linkStatus);
+    return getLinkDetails(linkStatus, naturalId, 1);
+  }
+
+  private LinkDetails getLinkDetails(LinkStatus linkStatus, String naturalId, Integer linkingRuleId) {
+    return new LinkDetails().linkingRuleId(linkingRuleId)
+        .authorityId(UUID.fromString(LINKABLE_AUTHORITY_ID))
+        .authorityNaturalId(naturalId)
+        .status(linkStatus);
   }
 }
