@@ -178,7 +178,7 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     var givenSubfields = Map.of("0", "oneAuthority");
     var givenRecord = getRecord("600", null, givenSubfields);
 
-    var expectedLinkDetails = new LinkDetails().status(ERROR).errorCause(DISABLED_AUTO_LINKING.getErrorCode());
+    var expectedLinkDetails = new LinkDetails().status(ERROR).errorCause(DISABLED_AUTO_LINKING.getCode());
     var expectedRecord = getRecord("600", expectedLinkDetails, givenSubfields);
 
     var requestBody = new ParsedRecordContentCollection().records(List.of(givenRecord));
