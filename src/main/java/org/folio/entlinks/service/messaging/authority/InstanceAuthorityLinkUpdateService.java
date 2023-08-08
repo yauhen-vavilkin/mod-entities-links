@@ -95,7 +95,7 @@ public class InstanceAuthorityLinkUpdateService {
     var dataStats = authorityDataStatService.createInBatch(authorityDataStats);
     for (AuthorityChangeHolder changeHolder : changeHolders) {
       for (AuthorityDataStat authorityDataStat : dataStats) {
-        if (authorityDataStat.getAuthorityData().getId() == changeHolder.getAuthorityId()) {
+        if (authorityDataStat.getAuthority().getId() == changeHolder.getAuthorityId()) {
           changeHolder.setAuthorityDataStatId(authorityDataStat.getId());
           break;
         }

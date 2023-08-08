@@ -3,7 +3,6 @@ package org.folio.entlinks.controller.delegate.suggestion;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -11,10 +10,9 @@ import java.util.Map;
 import org.folio.entlinks.client.SourceStorageClient;
 import org.folio.entlinks.controller.converter.SourceContentMapper;
 import org.folio.entlinks.domain.dto.LinkDetails;
-import org.folio.entlinks.domain.entity.AuthorityData;
-import org.folio.entlinks.domain.repository.AuthorityDataRepository;
+import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.integration.dto.FieldParsedContent;
-import org.folio.entlinks.integration.internal.SearchService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.LinksSuggestionService;
 import org.folio.spring.test.type.UnitTest;
@@ -32,13 +30,11 @@ class LinksSuggestionsByAuthorityNaturalIdTest {
   @Mock
   private LinksSuggestionService suggestionService;
   @Mock
-  private AuthorityDataRepository dataRepository;
+  private AuthorityRepository authorityRepository;
   @Mock
   private SourceStorageClient sourceStorageClient;
   @Mock
   private SourceContentMapper contentMapper;
-  @Mock
-  private SearchService searchService;
 
   @InjectMocks
   private LinksSuggestionsByAuthorityNaturalId delegate;
@@ -73,20 +69,13 @@ class LinksSuggestionsByAuthorityNaturalIdTest {
   void findExistingAuthorities_positive() {
     var ids = new HashSet<String>();
     delegate.findExistingAuthorities(ids);
-    verify(dataRepository).findByNaturalIds(ids);
+    verify(authorityRepository).findByNaturalIds(ids);
   }
 
   @Test
   void extractId_positive() {
-    var authorityData = AuthorityData.builder().naturalId("test").build();
-    var actual = delegate.extractId(authorityData);
-    assertThat(actual).isEqualTo(authorityData.getNaturalId());
-  }
-
-  @Test
-  void searchAuthorities_positive() {
-    var ids = new HashSet<String>();
-    delegate.searchAuthorities(ids);
-    verify(searchService).searchAuthoritiesByNaturalIds(new ArrayList<>(ids));
+    var authority = new Authority().withNaturalId("test");
+    var actual = delegate.extractId(authority);
+    assertThat(actual).isEqualTo(authority.getNaturalId());
   }
 }

@@ -56,8 +56,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 @IntegrationTest
 @DatabaseCleanup(tables = {DatabaseHelper.AUTHORITY_DATA_STAT_TABLE,
-                           DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE,
-                           DatabaseHelper.AUTHORITY_DATA_TABLE})
+                           DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE})
 class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
 
   private static final UUID SOURCE_FILE_ID = UUID.randomUUID();

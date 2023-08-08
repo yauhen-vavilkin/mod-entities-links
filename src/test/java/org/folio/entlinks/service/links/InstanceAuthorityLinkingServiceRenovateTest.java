@@ -9,6 +9,7 @@ import static org.folio.entlinks.domain.dto.LinksChangeEvent.TypeEnum.UPDATE;
 import static org.folio.support.TestDataUtils.getAuthorityRecordsCollection;
 import static org.folio.support.TestDataUtils.links;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyIterable;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -17,23 +18,26 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.folio.entlinks.client.SourceStorageClient;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.dto.StrippedParsedRecordCollection;
-import org.folio.entlinks.domain.entity.AuthorityData;
+import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
+import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.domain.repository.InstanceLinkRepository;
 import org.folio.entlinks.exception.DeletedLinkingAuthorityException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
-import org.folio.entlinks.integration.internal.SearchService;
 import org.folio.entlinks.integration.kafka.EventProducer;
+import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.spring.test.type.UnitTest;
+import org.folio.support.TestDataUtils;
 import org.folio.support.TestDataUtils.Link;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -59,9 +63,9 @@ class InstanceAuthorityLinkingServiceRenovateTest {
   @Mock
   private InstanceLinkRepository instanceLinkRepository;
   @Mock
-  private AuthorityDataService authorityDataService;
+  private AuthorityRepository authorityRepository;
   @Mock
-  private SearchService searchService;
+  private AuthorityService authorityService;
   @Mock
   private SourceStorageClient sourceStorageClient;
   @Mock
@@ -112,7 +116,7 @@ class InstanceAuthorityLinkingServiceRenovateTest {
       .anyMatch(subfieldChange -> subfieldChange.getCode().equals("0")
         && incomingLinks.stream()
         .anyMatch(link -> event.getSubfieldsChanges().get(0).getField().equals(link.getLinkingRule().getBibField())
-          && subfieldChange.getValue().equals(link.getAuthorityData().getNaturalId())))
+          && subfieldChange.getValue().equals(link.getAuthority().getNaturalId())))
       .anyMatch(subfieldChange -> subfieldChange.getCode().equals("a")
         && subfieldChange.getValue().equals("test")));
   }
@@ -295,7 +299,9 @@ class InstanceAuthorityLinkingServiceRenovateTest {
     when(linkingRulesService.getLinkingRules()).thenReturn(incomingLinks.stream()
       .map(InstanceAuthorityLink::getLinkingRule)
       .toList());
-    mockAuthorities(incomingLinks.subList(0, incomingLinks.size() - 1));
+    mockAuthorities(incomingLinks);
+    when(sourceStorageClient.fetchParsedRecordsInBatch(any()))
+        .thenReturn(getAuthorityRecordsCollection(incomingLinks.subList(0, 3)));
     when(instanceLinkRepository.findByInstanceId(instanceId)).thenReturn(existedLinks);
     doNothing().when(instanceLinkRepository).deleteAllInBatch(any());
     when(instanceLinkRepository.saveAll(any())).thenReturn(emptyList());
@@ -332,18 +338,9 @@ class InstanceAuthorityLinkingServiceRenovateTest {
       Link.of(2, 3),
       Link.of(3, 2)
     );
-    var authorityIds = incomingLinks.stream()
-      .map(link -> link.getAuthorityData().getId())
-      .collect(Collectors.toSet());
-    var deletedAuthorityIds = incomingLinks.stream()
-      .map(link -> link.getAuthorityData().getId())
-      .limit(2)
-      .collect(Collectors.toSet());
-    var authorityDataMock = deletedAuthorityIds.stream()
-      .map(authorityId -> new AuthorityData(authorityId, "deleted", true))
-      .toList();
-
-    when(authorityDataService.getByIdAndDeleted(authorityIds, true)).thenReturn(authorityDataMock);
+    var existingAuthoritiesById = Map.of(TestDataUtils.AUTHORITY_IDS[0], new Authority(),
+        TestDataUtils.AUTHORITY_IDS[1], new Authority());
+    when(authorityService.getAllByIds(anyIterable())).thenReturn(existingAuthoritiesById);
 
     var exception = Assertions.assertThrows(DeletedLinkingAuthorityException.class,
       () -> service.updateLinksWithRenovation(instanceId, incomingLinks));
@@ -410,15 +407,12 @@ class InstanceAuthorityLinkingServiceRenovateTest {
 
   @SuppressWarnings("unchecked")
   private void mockAuthorities(List<InstanceAuthorityLink> links, StrippedParsedRecordCollection authorityRecords) {
-    final var authorityDataSet = links.stream()
-      .map(InstanceAuthorityLink::getAuthorityData)
-      .toList();
+    final var authoritiesById = links.stream()
+      .map(InstanceAuthorityLink::getAuthority)
+      .collect(Collectors.toMap(Authority::getId, Function.identity()));
 
-    when(searchService.searchAuthoritiesByIds(any())).thenReturn(authorityDataSet);
+    when(authorityService.getAllByIds(anyIterable())).thenReturn(authoritiesById);
     when(sourceStorageClient.fetchParsedRecordsInBatch(any())).thenReturn(authorityRecords);
-    when(authorityDataService.saveAll(any(Collection.class)))
-      .thenAnswer(invocation -> ((Collection<AuthorityData>) invocation.getArgument(0)).stream()
-        .collect(Collectors.toMap(AuthorityData::getId, a -> a)));
   }
 
   private ArgumentCaptor<List<InstanceAuthorityLink>> linksCaptor() {

@@ -21,7 +21,6 @@ import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
 import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
 import org.folio.entlinks.integration.internal.AuthoritySourceRecordService;
 import org.folio.entlinks.integration.kafka.EventProducer;
-import org.folio.entlinks.service.links.AuthorityDataService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.AuthorityMappingRulesProcessingService;
@@ -38,7 +37,6 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   private final AuthorityMappingRulesProcessingService mappingRulesProcessingService;
   private final AuthoritySourceRecordService sourceRecordService;
   private final InstanceAuthorityLinkingRulesService linkingRulesService;
-  private final AuthorityDataService authorityDataService;
   private final EventProducer<LinkUpdateReport> eventProducer;
 
   public UpdateAuthorityChangeHandler(InstanceAuthorityChangeProperties instanceAuthorityChangeProperties,
@@ -47,14 +45,12 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
                                       AuthoritySourceRecordService sourceRecordService,
                                       InstanceAuthorityLinkingRulesService linkingRulesService,
                                       InstanceAuthorityLinkingService linkingService,
-                                      AuthorityDataService authorityDataService,
                                       EventProducer<LinkUpdateReport> eventProducer) {
     super(instanceAuthorityChangeProperties, linkingService);
     this.sourceFilesService = sourceFilesService;
     this.mappingRulesProcessingService = mappingRulesProcessingService;
     this.sourceRecordService = sourceRecordService;
     this.linkingRulesService = linkingRulesService;
-    this.authorityDataService = authorityDataService;
     this.eventProducer = eventProducer;
   }
 
@@ -102,7 +98,6 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   private List<LinksChangeEvent> handleNaturalIdChange(AuthorityChangeHolder changeHolder) {
     var authorityId = changeHolder.getAuthorityId();
     var naturalId = changeHolder.getNewNaturalId();
-    authorityDataService.updateNaturalId(naturalId, authorityId);
 
     var subfield0Change = getSubfield0Change(naturalId, changeHolder.getNewSourceFileId());
 
@@ -136,8 +131,6 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
       .ifPresent(subfield0Change -> fieldChangeHolders
         .forEach(fieldChangeHolder -> fieldChangeHolder.addExtraSubfieldChange(subfield0Change)));
 
-    updateAuthorityDataAccordingToChange(changeHolder, authorityId, fieldChangeHolders);
-
     var fieldChanges = fieldChangeHolders.stream()
       .map(FieldChangeHolder::toFieldChange)
       .toList();
@@ -145,14 +138,6 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
     return handleLinksByPartitions(authorityId,
       instanceLinks -> constructEvent(changeHolder.getAuthorityDataStatId(), authorityId, instanceLinks, fieldChanges)
     );
-  }
-
-  private void updateAuthorityDataAccordingToChange(AuthorityChangeHolder changeHolder, UUID authorityId,
-                                                    List<FieldChangeHolder> fieldChangeHolders) {
-    fieldChangeHolders.forEach(fieldChangeHolder -> {
-      var naturalId = changeHolder.getNewNaturalId();
-      authorityDataService.updateNaturalId(naturalId, authorityId);
-    });
   }
 
   private List<FieldChangeHolder> getFieldChangeHolders(UUID authorityId,

@@ -20,6 +20,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.With;
 import org.folio.entlinks.domain.entity.base.Identifiable;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -28,6 +29,7 @@ import org.springframework.data.domain.Persistable;
 
 @Getter
 @Setter
+@With
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor

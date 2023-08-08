@@ -15,14 +15,14 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface DataStatsMapper {
 
-  @Mapping(target = "authorityId", source = "authorityData.id")
+  @Mapping(target = "authorityId", source = "authority.id")
   @Mapping(target = "naturalIdOld", source = "authorityNaturalIdOld")
   @Mapping(target = "naturalIdNew", source = "authorityNaturalIdNew")
   @Mapping(target = "sourceFileOld", source = "authoritySourceFileOld")
   @Mapping(target = "sourceFileNew", source = "authoritySourceFileNew")
   AuthorityStatsDto convertToDto(AuthorityDataStat source);
 
-  @Mapping(target = "authorityNaturalId", source = "authorityData.naturalId")
+  @Mapping(target = "authorityNaturalId", source = "authority.naturalId")
   @Mapping(target = "bibRecordTag", source = "linkingRule.bibField")
   BibStatsDto convertToDto(InstanceAuthorityLink source);
 

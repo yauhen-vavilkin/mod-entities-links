@@ -3,7 +3,6 @@ package org.folio.entlinks.controller.delegate.suggestion;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,10 +11,9 @@ import java.util.UUID;
 import org.folio.entlinks.client.SourceStorageClient;
 import org.folio.entlinks.controller.converter.SourceContentMapper;
 import org.folio.entlinks.domain.dto.LinkDetails;
-import org.folio.entlinks.domain.entity.AuthorityData;
-import org.folio.entlinks.domain.repository.AuthorityDataRepository;
+import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.integration.dto.FieldParsedContent;
-import org.folio.entlinks.integration.internal.SearchService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.LinksSuggestionService;
 import org.folio.spring.test.type.UnitTest;
@@ -33,13 +31,11 @@ class LinksSuggestionsByAuthorityIdTest {
   @Mock
   private LinksSuggestionService suggestionService;
   @Mock
-  private AuthorityDataRepository dataRepository;
+  private AuthorityRepository authorityRepository;
   @Mock
   private SourceStorageClient sourceStorageClient;
   @Mock
   private SourceContentMapper contentMapper;
-  @Mock
-  private SearchService searchService;
 
   @InjectMocks
   private LinksSuggestionsByAuthorityId delegate;
@@ -76,20 +72,13 @@ class LinksSuggestionsByAuthorityIdTest {
   void findExistingAuthorities_positive() {
     var ids = new HashSet<UUID>();
     delegate.findExistingAuthorities(ids);
-    verify(dataRepository).findAllById(ids);
+    verify(authorityRepository).findAllById(ids);
   }
 
   @Test
   void extractId_positive() {
-    var authorityData = AuthorityData.builder().id(UUID.randomUUID()).build();
-    var actual = delegate.extractId(authorityData);
-    assertThat(actual).isEqualTo(authorityData.getId());
-  }
-
-  @Test
-  void searchAuthorities_positive() {
-    var ids = new HashSet<UUID>();
-    delegate.searchAuthorities(ids);
-    verify(searchService).searchAuthoritiesByIds(new ArrayList<>(ids));
+    var authority = new Authority().withId(UUID.randomUUID());
+    var actual = delegate.extractId(authority);
+    assertThat(actual).isEqualTo(authority.getId());
   }
 }

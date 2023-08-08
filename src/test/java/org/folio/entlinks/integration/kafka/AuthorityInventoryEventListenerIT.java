@@ -123,7 +123,6 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
     var authorityData = databaseHelper.getAuthority(link1.authorityId());
     assertions.then(authorityData.getId()).as("Id").isEqualTo(link1.authorityId());
     assertions.then(authorityData.getId()).as("Natural Id").isEqualTo("oldNaturalId");
-    assertions.then(authorityData.isDeleted()).as("State").isTrue();
   }
 
   @SneakyThrows

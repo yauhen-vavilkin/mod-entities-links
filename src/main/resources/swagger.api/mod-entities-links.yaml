@@ -514,9 +514,6 @@ components:
     linkStatus:
       $ref: schemas/authority/control/linkStatus.json
 
-    authoritySearchResult:
-      $ref: schemas/mod-search/authoritySearchResult.json
-
     authorityDto:
       $ref: schemas/authority-storage/authorityDto.yaml
 

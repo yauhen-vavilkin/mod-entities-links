@@ -3,9 +3,12 @@ package org.folio.entlinks.service.authority;
 import static org.folio.entlinks.utils.ServiceUtils.initId;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -50,6 +53,11 @@ public class AuthorityService {
     log.debug("getById:: Loading Authority by ID [id: {}]", id);
 
     return repository.findById(id).orElseThrow(() -> new AuthorityNotFoundException(id));
+  }
+
+  public Map<UUID, Authority> getAllByIds(Iterable<UUID> ids) {
+    return repository.findAllById(ids).stream()
+        .collect(Collectors.toMap(Authority::getId, Function.identity()));
   }
 
   @Transactional

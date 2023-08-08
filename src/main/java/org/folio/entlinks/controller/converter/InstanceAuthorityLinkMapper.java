@@ -13,21 +13,20 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface InstanceAuthorityLinkMapper {
 
-  @Mapping(target = "authorityId", source = "authorityData.id")
-  @Mapping(target = "authorityNaturalId", source = "authorityData.naturalId")
+  @Mapping(target = "authorityId", source = "authority.id")
+  @Mapping(target = "authorityNaturalId", source = "authority.naturalId")
   @Mapping(target = "linkingRuleId", source = "linkingRule.id")
   InstanceLinkDto convertToDto(InstanceAuthorityLink source);
 
   default InstanceLinkDtoCollection convertToDto(List<InstanceAuthorityLink> source) {
     var convertedLinks = source.stream().map(this::convertToDto).toList();
 
-    return new InstanceLinkDtoCollection()
-      .links(convertedLinks)
+    return new InstanceLinkDtoCollection(convertedLinks)
       .totalRecords(source.size());
   }
 
-  @Mapping(target = "authorityData.id", source = "authorityId")
-  @Mapping(target = "authorityData.naturalId", source = "authorityNaturalId")
+  @Mapping(target = "authority.id", source = "authorityId")
+  @Mapping(target = "authority.naturalId", source = "authorityNaturalId")
   @Mapping(target = "linkingRule.id", source = "linkingRuleId")
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "errorCause", ignore = true)

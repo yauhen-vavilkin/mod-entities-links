@@ -17,7 +17,6 @@
 * Add possibility of matching by Authority id for links suggestions ([MODELINKS-113](https://issues.folio.org/browse/MODELINKS-113))
 * Relocate Authority API and associated reference APIs ([MODELINKS-106](https://issues.folio.org/browse/MODELINKS-106))
 * Add possibility of ignoring autoLinkingEnabled flag for links suggestions ([MODELINKS-113](https://issues.folio.org/browse/MODELINKS-114))
-* Relocate Authority API and associated reference APIs ([MODELINKS-106](https://issues.folio.org/browse/MODELINKS-106))
 
 ### Tech Dept
 * Upgrade folio-spring-base to v7.1.0 ([MODELINKS-99](https://issues.folio.org/browse/MODELINKS-99))

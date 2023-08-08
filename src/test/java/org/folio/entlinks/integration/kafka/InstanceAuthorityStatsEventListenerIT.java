@@ -49,8 +49,7 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 
 @IntegrationTest
 @DatabaseCleanup(tables = {DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE,
-                           DatabaseHelper.AUTHORITY_DATA_STAT_TABLE,
-                           DatabaseHelper.AUTHORITY_DATA_TABLE})
+                           DatabaseHelper.AUTHORITY_DATA_STAT_TABLE})
 class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
 
   private KafkaMessageListenerContainer<String, LinksChangeEvent> container;
