@@ -1,13 +1,9 @@
 package org.folio.support;
 
-import static java.lang.String.format;
-import static org.folio.support.base.TestConstants.TENANT_ID;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 import org.folio.entlinks.domain.entity.Authority;
-import org.folio.entlinks.domain.entity.AuthorityData;
 import org.folio.entlinks.domain.entity.AuthorityNoteType;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
@@ -21,7 +17,6 @@ public class DatabaseHelper {
 
   public static final String AUTHORITY_DATA_STAT_TABLE = "authority_data_stat";
   public static final String INSTANCE_AUTHORITY_LINK_TABLE = "instance_authority_link";
-  public static final String AUTHORITY_DATA_TABLE = "authority_data";
   public static final String AUTHORITY_NOTE_TYPE_TABLE = "authority_note_type";
   public static final String AUTHORITY_SOURCE_FILE_TABLE = "authority_source_file";
   public static final String AUTHORITY_SOURCE_FILE_CODE_TABLE = "authority_source_file_code";
@@ -49,19 +44,6 @@ public class DatabaseHelper {
     return string == null ? null : UUID.fromString(string);
   }
 
-  public AuthorityData getAuthority(UUID id) {
-    var table = getTable(TENANT_ID, AUTHORITY_DATA_TABLE);
-    var sql = format("SELECT * FROM %s WHERE id = ?", table);
-    return jdbcTemplate.query(sql, rs -> {
-      rs.next();
-      var data = new AuthorityData();
-      data.setId(getUuid(rs));
-      data.setDeleted(rs.getBoolean("state"));
-      data.setNaturalId(rs.getString("natural_id"));
-      return data;
-    }, id);
-  }
-
   public void saveAuthorityNoteType(String tenant, AuthorityNoteType entity) {
     var sql = "INSERT INTO " + getTable(tenant, AUTHORITY_NOTE_TYPE_TABLE)
       + " (id, name, source, created_date, updated_date, created_by_user_id, "
@@ -77,6 +59,12 @@ public class DatabaseHelper {
     jdbcTemplate.update(sql, entity.getId(), entity.getName(),
       entity.getSource(), entity.getType(), entity.getBaseUrl(), entity.getCreatedDate(),
       entity.getUpdatedDate(), entity.getCreatedByUserId(), entity.getUpdatedByUserId());
+  }
+
+  public void updateAuthorityNaturalId(String tenant, UUID authorityId, String naturalId) {
+    var sql = "UPDATE " + getTable(tenant, AUTHORITY_TABLE)
+        + " SET natural_id = ? where id = ?";
+    jdbcTemplate.update(sql, naturalId, authorityId);
   }
 
   public void saveAuthoritySourceFileCode(String tenant, UUID sourceFileId, AuthoritySourceFileCode code) {
