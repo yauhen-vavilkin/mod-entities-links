@@ -157,6 +157,14 @@ class LinksSuggestionsIT extends IntegrationTestBase {
   @SneakyThrows
   void getAuthDataStat_shouldFillErrorDetails_whenTwoSuggestionsFound() {
     var naturalId = "twoAuthority";
+    var authority1 = TestDataUtils.AuthorityTestData.authority(0, 0);
+    authority1.setId(UUID.fromString("517f3355-081c-4aae-9209-ccb305f25f7e"));
+    authority1.setNaturalId(naturalId);
+    var authority2 = TestDataUtils.AuthorityTestData.authority(0, 0);
+    authority2.setId(UUID.fromString("617f3355-081c-4aae-9209-ccb305f25f7e"));
+    authority2.setNaturalId(naturalId);
+    databaseHelper.saveAuthority(TENANT_ID, authority1);
+    databaseHelper.saveAuthority(TENANT_ID, authority2);
     var givenSubfields = Map.of("0", naturalId);
     var givenRecord = getRecord("100", null, givenSubfields);
 
