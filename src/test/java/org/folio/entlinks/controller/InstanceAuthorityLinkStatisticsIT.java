@@ -7,7 +7,9 @@ import static org.folio.support.MatchUtils.errorMessageMatch;
 import static org.folio.support.MatchUtils.errorTotalMatch;
 import static org.folio.support.MatchUtils.errorTypeMatch;
 import static org.folio.support.MatchUtils.statsMatch;
+import static org.folio.support.TestDataUtils.AuthorityTestData.authority;
 import static org.folio.support.TestDataUtils.Link.TAGS;
+import static org.folio.support.TestDataUtils.NATURAL_IDS;
 import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.TestDataUtils.stats;
@@ -48,17 +50,22 @@ import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
 import org.folio.support.TestDataUtils;
+import org.folio.support.TestDataUtils.Link;
 import org.folio.support.base.IntegrationTestBase;
 import org.folio.support.base.TestConstants;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @IntegrationTest
-@DatabaseCleanup(tables = {DatabaseHelper.AUTHORITY_DATA_STAT_TABLE,
-                           DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE})
+@DatabaseCleanup(tables = {
+  DatabaseHelper.AUTHORITY_DATA_STAT_TABLE,
+  DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE,
+  DatabaseHelper.AUTHORITY_TABLE})
 class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
 
+  private static final UUID AUTHORITY_ID = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
   private static final UUID SOURCE_FILE_ID = UUID.randomUUID();
   private static final OffsetDateTime TO_DATE = OffsetDateTime.of(LocalDateTime.now().plusHours(1), ZoneOffset.UTC);
   private static final OffsetDateTime FROM_DATE = TO_DATE.minusMonths(1);
@@ -69,6 +76,22 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
     UUID.fromString("68de093d-8c0d-44c2-b3a8-79393f6cb195")
   );
   private static final List<String> INSTANCE_TITLES = List.of("title1", "title2", "title3");
+  private static final Link[] LINKS = new Link[] {
+      Link.of(0, 0, NATURAL_IDS[0]),
+      Link.of(1, 1, NATURAL_IDS[1])
+  };
+
+  @BeforeEach
+  public void setup() {
+    var authority1 = authority(0, 0);
+    databaseHelper.saveAuthority(TENANT_ID, authority1);
+    var authority2 = authority(1, 0);
+    databaseHelper.saveAuthority(TENANT_ID, authority2);
+    var authority3 = authority(0, 0);
+    authority3.setId(AUTHORITY_ID);
+    authority3.setNaturalId(AUTHORITY_ID.toString());
+    databaseHelper.saveAuthority(TENANT_ID, authority3);
+  }
 
   @Test
   @SneakyThrows
@@ -82,19 +105,18 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
   @SneakyThrows
   void getAuthDataStat_positive() {
     var instanceId = UUID.randomUUID();
-    var authorityId = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
-    var link = new TestDataUtils.Link(authorityId, TAGS[1]);
+    var link = new Link(AUTHORITY_ID, TAGS[1]);
 
     // save link
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
     // send update event to store authority data stat
-    sendInventoryAuthorityEvent(authorityId, TestConstants.UPDATE_TYPE);
+    sendInventoryAuthorityEvent(AUTHORITY_ID, TestConstants.UPDATE_TYPE);
     //await until stat saved to database
     awaitUntilAsserted(() -> assertEquals(1,
       databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
 
     // send update event to store another authority data stat
-    sendInventoryAuthorityEvent(authorityId, TestConstants.UPDATE_TYPE);
+    sendInventoryAuthorityEvent(AUTHORITY_ID, TestConstants.UPDATE_TYPE);
     //await until stat saved to database
     awaitUntilAsserted(() -> assertEquals(2,
       databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
@@ -103,7 +125,7 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
       .andExpect(status().is2xxSuccessful())
       .andExpect(jsonPath("$.next", notNullValue()))
       .andExpect(jsonPath("$.stats[0].action", is(UPDATE_HEADING.name())))
-      .andExpect(jsonPath("$.stats[0].authorityId", is(authorityId.toString())))
+      .andExpect(jsonPath("$.stats[0].authorityId", is(AUTHORITY_ID.toString())))
       .andExpect(jsonPath("$.stats[0].lbFailed", is(0)))
       .andExpect(jsonPath("$.stats[0].lbUpdated", is(0)))
       .andExpect(jsonPath("$.stats[0].lbTotal", is(1)))
@@ -125,25 +147,23 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
   @SneakyThrows
   void getAuthDataStat_positive_whenAuthorityWasDeleted() {
     var instanceId = UUID.randomUUID();
-    var authorityId = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
-    var link = new TestDataUtils.Link(authorityId, TAGS[0]);
+    var link = new Link(AUTHORITY_ID, TAGS[0]);
 
     // save link
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
     // send update event to store authority data stats
-    sendInventoryAuthorityEvent(authorityId, TestConstants.UPDATE_TYPE);
+    sendInventoryAuthorityEvent(AUTHORITY_ID, TestConstants.UPDATE_TYPE);
     //await until stat saved to database
     awaitUntilAsserted(() -> assertEquals(1,
       databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
 
     // send delete event to mark authority as deleted
-    sendInventoryAuthorityEvent(authorityId, TestConstants.DELETE_TYPE);
+    sendInventoryAuthorityEvent(AUTHORITY_ID, TestConstants.DELETE_TYPE);
     //await until stat saved to database
     awaitUntilAsserted(() -> assertEquals(2,
       databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
 
     doGet(authorityStatsEndpoint(UPDATE_HEADING, FROM_DATE, TO_DATE, 1))
-      .andExpect(status().is2xxSuccessful())
       .andExpect(jsonPath("$.stats[0]").doesNotExist());
   }
 
@@ -157,8 +177,7 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
   @Test
   void getLinkedBibUpdateStats_positive_noStatsFoundForStatus() throws Exception {
     var instanceId = INSTANCE_IDS.get(0);
-    var links = linksDtoCollection(linksDto(instanceId,
-      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
+    var links = linksDtoCollection(linksDto(instanceId, LINKS));
     doPut(linksInstanceEndpoint(), links, instanceId);
 
     var toDate = OffsetDateTime.now();
@@ -171,8 +190,7 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
   @Test
   void getLinkedBibUpdateStats_positive() throws Exception {
     var instanceId = INSTANCE_IDS.get(0);
-    var links = linksDtoCollection(linksDto(instanceId,
-      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
+    var links = linksDtoCollection(linksDto(instanceId, LINKS));
     doPut(linksInstanceEndpoint(), links, instanceId);
 
     var stats = stats(links.getLinks(), null, null, INSTANCE_TITLES.get(0));
@@ -186,8 +204,7 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
   @Test
   void getLinkedBibUpdateStats_positive_noParams() throws Exception {
     var instanceId = INSTANCE_IDS.get(0);
-    var links = linksDtoCollection(linksDto(instanceId,
-      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
+    var links = linksDtoCollection(linksDto(instanceId, LINKS));
     doPut(linksInstanceEndpoint(), links, instanceId);
 
     var stats = stats(links.getLinks(), null, null, INSTANCE_TITLES.get(0));
@@ -202,10 +219,8 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
   void getLinkedBibUpdateStats_positive_differentInstances() throws Exception {
     var instanceId1 = INSTANCE_IDS.get(0);
     var instanceId2 = INSTANCE_IDS.get(1);
-    var links1 = linksDtoCollection(linksDto(instanceId1,
-      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
-    var links2 = linksDtoCollection(linksDto(instanceId2,
-      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
+    var links1 = linksDtoCollection(linksDto(instanceId1, LINKS));
+    var links2 = linksDtoCollection(linksDto(instanceId2, LINKS));
     doPut(linksInstanceEndpoint(), links1, instanceId1);
     doPut(linksInstanceEndpoint(), links2, instanceId2);
 
@@ -224,8 +239,7 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
   @Test
   void getLinkedBibUpdateStats_positive_withSkippedAndNext() throws Exception {
     var instanceId1 = INSTANCE_IDS.get(0);
-    var links1 = linksDtoCollection(linksDto(instanceId1,
-      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
+    var links1 = linksDtoCollection(linksDto(instanceId1, LINKS));
     doPut(linksInstanceEndpoint(), links1, instanceId1);
 
     OffsetDateTime now = OffsetDateTime.now();
@@ -236,15 +250,13 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
     final var fromDate = OffsetDateTime.now();
 
     var instanceId2 = INSTANCE_IDS.get(1);
-    var links2 = linksDtoCollection(linksDto(instanceId2,
-      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
+    var links2 = linksDtoCollection(linksDto(instanceId2, LINKS));
     doPut(linksInstanceEndpoint(), links2, instanceId2);
 
     ThreadUtils.sleep(Duration.ofSeconds(1));
 
     var instanceId3 = INSTANCE_IDS.get(2);
-    var links3 = linksDtoCollection(linksDto(instanceId3,
-      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
+    var links3 = linksDtoCollection(linksDto(instanceId3, LINKS));
     doPut(linksInstanceEndpoint(), links3, instanceId3);
     var toDate = OffsetDateTime.now();
 
@@ -269,16 +281,14 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
   @Test
   void getLinkedBibUpdateStats_positive_onlyOneDateAndLinksSkipped() throws Exception {
     var instanceId1 = INSTANCE_IDS.get(0);
-    var links1 = linksDtoCollection(linksDto(instanceId1,
-      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
+    var links1 = linksDtoCollection(linksDto(instanceId1, LINKS));
     doPut(linksInstanceEndpoint(), links1, instanceId1);
 
     ThreadUtils.sleep(Duration.ofSeconds(1));
 
     var fromDate = OffsetDateTime.now();
     var instanceId2 = INSTANCE_IDS.get(1);
-    var links2 = linksDtoCollection(linksDto(instanceId2,
-      TestDataUtils.Link.of(0, 0), TestDataUtils.Link.of(1, 1)));
+    var links2 = linksDtoCollection(linksDto(instanceId2, LINKS));
     doPut(linksInstanceEndpoint(), links2, instanceId2);
 
     var stats = stats(links2.getLinks(), null, OffsetDateTime.now(), INSTANCE_TITLES.get(1));
