@@ -6,6 +6,7 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.controller.converter.AuthorityMapper;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
+import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.entlinks.service.authority.AuthorityService;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,7 @@ public class AuthorityServiceDelegate {
 
   public void updateAuthority(UUID id, AuthorityDto authorityDto) {
     var modifiedEntity = mapper.toEntity(authorityDto);
-    var existingEntity = service.getById(id);
+    var existingEntity = new Authority(service.getById(id));
     var updatedEntity = service.update(id, modifiedEntity);
     eventPublisher.publishUpdateEvent(mapper.toDto(existingEntity), mapper.toDto(updatedEntity));
   }

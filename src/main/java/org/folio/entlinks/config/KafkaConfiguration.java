@@ -75,7 +75,7 @@ public class KafkaConfiguration {
   /**
    * Creates and configures {@link org.springframework.kafka.core.ConsumerFactory} as Spring bean.
    *
-   * <p>Key type - {@link String}, value - {@link InventoryEvent}.</p>
+   * <p>Key type - {@link String}, value - {@link LinkUpdateReport}.</p>
    *
    * @return typed {@link org.springframework.kafka.core.ConsumerFactory} object as Spring bean.
    */
@@ -173,7 +173,7 @@ public class KafkaConfiguration {
   }
 
   private <T> ConsumerFactory<String, T> consumerFactoryForEvent(KafkaProperties kafkaProperties, Class<T> eventClass) {
-    var deserializer = new JsonDeserializer<>(eventClass);
+    var deserializer = new JsonDeserializer<>(eventClass, false);
     Map<String, Object> config = new HashMap<>(kafkaProperties.buildConsumerProperties());
     config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     config.put(VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);

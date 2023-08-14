@@ -5,14 +5,17 @@ import static org.folio.entlinks.utils.ObjectUtils.getDifference;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.collections4.CollectionUtils;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
 import org.folio.entlinks.domain.dto.InventoryEvent;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
+import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
@@ -32,18 +35,21 @@ public class InstanceAuthorityLinkUpdateService {
   private final AuthorityMappingRulesProcessingService mappingRulesProcessingService;
   private final InstanceAuthorityLinkingService linkingService;
   private final EventProducer<LinksChangeEvent> eventProducer;
+  private final AuthorityRepository authorityRepository;
 
   public InstanceAuthorityLinkUpdateService(AuthorityDataStatService authorityDataStatService,
                                             AuthorityMappingRulesProcessingService mappingRulesProcessingService,
                                             InstanceAuthorityLinkingService linkingService,
                                             EventProducer<LinksChangeEvent> eventProducer,
-                                            List<AuthorityChangeHandler> changeHandlers) {
+                                            List<AuthorityChangeHandler> changeHandlers,
+                                            AuthorityRepository authorityRepository) {
     this.authorityDataStatService = authorityDataStatService;
     this.mappingRulesProcessingService = mappingRulesProcessingService;
     this.linkingService = linkingService;
     this.eventProducer = eventProducer;
     this.changeHandlers = changeHandlers.stream()
       .collect(Collectors.toMap(AuthorityChangeHandler::supportedAuthorityChangeType, handler -> handler));
+    this.authorityRepository = authorityRepository;
   }
 
   public void handleAuthoritiesChanges(List<InventoryEvent> events) {
@@ -88,14 +94,20 @@ public class InstanceAuthorityLinkUpdateService {
   }
 
   private void prepareAndSaveAuthorityDataStats(List<AuthorityChangeHolder> changeHolders) {
+    var deletedAuthorityIds = getDeletedAuthorityIds(changeHolders);
     var authorityDataStats = changeHolders.stream()
-      .map(AuthorityChangeHolder::toAuthorityDataStat)
-      .toList();
+        .filter(change -> isNotUpdateChangeForDeletedAuthority(change, deletedAuthorityIds))
+        .map(AuthorityChangeHolder::toAuthorityDataStat)
+        .toList();
+
+    if (CollectionUtils.isNotEmpty(deletedAuthorityIds)) {
+      authorityDataStatService.deleteByAuthorityIds(deletedAuthorityIds);
+    }
 
     var dataStats = authorityDataStatService.createInBatch(authorityDataStats);
     for (AuthorityChangeHolder changeHolder : changeHolders) {
       for (AuthorityDataStat authorityDataStat : dataStats) {
-        if (authorityDataStat.getAuthority().getId() == changeHolder.getAuthorityId()) {
+        if (authorityDataStat.getAuthorityId().equals(changeHolder.getAuthorityId())) {
           changeHolder.setAuthorityDataStatId(authorityDataStat.getId());
           break;
         }
@@ -126,6 +138,24 @@ public class InstanceAuthorityLinkUpdateService {
       })
       .filter(Objects::nonNull)
       .collect(Collectors.toMap(AuthorityChange::changeField, ac -> ac));
+  }
+
+  private boolean isNotUpdateChangeForDeletedAuthority(AuthorityChangeHolder change, Set<UUID> deletedAuthorityIds) {
+    if (AuthorityChangeType.UPDATE.equals(change.getChangeType())) {
+      // if we have deleted authority and updated authority changes at the same time, we will save authority
+      // stat only for the deleted change as in any way we are going to remove all previous authority change stats
+      // for that authority
+      return Boolean.FALSE.equals(deletedAuthorityIds.contains(change.getAuthorityId()));
+    }
+    return true;
+  }
+
+  private Set<UUID> getDeletedAuthorityIds(List<AuthorityChangeHolder> changeHolders) {
+    return changeHolders.stream()
+        .filter(changeHolder -> AuthorityChangeType.DELETE.equals(changeHolder.getChangeType()))
+        .map(AuthorityChangeHolder::getAuthorityId)
+        .filter(authorityId -> authorityRepository.findById(authorityId).isEmpty())
+        .collect(Collectors.toSet());
   }
 
   private void sendEvents(List<LinksChangeEvent> events, AuthorityChangeType type) {

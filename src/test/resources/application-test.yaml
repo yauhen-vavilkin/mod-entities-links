@@ -56,7 +56,7 @@ folio:
     listener:
       authority:
         concurrency: 1
-        topic-pattern: (${folio.environment}\.)(.*\.)inventory\.authority
+        topic-pattern: (${folio.environment}\.)(.*\.)authorities\.authority
         group-id: ${folio.environment}-mod-entities-links-authorities-group
       instance-authority-stats:
         concurrency: 1

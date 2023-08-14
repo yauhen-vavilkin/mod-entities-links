@@ -5,16 +5,20 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
 import org.folio.entlinks.domain.dto.InventoryEvent;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
+import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
@@ -42,6 +46,8 @@ class InstanceAuthorityLinkUpdateServiceTest {
   private @Mock AuthorityChangeHandler deleteHandler;
   private @Mock AuthorityMappingRulesProcessingService mappingRulesProcessingService;
   private @Mock InstanceAuthorityLinkingService linkingService;
+  private @Mock AuthorityRepository authorityRepository;
+
   private InstanceAuthorityLinkUpdateService service;
 
   @BeforeEach
@@ -50,7 +56,8 @@ class InstanceAuthorityLinkUpdateServiceTest {
     when(deleteHandler.supportedAuthorityChangeType()).thenReturn(AuthorityChangeType.DELETE);
 
     service = new InstanceAuthorityLinkUpdateService(authorityDataStatService,
-      mappingRulesProcessingService, linkingService, eventProducer, List.of(updateHandler, deleteHandler));
+      mappingRulesProcessingService, linkingService, eventProducer, List.of(updateHandler, deleteHandler),
+        authorityRepository);
   }
 
   @Test
@@ -67,6 +74,8 @@ class InstanceAuthorityLinkUpdateServiceTest {
 
     verify(eventProducer).sendMessages(argumentCaptor.capture());
     verify(authorityDataStatService).createInBatch(anyList());
+    verifyNoInteractions(authorityRepository);
+    verifyNoMoreInteractions(authorityDataStatService);
 
     var messages = argumentCaptor.getValue();
     assertThat(messages).hasSize(1);
@@ -85,6 +94,8 @@ class InstanceAuthorityLinkUpdateServiceTest {
 
     verify(eventProducer, never()).sendMessages(argumentCaptor.capture());
     verify(authorityDataStatService).createInBatch(anyList());
+    verifyNoInteractions(authorityRepository);
+    verifyNoMoreInteractions(authorityDataStatService);
   }
 
   @Test
@@ -97,10 +108,13 @@ class InstanceAuthorityLinkUpdateServiceTest {
 
     when(linkingService.countLinksByAuthorityIds(Set.of(id))).thenReturn(Map.of(id, 1));
     when(deleteHandler.handle(any())).thenReturn(List.of(changeEvent));
+    when(authorityRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
     service.handleAuthoritiesChanges(inventoryEvents);
 
     verify(eventProducer).sendMessages(argumentCaptor.capture());
+    verify(authorityRepository).findById(any(UUID.class));
+    verify(authorityDataStatService).deleteByAuthorityIds(Set.of(id));
     verify(authorityDataStatService).createInBatch(anyList());
 
     var messages = argumentCaptor.getValue();

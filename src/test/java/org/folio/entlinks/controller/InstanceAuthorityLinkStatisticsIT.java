@@ -15,6 +15,7 @@ import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.TestDataUtils.stats;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
+import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.authorityStatsEndpoint;
 import static org.folio.support.base.TestConstants.inventoryAuthorityTopic;
 import static org.folio.support.base.TestConstants.linksInstanceEndpoint;
@@ -158,9 +159,10 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
       databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
 
     // send delete event to mark authority as deleted
-    sendInventoryAuthorityEvent(AUTHORITY_ID, TestConstants.DELETE_TYPE);
-    //await until stat saved to database
-    awaitUntilAsserted(() -> assertEquals(2,
+    //sendInventoryAuthorityEvent(AUTHORITY_ID, TestConstants.DELETE_TYPE);
+    doDelete(authorityEndpoint(AUTHORITY_ID));
+    // wait until stat for DELETE saved to database and for UPDATE removed from database
+    awaitUntilAsserted(() -> assertEquals(1,
       databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
 
     doGet(authorityStatsEndpoint(UPDATE_HEADING, FROM_DATE, TO_DATE, 1))

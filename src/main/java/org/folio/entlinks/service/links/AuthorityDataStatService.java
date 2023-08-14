@@ -7,6 +7,7 @@ import static org.folio.entlinks.utils.DateUtils.currentTs;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -19,7 +20,6 @@ import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.domain.entity.AuthorityDataStatStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.repository.AuthorityDataStatRepository;
-import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.entlinks.utils.DateUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthorityDataStatService {
 
   private final AuthorityDataStatRepository statRepository;
-  private final AuthorityService authorityService;
 
   private final InstanceAuthorityLinkingService linkingService;
 
@@ -41,8 +40,6 @@ public class AuthorityDataStatService {
     for (AuthorityDataStat stat : stats) {
       stat.setId(UUID.randomUUID());
       stat.setStatus(AuthorityDataStatStatus.IN_PROGRESS);
-      var authority = authorityService.getById(stat.getAuthority().getId());
-      stat.setAuthority(authority);
     }
 
     return statRepository.saveAll(stats);
@@ -70,6 +67,11 @@ public class AuthorityDataStatService {
     }
   }
 
+  @Transactional
+  public void deleteByAuthorityIds(Set<UUID> authorityIds) {
+    statRepository.deleteByAuthorityIds(authorityIds);
+  }
+
   private void checkIfAllFailed(List<LinkUpdateReport> reports, AuthorityDataStat dataStat) {
     reports.stream()
       .filter(linkUpdateReport -> CollectionUtils.isEmpty(linkUpdateReport.getLinkIds())
@@ -93,7 +95,7 @@ public class AuthorityDataStatService {
 
         linkingService.saveAll(report.getInstanceId(), links);
       } else if (dataStat.isPresent()) {
-        var authorityId = dataStat.get().getAuthority().getId();
+        var authorityId = dataStat.get().getAuthorityId();
         linkingService.updateStatus(authorityId, status, report.getFailCause());
       }
     });

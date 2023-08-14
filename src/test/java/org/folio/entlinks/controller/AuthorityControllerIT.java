@@ -391,14 +391,13 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var authority = createAuthority(0);
 
     var contentAsString = doGet(authorityEndpoint(authority.getId())).andReturn().getResponse().getContentAsString();
-    var existingDto = objectMapper.readValue(contentAsString, AuthorityDto.class);
+    var expectedDto = objectMapper.readValue(contentAsString, AuthorityDto.class);
 
     doDelete(authorityEndpoint(authority.getId()));
     var receivedEvent = getReceivedEvent();
 
     assertEquals(0, databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID));
-
-    verifyReceivedDomainEvent(receivedEvent, DELETE, DOMAIN_EVENT_HEADER_KEYS, existingDto, AuthorityDto.class,
+    verifyReceivedDomainEvent(receivedEvent, DELETE, DOMAIN_EVENT_HEADER_KEYS, expectedDto, AuthorityDto.class,
         "metadata.createdDate", "metadata.updatedDate");
   }
 
