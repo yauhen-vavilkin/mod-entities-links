@@ -58,7 +58,7 @@ public class LinksSuggestionsByAuthorityNaturalId extends LinksSuggestionsServic
 
   @Override
   protected List<Authority> findExistingAuthorities(Set<String> ids) {
-    return authorityRepository.findByNaturalIds(ids);
+    return authorityRepository.findByNaturalIdInAndDeletedFalse(ids);
   }
 
   @Override

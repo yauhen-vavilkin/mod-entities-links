@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.folio.support.TestDataUtils.links;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyIterable;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -366,7 +366,7 @@ class InstanceAuthorityLinkingServiceTest {
         .map(InstanceAuthorityLink::getAuthority)
         .collect(Collectors.toMap(Authority::getId, Function.identity()));
 
-    when(authorityService.getAllByIds(anyIterable())).thenReturn(authoritiesById);
+    when(authorityService.getAllByIds(anyCollection())).thenReturn(authoritiesById);
   }
 
 }

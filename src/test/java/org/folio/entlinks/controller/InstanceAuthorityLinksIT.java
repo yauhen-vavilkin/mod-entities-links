@@ -9,6 +9,7 @@ import static org.folio.support.MatchUtils.errorParameterMatch;
 import static org.folio.support.MatchUtils.errorTotalMatch;
 import static org.folio.support.MatchUtils.errorTypeMatch;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authority;
+import static org.folio.support.TestDataUtils.AuthorityTestData.authoritySourceFile;
 import static org.folio.support.TestDataUtils.Link.TAGS;
 import static org.folio.support.TestDataUtils.NATURAL_IDS;
 import static org.folio.support.TestDataUtils.linksDto;
@@ -50,6 +51,7 @@ import org.folio.support.base.IntegrationTestBase;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -57,7 +59,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 @IntegrationTest
-@DatabaseCleanup(tables = {DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE, DatabaseHelper.AUTHORITY_TABLE})
+@DatabaseCleanup(tables = {
+  DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE,
+  DatabaseHelper.AUTHORITY_TABLE,
+  DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class InstanceAuthorityLinksIT extends IntegrationTestBase {
 
   public static Stream<Arguments> requiredFieldMissingProvider() {
@@ -82,6 +87,12 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
           .authorityId(randomUUID()).authorityNaturalId("id")
       )
     );
+  }
+
+  @BeforeEach
+  void setup() {
+    var sourceFile = authoritySourceFile(0);
+    databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile);
   }
 
   @Test

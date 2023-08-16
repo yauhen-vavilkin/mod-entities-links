@@ -69,7 +69,7 @@ class LinksSuggestionsServiceDelegateTest {
     when(linkingRulesService.getMinAuthorityField()).thenReturn(MIN_AUTHORITY_FIELD);
     when(linkingRulesService.getMaxAuthorityField()).thenReturn(MAX_AUTHORITY_FIELD);
 
-    when(authorityRepository.findByNaturalIds(Set.of(NATURAL_ID))).thenReturn(List.of(authority));
+    when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID))).thenReturn(List.of(authority));
 
     when(sourceStorageClient
       .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
@@ -94,7 +94,7 @@ class LinksSuggestionsServiceDelegateTest {
     when(linkingRulesService.getMinAuthorityField()).thenReturn(MIN_AUTHORITY_FIELD);
     when(linkingRulesService.getMaxAuthorityField()).thenReturn(MAX_AUTHORITY_FIELD);
 
-    when(authorityRepository.findByNaturalIds(Set.of(NATURAL_ID))).thenReturn(authority);
+    when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID))).thenReturn(authority);
     when(sourceStorageClient
       .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
       .thenReturn(fetchRequest);
@@ -104,7 +104,7 @@ class LinksSuggestionsServiceDelegateTest {
     var parsedContentCollection = new ParsedRecordContentCollection().records(records);
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
-    verify(authorityRepository).findByNaturalIds(Set.of(NATURAL_ID));
+    verify(authorityRepository).findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID));
     verify(sourceStorageClient).fetchParsedRecordsInBatch(fetchRequest);
   }
 
@@ -119,7 +119,7 @@ class LinksSuggestionsServiceDelegateTest {
     when(linkingRulesService.getMinAuthorityField()).thenReturn(MIN_AUTHORITY_FIELD);
     when(linkingRulesService.getMaxAuthorityField()).thenReturn(MAX_AUTHORITY_FIELD);
 
-    when(authorityRepository.findByNaturalIds(Set.of(NATURAL_ID))).thenReturn(authority);
+    when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID))).thenReturn(authority);
     when(sourceStorageClient
       .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
       .thenReturn(fetchRequest);
@@ -129,7 +129,7 @@ class LinksSuggestionsServiceDelegateTest {
     var parsedContentCollection = new ParsedRecordContentCollection().records(records);
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
-    verify(authorityRepository).findByNaturalIds(Set.of(NATURAL_ID));
+    verify(authorityRepository).findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID));
     verify(sourceStorageClient).fetchParsedRecordsInBatch(fetchRequest);
   }
 
@@ -139,12 +139,12 @@ class LinksSuggestionsServiceDelegateTest {
     var rules = List.of(getRule("110"));
 
     when(linkingRulesService.getLinkingRules()).thenReturn(rules);
-    when(authorityRepository.findByNaturalIds(emptySet())).thenReturn(emptyList());
+    when(authorityRepository.findByNaturalIdInAndDeletedFalse(emptySet())).thenReturn(emptyList());
 
     var parsedContentCollection = new ParsedRecordContentCollection().records(List.of(record));
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
-    verify(authorityRepository).findByNaturalIds(emptySet());
+    verify(authorityRepository).findByNaturalIdInAndDeletedFalse(emptySet());
     verify(sourceStorageClient, times(0)).fetchParsedRecordsInBatch(any());
   }
 
@@ -158,7 +158,7 @@ class LinksSuggestionsServiceDelegateTest {
     var parsedContentCollection = new ParsedRecordContentCollection().records(records);
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
-    verify(authorityRepository).findByNaturalIds(emptySet());
+    verify(authorityRepository).findByNaturalIdInAndDeletedFalse(emptySet());
     verify(sourceStorageClient, times(0)).fetchParsedRecordsInBatch(any());
   }
 
@@ -168,12 +168,12 @@ class LinksSuggestionsServiceDelegateTest {
     var rules = List.of(getRule("100", false));
 
     when(linkingRulesService.getLinkingRules()).thenReturn(rules);
-    when(authorityRepository.findByNaturalIds(emptySet())).thenReturn(emptyList());
+    when(authorityRepository.findByNaturalIdInAndDeletedFalse(emptySet())).thenReturn(emptyList());
 
     var parsedContentCollection = new ParsedRecordContentCollection().records(List.of(record));
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 
-    verify(authorityRepository).findByNaturalIds(emptySet());
+    verify(authorityRepository).findByNaturalIdInAndDeletedFalse(emptySet());
     verifyNoInteractions(sourceStorageClient);
     verify(suggestionService).fillErrorDetailsWithDisabledAutoLinking(any(), any());
   }

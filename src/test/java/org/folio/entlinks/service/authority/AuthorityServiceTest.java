@@ -3,7 +3,6 @@ package org.folio.entlinks.service.authority;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -45,12 +44,12 @@ class AuthorityServiceTest {
   @Test
   void shouldGetAllAuthoritiesByOffsetAndLimit() {
     var expected = new PageImpl<>(List.of(new Authority()));
-    when(repository.findAll(any(Pageable.class))).thenReturn(expected);
+    when(repository.findAllByDeletedFalse(any(Pageable.class))).thenReturn(expected);
 
     var result = service.getAll(0, 10, null);
 
     assertThat(result).isEqualTo(expected);
-    verify(repository).findAll(any(Pageable.class));
+    verify(repository).findAllByDeletedFalse(any(Pageable.class));
   }
 
   @Test
@@ -67,21 +66,21 @@ class AuthorityServiceTest {
   @Test
   void shouldGetAuthorityStorageById() {
     var expected = new Authority();
-    when(repository.findById(any(UUID.class))).thenReturn(Optional.of(expected));
+    when(repository.findByIdAndDeletedFalse(any(UUID.class))).thenReturn(Optional.of(expected));
 
     var result = service.getById(UUID.randomUUID());
 
     assertThat(result).isEqualTo(expected);
-    verify(repository).findById(any(UUID.class));
+    verify(repository).findByIdAndDeletedFalse(any(UUID.class));
   }
 
   @Test
   void shouldThrowExceptionWhenNoAuthorityStorageExistById() {
-    when(repository.findById(any(UUID.class))).thenReturn(Optional.empty());
+    when(repository.findByIdAndDeletedFalse(any(UUID.class))).thenReturn(Optional.empty());
     var id = UUID.randomUUID();
 
     assertThrows(AuthorityNotFoundException.class, () -> service.getById(id));
-    verify(repository).findById(any(UUID.class));
+    verify(repository).findByIdAndDeletedFalse(any(UUID.class));
   }
 
   @Test
@@ -132,7 +131,7 @@ class AuthorityServiceTest {
     sourceFile.setId(UUID.randomUUID());
     entity.setAuthoritySourceFile(sourceFile);
 
-    when(repository.findById(id)).thenReturn(Optional.of(expected));
+    when(repository.findByIdAndDeletedFalse(id)).thenReturn(Optional.of(expected));
     when(sourceFileRepository.existsById(any(UUID.class))).thenReturn(true);
     when(repository.save(expected)).thenReturn(expected);
 
@@ -140,7 +139,7 @@ class AuthorityServiceTest {
 
     assertThat(updated).isEqualTo(expected);
     assertThat(updated.getAuthoritySourceFile()).isEqualTo(sourceFile);
-    verify(repository).findById(id);
+    verify(repository).findByIdAndDeletedFalse(id);
     verify(sourceFileRepository).existsById(any(UUID.class));
     verify(repository).save(expected);
     verifyNoMoreInteractions(repository);
@@ -164,24 +163,25 @@ class AuthorityServiceTest {
 
   @Test
   void shouldDeleteAuthorityStorage() {
-    when(repository.existsById(any(UUID.class))).thenReturn(true);
-    doNothing().when(repository).deleteById(any(UUID.class));
+    var authority = new Authority();
+    when(repository.findByIdAndDeletedFalse(any(UUID.class))).thenReturn(Optional.of(authority));
+    when(repository.save(any(Authority.class))).thenReturn(authority);
 
     service.deleteById(UUID.randomUUID());
 
-    verify(repository).existsById(any(UUID.class));
-    verify(repository).deleteById(any(UUID.class));
+    verify(repository).findByIdAndDeletedFalse(any(UUID.class));
+    verify(repository).save(any(Authority.class));
   }
 
   @Test
   void shouldThrowExceptionWhenNoEntityExistsToDelete() {
     var id = UUID.randomUUID();
-    when(repository.existsById(any(UUID.class))).thenReturn(false);
+    when(repository.findByIdAndDeletedFalse(any(UUID.class))).thenReturn(Optional.empty());
 
     var thrown = assertThrows(AuthorityNotFoundException.class, () -> service.deleteById(id));
 
     assertThat(thrown.getMessage()).containsOnlyOnce(id.toString());
-    verify(repository).existsById(any(UUID.class));
+    verify(repository).findByIdAndDeletedFalse(any(UUID.class));
     verifyNoMoreInteractions(repository);
   }
 }

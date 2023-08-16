@@ -25,8 +25,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
@@ -120,12 +118,12 @@ class AuthorityControllerIT extends IntegrationTestBase {
   })
   @DisplayName("Get Collection: return list of authorities for the given limit and offset")
   void getCollection_positive_entitiesSortedByNameAndLimitedWithOffset(String offset, String limit, String sortOrder,
-                                                                       String firstNoteTypeName) throws Exception {
+                                                                       String firstSourceName) throws Exception {
     createAuthorities();
 
     var cqlQuery = "(cql.allRecords=1)sortby source/sort." + sortOrder;
     doGet(authorityEndpoint() + "?limit={l}&offset={o}&query={cql}", limit, offset, cqlQuery)
-      .andExpect(jsonPath("authorities[0].source", is(firstNoteTypeName)))
+      .andExpect(jsonPath("authorities[0].source", is(firstSourceName)))
       .andExpect(jsonPath("authorities[0].metadata.createdDate", notNullValue()))
       .andExpect(jsonPath("authorities[0].metadata.createdByUserId", is(USER_ID)))
       .andExpect(jsonPath("totalRecords").value(3));
@@ -387,7 +385,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
   @Test
   @DisplayName("DELETE: Should delete existing authority")
-  void deleteAuthority_positive_deleteExistingEntity() throws UnsupportedEncodingException, JsonProcessingException {
+  void deleteAuthority_positive_deleteExistingEntity() throws Exception {
     var authority = createAuthority(0);
 
     var contentAsString = doGet(authorityEndpoint(authority.getId())).andReturn().getResponse().getContentAsString();
@@ -396,7 +394,9 @@ class AuthorityControllerIT extends IntegrationTestBase {
     doDelete(authorityEndpoint(authority.getId()));
     var receivedEvent = getReceivedEvent();
 
-    assertEquals(0, databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID));
+    tryGet(authorityEndpoint(authority.getId()))
+        .andExpect(status().isNotFound())
+        .andExpect(exceptionMatch(AuthorityNotFoundException.class));
     verifyReceivedDomainEvent(receivedEvent, DELETE, DOMAIN_EVENT_HEADER_KEYS, expectedDto, AuthorityDto.class,
         "metadata.createdDate", "metadata.updatedDate");
   }

@@ -18,6 +18,7 @@ import java.util.UUID;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
 import org.folio.entlinks.domain.dto.InventoryEvent;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
+import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
@@ -108,12 +109,12 @@ class InstanceAuthorityLinkUpdateServiceTest {
 
     when(linkingService.countLinksByAuthorityIds(Set.of(id))).thenReturn(Map.of(id, 1));
     when(deleteHandler.handle(any())).thenReturn(List.of(changeEvent));
-    when(authorityRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
+    when(authorityRepository.findByIdAndDeletedTrue(any(UUID.class))).thenReturn(Optional.of(new Authority()));
 
     service.handleAuthoritiesChanges(inventoryEvents);
 
     verify(eventProducer).sendMessages(argumentCaptor.capture());
-    verify(authorityRepository).findById(any(UUID.class));
+    verify(authorityRepository).findByIdAndDeletedTrue(any(UUID.class));
     verify(authorityDataStatService).deleteByAuthorityIds(Set.of(id));
     verify(authorityDataStatService).createInBatch(anyList());
 

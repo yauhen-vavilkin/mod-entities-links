@@ -63,7 +63,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @DatabaseCleanup(tables = {
   DatabaseHelper.AUTHORITY_DATA_STAT_TABLE,
   DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE,
-  DatabaseHelper.AUTHORITY_TABLE})
+  DatabaseHelper.AUTHORITY_TABLE,
+  DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
 
   private static final UUID AUTHORITY_ID = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
@@ -84,6 +85,8 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
 
   @BeforeEach
   public void setup() {
+    var sourceFile = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
+    databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile);
     var authority1 = authority(0, 0);
     databaseHelper.saveAuthority(TENANT_ID, authority1);
     var authority2 = authority(1, 0);

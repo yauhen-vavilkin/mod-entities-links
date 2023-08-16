@@ -154,7 +154,7 @@ public class InstanceAuthorityLinkUpdateService {
     return changeHolders.stream()
         .filter(changeHolder -> AuthorityChangeType.DELETE.equals(changeHolder.getChangeType()))
         .map(AuthorityChangeHolder::getAuthorityId)
-        .filter(authorityId -> authorityRepository.findById(authorityId).isEmpty())
+        .filter(authorityId -> authorityRepository.findByIdAndDeletedTrue(authorityId).isPresent())
         .collect(Collectors.toSet());
   }
 

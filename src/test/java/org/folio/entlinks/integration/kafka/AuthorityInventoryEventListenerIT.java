@@ -11,12 +11,14 @@ import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.base.TestConstants.DELETE_TYPE;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.UPDATE_TYPE;
+import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.inventoryAuthorityTopic;
 import static org.folio.support.base.TestConstants.linksInstanceAuthorityTopic;
 import static org.folio.support.base.TestConstants.linksInstanceEndpoint;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,12 +30,14 @@ import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import org.assertj.core.api.BDDSoftAssertions;
+import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
 import org.folio.entlinks.domain.dto.ChangeTarget;
 import org.folio.entlinks.domain.dto.ChangeTargetLink;
 import org.folio.entlinks.domain.dto.FieldChange;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.dto.SubfieldChange;
+import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
@@ -180,6 +184,13 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
   @SneakyThrows
   @Test
   void shouldHandleUpdateEvent_positive_whenAuthorityLinkExistAndOnlyNaturalIdChanged() {
+    var sourceFile1 = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
+    var sourceFile2 = new AuthoritySourceFile(sourceFile1);
+    sourceFile2.setId(UUID.fromString("af045f2f-e851-4613-984c-4bc13430454a"));
+    sourceFile2.setName("LC Name Authority file (LCNAF)");
+    sourceFile2.setBaseUrl("id.loc.gov/authorities/names/");
+    databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile1);
+    databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile2);
     var authority = authority(0, 0);
     databaseHelper.saveAuthority(TENANT_ID, authority);
     var instanceId1 = UUID.randomUUID();
@@ -192,11 +203,13 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
     var link3 = Link.of(0, 0, NATURAL_IDS[0]);
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId3, link3)), instanceId3);
 
-    var event = TestDataUtils.authorityEvent(UPDATE_TYPE,
-      new AuthorityInventoryRecord().id(link1.authorityId()).naturalId("newNaturalId")
-        .sourceFileId(UUID.fromString("af045f2f-e851-4613-984c-4bc13430454a")),
-      new AuthorityInventoryRecord().id(link1.authorityId()).naturalId("1"));
-    sendKafkaMessage(inventoryAuthorityTopic(), link1.authorityId().toString(), event);
+    var existingAuthorityContent = doGet(authorityEndpoint(link1.authorityId()))
+        .andReturn().getResponse().getContentAsString();
+    var authorityDto = objectMapper.readValue(existingAuthorityContent, AuthorityDto.class);
+    var updatedNaturalId = "newNaturalId";
+    authorityDto.setSourceFileId(sourceFile2.getId());
+    authorityDto.setNaturalId(updatedNaturalId);
+    tryPut(authorityEndpoint(link1.authorityId()), authorityDto).andExpect(status().isAccepted());
 
     var received = getReceivedEvent();
 
@@ -210,6 +223,7 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
       .contains(XOkapiHeaders.TENANT, XOkapiHeaders.URL, XOkapiHeaders.TOKEN);
 
     var value = received.value();
+    var expectedSubfieldChange = subfieldChange("0", sourceFile2.getBaseUrl() + updatedNaturalId);
     assertions.then(value.getTenant()).as("Tenant").isEqualTo(TENANT_ID);
     assertions.then(value.getType()).as("Type").isEqualTo(LinksChangeEvent.TypeEnum.UPDATE);
     assertions.then(value.getAuthorityId()).as("Authority ID").isEqualTo(link1.authorityId());
@@ -222,10 +236,10 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
       .isEqualTo(List.of(
           new FieldChange()
               .field(link1.tag())
-              .subfields(List.of(subfieldChange("0", "id.loc.gov/authorities/names/newNaturalId"))),
+              .subfields(List.of(expectedSubfieldChange)),
           new FieldChange()
               .field(link2.tag())
-              .subfields(List.of(subfieldChange("0", "id.loc.gov/authorities/names/newNaturalId")))));
+              .subfields(List.of(expectedSubfieldChange))));
     assertions.then(value.getJobId()).as("Job ID").isNotNull();
     assertions.then(value.getTs()).as("Timestamp").isNotNull();
 
@@ -233,11 +247,11 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
 
     // check that links were updated according to authority changes
     doGet(linksInstanceEndpoint(), instanceId1)
-      .andExpect(jsonPath("$.links[0].authorityNaturalId", equalTo("newNaturalId")));
+      .andExpect(jsonPath("$.links[0].authorityNaturalId", equalTo(updatedNaturalId)));
     doGet(linksInstanceEndpoint(), instanceId2)
-      .andExpect(jsonPath("$.links[0].authorityNaturalId", equalTo("newNaturalId")));
+      .andExpect(jsonPath("$.links[0].authorityNaturalId", equalTo(updatedNaturalId)));
     doGet(linksInstanceEndpoint(), instanceId3)
-      .andExpect(jsonPath("$.links[0].authorityNaturalId", equalTo("newNaturalId")));
+      .andExpect(jsonPath("$.links[0].authorityNaturalId", equalTo(updatedNaturalId)));
   }
 
   @SneakyThrows

@@ -72,7 +72,7 @@ class LinksSuggestionsByAuthorityIdTest {
   void findExistingAuthorities_positive() {
     var ids = new HashSet<UUID>();
     delegate.findExistingAuthorities(ids);
-    verify(authorityRepository).findAllById(ids);
+    verify(authorityRepository).findAllByIdInAndDeletedFalse(ids);
   }
 
   @Test

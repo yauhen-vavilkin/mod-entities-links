@@ -45,9 +45,11 @@ import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 
 @IntegrationTest
-@DatabaseCleanup(tables = {DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE,
+@DatabaseCleanup(tables = {
+  DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE,
   DatabaseHelper.AUTHORITY_DATA_STAT_TABLE,
-  DatabaseHelper.AUTHORITY_TABLE})
+  DatabaseHelper.AUTHORITY_TABLE,
+  DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
 
   private KafkaMessageListenerContainer<String, LinksChangeEvent> container;
@@ -69,12 +71,7 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
   @SneakyThrows
   void shouldHandleEvent_positive() {
     var instanceId = UUID.randomUUID();
-    var authorityId = TestDataUtils.AUTHORITY_IDS[0];
-    var link = Link.of(0, 1, TestDataUtils.NATURAL_IDS[0]);
-    var authority = TestDataUtils.AuthorityTestData.authority(0, 0);
-    databaseHelper.saveAuthority(TENANT_ID, authority);
-
-    prepareData(instanceId, authorityId, link);
+    prepareData(instanceId);
 
     var linksChangeEvent = Objects.requireNonNull(getReceivedEvent()).value();
 
@@ -97,13 +94,7 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
   @SneakyThrows
   void shouldHandleEvent_positive_whenLinkIdsAndInstanceIdAreEmpty() {
     var instanceId = UUID.randomUUID();
-    var authorityId = TestDataUtils.AUTHORITY_IDS[0];
-    var link = Link.of(0, 1, TestDataUtils.NATURAL_IDS[0]);
-    var authority = TestDataUtils.AuthorityTestData.authority(0, 0);
-    databaseHelper.saveAuthority(TENANT_ID, authority);
-
-    // save link
-    prepareData(instanceId, authorityId, link);
+    prepareData(instanceId);
 
     var linksChangeEvent = Objects.requireNonNull(getReceivedEvent()).value();
 
@@ -121,7 +112,14 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
     assertLinksUpdated(failCause);
   }
 
-  private void prepareData(UUID instanceId, UUID authorityId, Link link) {
+  private void prepareData(UUID instanceId) {
+    var link = Link.of(0, 1, TestDataUtils.NATURAL_IDS[0]);
+    var sourceFile = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
+    databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile);
+    var authority = TestDataUtils.AuthorityTestData.authority(0, 0);
+    databaseHelper.saveAuthority(TENANT_ID, authority);
+    var authorityId = TestDataUtils.AUTHORITY_IDS[0];
+
     // save link
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
     // prepare and send inventory update authority event to save stats data

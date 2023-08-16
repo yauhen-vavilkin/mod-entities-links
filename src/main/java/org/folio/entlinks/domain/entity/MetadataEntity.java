@@ -5,7 +5,9 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import java.sql.Timestamp;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -15,6 +17,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 public class MetadataEntity {
@@ -40,4 +44,10 @@ public class MetadataEntity {
   @Column(name = "updated_by_user_id")
   private UUID updatedByUserId;
 
+  public MetadataEntity(MetadataEntity other) {
+    this.createdDate = other.createdDate;
+    this.createdByUserId = other.createdByUserId;
+    this.updatedDate = other.updatedDate;
+    this.updatedByUserId = other.updatedByUserId;
+  }
 }

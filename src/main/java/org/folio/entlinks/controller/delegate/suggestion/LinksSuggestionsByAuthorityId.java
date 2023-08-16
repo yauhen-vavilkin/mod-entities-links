@@ -60,7 +60,7 @@ public class LinksSuggestionsByAuthorityId extends LinksSuggestionsServiceDelega
 
   @Override
   protected List<Authority> findExistingAuthorities(Set<UUID> ids) {
-    return authorityRepository.findAllById(ids);
+    return authorityRepository.findAllByIdInAndDeletedFalse(ids);
   }
 
   @Override

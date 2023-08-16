@@ -9,7 +9,7 @@ import static org.folio.entlinks.domain.dto.LinksChangeEvent.TypeEnum.UPDATE;
 import static org.folio.support.TestDataUtils.getAuthorityRecordsCollection;
 import static org.folio.support.TestDataUtils.links;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyIterable;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -340,7 +340,7 @@ class InstanceAuthorityLinkingServiceRenovateTest {
     );
     var existingAuthoritiesById = Map.of(TestDataUtils.AUTHORITY_IDS[0], new Authority(),
         TestDataUtils.AUTHORITY_IDS[1], new Authority());
-    when(authorityService.getAllByIds(anyIterable())).thenReturn(existingAuthoritiesById);
+    when(authorityService.getAllByIds(anyCollection())).thenReturn(existingAuthoritiesById);
 
     var exception = Assertions.assertThrows(DeletedLinkingAuthorityException.class,
       () -> service.updateLinksWithRenovation(instanceId, incomingLinks));
@@ -411,7 +411,7 @@ class InstanceAuthorityLinkingServiceRenovateTest {
       .map(InstanceAuthorityLink::getAuthority)
       .collect(Collectors.toMap(Authority::getId, Function.identity()));
 
-    when(authorityService.getAllByIds(anyIterable())).thenReturn(authoritiesById);
+    when(authorityService.getAllByIds(anyCollection())).thenReturn(authoritiesById);
     when(sourceStorageClient.fetchParsedRecordsInBatch(any())).thenReturn(authorityRecords);
   }
 

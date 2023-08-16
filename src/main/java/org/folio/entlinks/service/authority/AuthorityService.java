@@ -2,6 +2,7 @@ package org.folio.entlinks.service.authority;
 
 import static org.folio.entlinks.utils.ServiceUtils.initId;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -43,7 +44,7 @@ public class AuthorityService {
       cql);
 
     if (StringUtils.isBlank(cql)) {
-      return repository.findAll(new OffsetRequest(offset, limit));
+      return repository.findAllByDeletedFalse(new OffsetRequest(offset, limit));
     }
 
     return repository.findByCql(cql, new OffsetRequest(offset, limit));
@@ -52,11 +53,11 @@ public class AuthorityService {
   public Authority getById(UUID id) {
     log.debug("getById:: Loading Authority by ID [id: {}]", id);
 
-    return repository.findById(id).orElseThrow(() -> new AuthorityNotFoundException(id));
+    return repository.findByIdAndDeletedFalse(id).orElseThrow(() -> new AuthorityNotFoundException(id));
   }
 
-  public Map<UUID, Authority> getAllByIds(Iterable<UUID> ids) {
-    return repository.findAllById(ids).stream()
+  public Map<UUID, Authority> getAllByIds(Collection<UUID> ids) {
+    return repository.findAllByIdInAndDeletedFalse(ids).stream()
         .collect(Collectors.toMap(Authority::getId, Function.identity()));
   }
 
@@ -82,7 +83,7 @@ public class AuthorityService {
     }
     validateSourceFile(modified);
 
-    var existing = repository.findById(id).orElseThrow(() -> new AuthorityNotFoundException(id));
+    var existing = repository.findByIdAndDeletedFalse(id).orElseThrow(() -> new AuthorityNotFoundException(id));
 
     copyModifiableFields(existing, modified);
 
@@ -93,11 +94,11 @@ public class AuthorityService {
   public void deleteById(UUID id) {
     log.debug("deleteById:: Attempt to delete Authority by [id: {}]", id);
 
-    if (!repository.existsById(id)) {
-      throw new AuthorityNotFoundException(id);
-    }
+    var authority = repository.findByIdAndDeletedFalse(id)
+        .orElseThrow(() -> new AuthorityNotFoundException(id));
+    authority.setDeleted(true);
 
-    repository.deleteById(id);
+    repository.save(authority);
   }
 
   private void copyModifiableFields(Authority existing, Authority modified) {
