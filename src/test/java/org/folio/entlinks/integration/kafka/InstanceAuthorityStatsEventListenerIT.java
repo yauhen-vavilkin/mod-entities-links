@@ -2,19 +2,25 @@ package org.folio.entlinks.integration.kafka;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.awaitility.Durations.ONE_SECOND;
 import static org.folio.entlinks.domain.dto.LinkUpdateReport.StatusEnum.FAIL;
 import static org.folio.support.KafkaTestUtils.createAndStartTestConsumer;
 import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.base.TestConstants.TENANT_ID;
+import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.authorityStatsEndpoint;
-import static org.folio.support.base.TestConstants.inventoryAuthorityTopic;
 import static org.folio.support.base.TestConstants.linksInstanceAuthorityStatsTopic;
 import static org.folio.support.base.TestConstants.linksInstanceAuthorityTopic;
 import static org.folio.support.base.TestConstants.linksInstanceEndpoint;
 import static org.folio.support.base.TestConstants.linksStatsInstanceEndpoint;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.io.UnsupportedEncodingException;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
@@ -23,9 +29,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
-import org.folio.entlinks.domain.dto.AuthorityStatsDtoCollection;
-import org.folio.entlinks.domain.dto.BibStatsDtoCollection;
+import org.awaitility.Durations;
 import org.folio.entlinks.domain.dto.LinkAction;
 import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
@@ -112,7 +116,7 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
     assertLinksUpdated(failCause);
   }
 
-  private void prepareData(UUID instanceId) {
+  private void prepareData(UUID instanceId) throws JsonProcessingException, UnsupportedEncodingException {
     var link = Link.of(0, 1, TestDataUtils.NATURAL_IDS[0]);
     var sourceFile = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
     databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile);
@@ -122,35 +126,29 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
 
     // save link
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
-    // prepare and send inventory update authority event to save stats data
-    var authUpdateEvent = TestDataUtils.authorityEvent("UPDATE",
-      new AuthorityInventoryRecord().id(authorityId).personalName("personal name").naturalId("naturalId1"),
-      new AuthorityInventoryRecord().id(authorityId).personalName("personal name").naturalId("naturalId2"));
-    sendKafkaMessage(inventoryAuthorityTopic(), authorityId.toString(), authUpdateEvent);
+
+    // prepare and send update authority request to generate update event to save stats data
+    var content = doGet(authorityEndpoint(authorityId)).andReturn().getResponse().getContentAsString();
+    var authorityDto = objectMapper.readValue(content, org.folio.entlinks.domain.dto.AuthorityDto.class);
+    authorityDto.setNaturalId(authority.getNaturalId() + " updated");
+    doPut(authorityEndpoint(authorityId), authorityDto);
   }
 
   @SneakyThrows
   private void assertLinksUpdated(String failCause) {
     var now = OffsetDateTime.now();
-    awaitUntilAsserted(() -> {
-      var content = doGet(linksStatsInstanceEndpoint(LinkStatus.ERROR, now.minusDays(1), now))
-          .andReturn().getResponse().getContentAsString();
-      var bibStatsDtoCollection = objectMapper.readValue(content, BibStatsDtoCollection.class);
-      assertThat(bibStatsDtoCollection).isNotNull();
-      assertThat(bibStatsDtoCollection.getStats()).hasSize(1);
-      assertThat(bibStatsDtoCollection.getStats().get(0).getErrorCause()).isEqualTo(failCause);
-    });
+    awaitUntilAsserted(() ->
+        doGet(linksStatsInstanceEndpoint(LinkStatus.ERROR, now.minusDays(1), now))
+            .andExpect(jsonPath("$.stats", hasSize(1)))
+            .andExpect(jsonPath("$.stats[0].errorCause", is(failCause)))
+    );
 
-    awaitUntilAsserted(() -> {
-      var content = doGet(authorityStatsEndpoint(
-          LinkAction.UPDATE_NATURAL_ID, OffsetDateTime.now().minusDays(1), OffsetDateTime.now(), 1))
-          .andReturn().getResponse().getContentAsString();
-      var authorityStatsDtoCollection = objectMapper.readValue(content, AuthorityStatsDtoCollection.class);
-      assertThat(authorityStatsDtoCollection).isNotNull();
-      assertThat(authorityStatsDtoCollection.getStats()).hasSize(1);
-      assertThat(authorityStatsDtoCollection.getStats().get(0).getLbFailed()).isOne();
-      assertThat(authorityStatsDtoCollection.getStats().get(0).getLbUpdated()).isZero();
-    });
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        doGet(authorityStatsEndpoint(LinkAction.UPDATE_NATURAL_ID, now.minusDays(1), now, 1))
+            .andExpect(jsonPath("$.stats", hasSize(1)))
+            .andExpect(jsonPath("$.stats[0].lbFailed", is(1)))
+            .andExpect(jsonPath("$.stats[0].lbUpdated", is(0)))
+    );
   }
 
   @Nullable
