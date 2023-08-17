@@ -38,6 +38,10 @@ public class DatabaseHelper {
     return JdbcTestUtils.countRowsInTable(jdbcTemplate, getTable(tenant, tableName));
   }
 
+  public void deleteFromTable(String tableName, String tenant) {
+    JdbcTestUtils.deleteFromTables(jdbcTemplate, getTable(tenant, tableName));
+  }
+
   public void saveAuthorityNoteType(String tenant, AuthorityNoteType entity) {
     var sql = "INSERT INTO " + getTable(tenant, AUTHORITY_NOTE_TYPE_TABLE)
       + " (id, name, source, created_date, updated_date, created_by_user_id, "

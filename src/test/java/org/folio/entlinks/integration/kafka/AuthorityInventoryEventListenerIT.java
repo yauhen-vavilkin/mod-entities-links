@@ -58,9 +58,14 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 @DatabaseCleanup(tables = {
   DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE,
   DatabaseHelper.AUTHORITY_DATA_STAT_TABLE,
-  DatabaseHelper.AUTHORITY_TABLE
+  DatabaseHelper.AUTHORITY_TABLE,
+  DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE
 })
 class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
+
+  private static final UUID AUTHORITY_ID = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
+  private static final UUID SOURCE_FILE_ID = UUID.fromString("af045f2f-e851-4613-984c-4bc13430454a");
+  private static final String BASE_URL = "id.loc.gov/authorities/names/";
 
   private KafkaMessageListenerContainer<String, LinksChangeEvent> container;
   private BlockingQueue<ConsumerRecord<String, LinksChangeEvent>> consumerRecords;
@@ -70,6 +75,20 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
     consumerRecords = new LinkedBlockingQueue<>();
     container = createAndStartTestConsumer(linksInstanceAuthorityTopic(), consumerRecords, kafkaProperties,
       LinksChangeEvent.class);
+
+    var sourceFile1 = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
+    var sourceFile2 = new AuthoritySourceFile(sourceFile1);
+    sourceFile2.setId(SOURCE_FILE_ID);
+    sourceFile2.setName("LC Name Authority file (LCNAF)");
+    sourceFile2.setBaseUrl(BASE_URL);
+    databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile1);
+    databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile2);
+
+    var authority1 = authority(0, 0);
+    databaseHelper.saveAuthority(TENANT_ID, authority1);
+    var authority2 = authority(0, 0);
+    authority2.setId(AUTHORITY_ID);
+    databaseHelper.saveAuthority(TENANT_ID, authority2);
   }
 
   @AfterEach
@@ -80,8 +99,6 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
   @SneakyThrows
   @Test
   void shouldHandleDeleteEvent_positive_whenAuthorityLinkExists() {
-    var authority = authority(0, 0);
-    databaseHelper.saveAuthority(TENANT_ID, authority);
     var instanceId1 = UUID.randomUUID();
     var instanceId2 = UUID.randomUUID();
     var instanceId3 = UUID.randomUUID();
@@ -139,8 +156,6 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
     var authorityId = AUTHORITY_IDS[0];
     var instanceId = UUID.randomUUID();
     var naturalId = NATURAL_IDS[0];
-    var authority = authority(0, 0);
-    databaseHelper.saveAuthority(TENANT_ID, authority);
     var link = new Link(authorityId, "240", naturalId, new char[] {'a', 'b', 'c'});
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
 
@@ -184,15 +199,6 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
   @SneakyThrows
   @Test
   void shouldHandleUpdateEvent_positive_whenAuthorityLinkExistAndOnlyNaturalIdChanged() {
-    var sourceFile1 = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
-    var sourceFile2 = new AuthoritySourceFile(sourceFile1);
-    sourceFile2.setId(UUID.fromString("af045f2f-e851-4613-984c-4bc13430454a"));
-    sourceFile2.setName("LC Name Authority file (LCNAF)");
-    sourceFile2.setBaseUrl("id.loc.gov/authorities/names/");
-    databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile1);
-    databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile2);
-    var authority = authority(0, 0);
-    databaseHelper.saveAuthority(TENANT_ID, authority);
     var instanceId1 = UUID.randomUUID();
     var instanceId2 = UUID.randomUUID();
     var instanceId3 = UUID.randomUUID();
@@ -207,7 +213,7 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
         .andReturn().getResponse().getContentAsString();
     var authorityDto = objectMapper.readValue(existingAuthorityContent, AuthorityDto.class);
     var updatedNaturalId = "newNaturalId";
-    authorityDto.setSourceFileId(sourceFile2.getId());
+    authorityDto.setSourceFileId(SOURCE_FILE_ID);
     authorityDto.setNaturalId(updatedNaturalId);
     tryPut(authorityEndpoint(link1.authorityId()), authorityDto).andExpect(status().isAccepted());
 
@@ -223,7 +229,7 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
       .contains(XOkapiHeaders.TENANT, XOkapiHeaders.URL, XOkapiHeaders.TOKEN);
 
     var value = received.value();
-    var expectedSubfieldChange = subfieldChange("0", sourceFile2.getBaseUrl() + updatedNaturalId);
+    var expectedSubfieldChange = subfieldChange("0", BASE_URL + updatedNaturalId);
     assertions.then(value.getTenant()).as("Tenant").isEqualTo(TENANT_ID);
     assertions.then(value.getType()).as("Type").isEqualTo(LinksChangeEvent.TypeEnum.UPDATE);
     assertions.then(value.getAuthorityId()).as("Authority ID").isEqualTo(link1.authorityId());
@@ -258,21 +264,17 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
   @Test
   void shouldHandleUpdateEvent_positive_whenAuthorityLinkExistAndHeadingChanged() {
     // prepare links
-    var authorityId = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
     var instanceId = UUID.randomUUID();
     var naturalId = NATURAL_IDS[0];
-    var authority = authority(0, 0);
-    authority.setId(authorityId);
-    databaseHelper.saveAuthority(TENANT_ID, authority);
-    var link = new Link(authorityId, "240", naturalId, new char[] {'a', 'b', 'c'});
+    var link = new Link(AUTHORITY_ID, "240", naturalId, new char[] {'a', 'b', 'c'});
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
 
     // prepare and send inventory update authority event
     var event = TestDataUtils.authorityEvent(UPDATE_TYPE,
-      new AuthorityInventoryRecord().id(authorityId).personalName("new personal name").naturalId(naturalId)
-        .sourceFileId(UUID.fromString("af045f2f-e851-4613-984c-4bc13430454a")),
-      new AuthorityInventoryRecord().id(authorityId).personalName("old").naturalId(naturalId));
-    sendKafkaMessage(inventoryAuthorityTopic(), authorityId.toString(), event);
+      new AuthorityInventoryRecord().id(AUTHORITY_ID).personalName("new personal name").naturalId(naturalId)
+        .sourceFileId(SOURCE_FILE_ID),
+      new AuthorityInventoryRecord().id(AUTHORITY_ID).personalName("old").naturalId(naturalId));
+    sendKafkaMessage(inventoryAuthorityTopic(), AUTHORITY_ID.toString(), event);
 
     var received = getReceivedEvent();
 

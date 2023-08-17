@@ -1,7 +1,10 @@
 package org.folio.entlinks.controller;
 
 import static java.util.Collections.singletonList;
+import static org.awaitility.Awaitility.await;
+import static org.awaitility.Durations.ONE_SECOND;
 import static org.folio.entlinks.domain.dto.LinkAction.UPDATE_HEADING;
+import static org.folio.support.DatabaseHelper.AUTHORITY_DATA_STAT_TABLE;
 import static org.folio.support.MatchUtils.errorCodeMatch;
 import static org.folio.support.MatchUtils.errorMessageMatch;
 import static org.folio.support.MatchUtils.errorTotalMatch;
@@ -17,7 +20,6 @@ import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.authorityStatsEndpoint;
-import static org.folio.support.base.TestConstants.inventoryAuthorityTopic;
 import static org.folio.support.base.TestConstants.linksInstanceEndpoint;
 import static org.folio.support.base.TestConstants.linksStatsInstanceEndpoint;
 import static org.hamcrest.Matchers.containsString;
@@ -31,6 +33,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.io.UnsupportedEncodingException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -42,8 +46,8 @@ import java.util.UUID;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.ThreadUtils;
-import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
-import org.folio.entlinks.domain.dto.AuthorityInventoryRecordMetadata;
+import org.awaitility.Durations;
+import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.BibStatsDtoCollection;
 import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.exception.type.ErrorType;
@@ -53,7 +57,6 @@ import org.folio.support.DatabaseHelper;
 import org.folio.support.TestDataUtils;
 import org.folio.support.TestDataUtils.Link;
 import org.folio.support.base.IntegrationTestBase;
-import org.folio.support.base.TestConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -61,14 +64,13 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 @IntegrationTest
 @DatabaseCleanup(tables = {
-  DatabaseHelper.AUTHORITY_DATA_STAT_TABLE,
+  AUTHORITY_DATA_STAT_TABLE,
   DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE,
   DatabaseHelper.AUTHORITY_TABLE,
   DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
 
   private static final UUID AUTHORITY_ID = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
-  private static final UUID SOURCE_FILE_ID = UUID.randomUUID();
   private static final OffsetDateTime TO_DATE = OffsetDateTime.of(LocalDateTime.now().plusHours(1), ZoneOffset.UTC);
   private static final OffsetDateTime FROM_DATE = TO_DATE.minusMonths(1);
 
@@ -110,20 +112,23 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
   void getAuthDataStat_positive() {
     var instanceId = UUID.randomUUID();
     var link = new Link(AUTHORITY_ID, TAGS[1]);
+    databaseHelper.deleteFromTable(AUTHORITY_DATA_STAT_TABLE, TENANT_ID);
 
     // save link
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
     // send update event to store authority data stat
-    sendInventoryAuthorityEvent(AUTHORITY_ID, TestConstants.UPDATE_TYPE);
-    //await until stat saved to database
-    awaitUntilAsserted(() -> assertEquals(1,
-      databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
+    sendAuthorityUpdateEvent();
+    // wait until stat is saved to database
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        assertEquals(1, databaseHelper.countRows(AUTHORITY_DATA_STAT_TABLE, TENANT_ID))
+    );
 
     // send update event to store another authority data stat
-    sendInventoryAuthorityEvent(AUTHORITY_ID, TestConstants.UPDATE_TYPE);
-    //await until stat saved to database
-    awaitUntilAsserted(() -> assertEquals(2,
-      databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
+    sendAuthorityUpdateEvent();
+    // wait until stat is saved to database
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        assertEquals(2, databaseHelper.countRows(AUTHORITY_DATA_STAT_TABLE, TENANT_ID))
+    );
 
     doGet(authorityStatsEndpoint(UPDATE_HEADING, FROM_DATE, TO_DATE, 1))
       .andExpect(status().is2xxSuccessful())
@@ -133,12 +138,12 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
       .andExpect(jsonPath("$.stats[0].lbFailed", is(0)))
       .andExpect(jsonPath("$.stats[0].lbUpdated", is(0)))
       .andExpect(jsonPath("$.stats[0].lbTotal", is(1)))
-      .andExpect(jsonPath("$.stats[0].naturalIdOld", is("naturalId")))
-      .andExpect(jsonPath("$.stats[0].naturalIdNew", is("naturalId")))
+      .andExpect(jsonPath("$.stats[0].naturalIdOld", is(AUTHORITY_ID.toString())))
+      .andExpect(jsonPath("$.stats[0].naturalIdNew", is(AUTHORITY_ID.toString())))
       .andExpect(jsonPath("$.stats[0].sourceFileOld", is("Not specified")))
       .andExpect(jsonPath("$.stats[0].sourceFileNew", is("Not specified")))
-      .andExpect(jsonPath("$.stats[0].headingOld", is("personal name")))
-      .andExpect(jsonPath("$.stats[0].headingNew", is("new personal name")))
+      .andExpect(jsonPath("$.stats[0].headingOld", is("headingPersonalName updated")))
+      .andExpect(jsonPath("$.stats[0].headingNew", is("headingPersonalName updated updated")))
       .andExpect(jsonPath("$.stats[0].headingTypeOld", is("100")))
       .andExpect(jsonPath("$.stats[0].headingTypeNew", is("100")))
       .andExpect(jsonPath("$.stats[0].metadata.startedByUserId", is(USER_ID)))
@@ -152,21 +157,23 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
   void getAuthDataStat_positive_whenAuthorityWasDeleted() {
     var instanceId = UUID.randomUUID();
     var link = new Link(AUTHORITY_ID, TAGS[0]);
+    databaseHelper.deleteFromTable(AUTHORITY_DATA_STAT_TABLE, TENANT_ID);
 
     // save link
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
     // send update event to store authority data stats
-    sendInventoryAuthorityEvent(AUTHORITY_ID, TestConstants.UPDATE_TYPE);
-    //await until stat saved to database
-    awaitUntilAsserted(() -> assertEquals(1,
-      databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
+    sendAuthorityUpdateEvent();
+    // wait until stat is saved to database
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        assertEquals(1, databaseHelper.countRows(AUTHORITY_DATA_STAT_TABLE, TENANT_ID))
+    );
 
     // send delete event to mark authority as deleted
-    //sendInventoryAuthorityEvent(AUTHORITY_ID, TestConstants.DELETE_TYPE);
     doDelete(authorityEndpoint(AUTHORITY_ID));
-    // wait until stat for DELETE saved to database and for UPDATE removed from database
-    awaitUntilAsserted(() -> assertEquals(1,
-      databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
+    // wait until stat for DELETE event is saved to database and for UPDATE is removed from database
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
+        assertEquals(1, databaseHelper.countRows(AUTHORITY_DATA_STAT_TABLE, TENANT_ID))
+    );
 
     doGet(authorityStatsEndpoint(UPDATE_HEADING, FROM_DATE, TO_DATE, 1))
       .andExpect(jsonPath("$.stats[0]").doesNotExist());
@@ -334,13 +341,10 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
     return jsonPath("$.next", is(next));
   }
 
-  private void sendInventoryAuthorityEvent(UUID authorityId, String type) {
-    var authUpdateEvent = TestDataUtils.authorityEvent(type,
-      new AuthorityInventoryRecord().id(authorityId).personalName("new personal name").naturalId("naturalId")
-        .sourceFileId(SOURCE_FILE_ID)
-        .metadata(new AuthorityInventoryRecordMetadata().updatedByUserId(UUID.fromString(USER_ID))),
-      new AuthorityInventoryRecord().id(authorityId).personalName("personal name").naturalId("naturalId"));
-    sendKafkaMessage(inventoryAuthorityTopic(), authorityId.toString(), authUpdateEvent);
-
+  private void sendAuthorityUpdateEvent() throws UnsupportedEncodingException, JsonProcessingException {
+    var content = doGet(authorityEndpoint(AUTHORITY_ID)).andReturn().getResponse().getContentAsString();
+    var authorityDto = objectMapper.readValue(content, AuthorityDto.class);
+    authorityDto.setPersonalName(authorityDto.getPersonalName() + " updated");
+    doPut(authorityEndpoint(AUTHORITY_ID), authorityDto);
   }
 }
