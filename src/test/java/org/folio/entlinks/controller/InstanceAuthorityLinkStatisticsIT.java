@@ -112,7 +112,6 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
   void getAuthDataStat_positive() {
     var instanceId = UUID.randomUUID();
     var link = new Link(AUTHORITY_ID, TAGS[1]);
-    databaseHelper.deleteFromTable(AUTHORITY_DATA_STAT_TABLE, TENANT_ID);
 
     // save link
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
@@ -157,7 +156,6 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
   void getAuthDataStat_positive_whenAuthorityWasDeleted() {
     var instanceId = UUID.randomUUID();
     var link = new Link(AUTHORITY_ID, TAGS[0]);
-    databaseHelper.deleteFromTable(AUTHORITY_DATA_STAT_TABLE, TENANT_ID);
 
     // save link
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
