@@ -7,6 +7,7 @@ import static org.folio.entlinks.service.reindex.event.DomainEventType.CREATE;
 import static org.folio.entlinks.service.reindex.event.DomainEventType.DELETE;
 import static org.folio.entlinks.service.reindex.event.DomainEventType.UPDATE;
 import static org.folio.support.KafkaTestUtils.createAndStartTestConsumer;
+import static org.folio.support.TestDataUtils.AuthorityTestData.authority;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authorityDto;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
@@ -120,6 +121,15 @@ class AuthorityControllerIT extends IntegrationTestBase {
   void getCollection_positive_entitiesSortedByNameAndLimitedWithOffset(String offset, String limit, String sortOrder,
                                                                        String firstSourceName) throws Exception {
     createAuthorities();
+    // the following two authorities should be filtered out and not included in the result because of deleted = true
+    var authority1 = authority(0, 0);
+    authority1.setId(UUID.randomUUID());
+    authority1.setDeleted(true);
+    var authority2 = authority(0, 0);
+    authority2.setId(UUID.randomUUID());
+    authority2.setDeleted(true);
+    databaseHelper.saveAuthority(TENANT_ID, authority1);
+    databaseHelper.saveAuthority(TENANT_ID, authority2);
 
     var cqlQuery = "(cql.allRecords=1)sortby source/sort." + sortOrder;
     doGet(authorityEndpoint() + "?limit={l}&offset={o}&query={cql}", limit, offset, cqlQuery)
@@ -442,7 +452,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   }
 
   private Authority createAuthority(int num) {
-    var entity = TestDataUtils.AuthorityTestData.authority(num, num);
+    var entity = authority(num, num);
     var sourceFile = entity.getAuthoritySourceFile();
 
     if (sourceFile != null) {

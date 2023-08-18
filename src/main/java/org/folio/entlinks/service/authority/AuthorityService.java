@@ -47,7 +47,7 @@ public class AuthorityService {
       return repository.findAllByDeletedFalse(new OffsetRequest(offset, limit));
     }
 
-    return repository.findByCql(cql, new OffsetRequest(offset, limit));
+    return repository.findByCqlAndDeletedFalse(cql, new OffsetRequest(offset, limit));
   }
 
   public Authority getById(UUID id) {

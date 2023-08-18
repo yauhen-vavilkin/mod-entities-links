@@ -55,12 +55,12 @@ class AuthorityServiceTest {
   @Test
   void shouldGetAllAuthoritiesByCqlQuery() {
     var expected = new PageImpl<>(List.of(new Authority()));
-    when(repository.findByCql(any(String.class), any(Pageable.class))).thenReturn(expected);
+    when(repository.findByCqlAndDeletedFalse(any(String.class), any(Pageable.class))).thenReturn(expected);
 
     var result = service.getAll(0, 10, "some_query_string");
 
     assertThat(result).isEqualTo(expected);
-    verify(repository).findByCql(any(String.class), any(Pageable.class));
+    verify(repository).findByCqlAndDeletedFalse(any(String.class), any(Pageable.class));
   }
 
   @Test
