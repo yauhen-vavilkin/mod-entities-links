@@ -31,7 +31,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @IntegrationTest
-@DatabaseCleanup(tables = {DatabaseHelper.AUTHORITY_TABLE, DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
+@DatabaseCleanup(tables = {
+  DatabaseHelper.AUTHORITY_TABLE,
+  DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE,
+  DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE
+})
 class LinksSuggestionsIT extends IntegrationTestBase {
 
   private static final String BASE_URL = "id.loc.gov/authorities/names/";
@@ -41,7 +45,11 @@ class LinksSuggestionsIT extends IntegrationTestBase {
   @BeforeEach
   public void setup() {
     var sourceFile = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
+    sourceFile.setBaseUrl(BASE_URL);
+    var sourceFileCode = sourceFile.getAuthoritySourceFileCodes().iterator().next();
+    sourceFileCode.setCode(NATURAL_ID);
     databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile);
+    databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, sourceFile.getId(), sourceFileCode);
     var authority = TestDataUtils.AuthorityTestData.authority(0, 0);
     authority.setId(UUID.fromString(LINKABLE_AUTHORITY_ID));
     authority.setNaturalId(NATURAL_ID);

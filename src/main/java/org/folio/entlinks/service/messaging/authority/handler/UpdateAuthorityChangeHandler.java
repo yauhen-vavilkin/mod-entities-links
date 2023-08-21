@@ -16,9 +16,9 @@ import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.dto.SubfieldChange;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
+import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthorityBatchProcessingException;
 import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
-import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
 import org.folio.entlinks.integration.internal.AuthoritySourceRecordService;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
@@ -33,21 +33,21 @@ import org.springframework.stereotype.Component;
 @Component
 public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler {
 
-  private final AuthoritySourceFilesService sourceFilesService;
+  private final AuthoritySourceFileRepository sourceFileRepository;
   private final AuthorityMappingRulesProcessingService mappingRulesProcessingService;
   private final AuthoritySourceRecordService sourceRecordService;
   private final InstanceAuthorityLinkingRulesService linkingRulesService;
   private final EventProducer<LinkUpdateReport> eventProducer;
 
   public UpdateAuthorityChangeHandler(InstanceAuthorityChangeProperties instanceAuthorityChangeProperties,
-                                      AuthoritySourceFilesService sourceFilesService,
+                                      AuthoritySourceFileRepository sourceFileRepository,
                                       AuthorityMappingRulesProcessingService mappingRulesProcessingService,
                                       AuthoritySourceRecordService sourceRecordService,
                                       InstanceAuthorityLinkingRulesService linkingRulesService,
                                       InstanceAuthorityLinkingService linkingService,
                                       EventProducer<LinkUpdateReport> eventProducer) {
     super(instanceAuthorityChangeProperties, linkingService);
-    this.sourceFilesService = sourceFilesService;
+    this.sourceFileRepository = sourceFileRepository;
     this.mappingRulesProcessingService = mappingRulesProcessingService;
     this.sourceRecordService = sourceRecordService;
     this.linkingRulesService = linkingRulesService;
@@ -164,7 +164,7 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   }
 
   private SubfieldChange getSubfield0Change(String naturalId, UUID sourceFileId) {
-    var sourceFile = sourceFilesService.fetchAuthoritySources().get(sourceFileId);
+    var sourceFile = sourceFileRepository.findById(sourceFileId).orElse(null);
     var subfield0Value = getSubfield0Value(naturalId, sourceFile);
     return new SubfieldChange().code("0").value(subfield0Value);
   }

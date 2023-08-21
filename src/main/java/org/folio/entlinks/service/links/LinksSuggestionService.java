@@ -22,11 +22,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.config.constants.ErrorCode;
 import org.folio.entlinks.domain.dto.LinkDetails;
+import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
+import org.folio.entlinks.domain.repository.AuthoritySourceFileCodeRepository;
 import org.folio.entlinks.integration.dto.AuthorityParsedContent;
 import org.folio.entlinks.integration.dto.FieldParsedContent;
 import org.folio.entlinks.integration.dto.SourceParsedContent;
-import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
 import org.folio.entlinks.utils.FieldUtils;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +36,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class LinksSuggestionService {
 
-  private final AuthoritySourceFilesService sourceFilesService;
+  private final AuthoritySourceFileCodeRepository sourceFileCodeRepository;
   private final AuthorityRuleValidationService authorityRuleValidationService;
 
   /**
@@ -172,7 +173,10 @@ public class LinksSuggestionService {
       return;
     }
 
-    var zeroValue = getSubfield0Value(sourceFilesService.fetchAuthoritySources(), authority.getNaturalId());
+    var zeroValue = sourceFileCodeRepository.findFirstByCodeStartsWith(authority.getNaturalId())
+        .map(AuthoritySourceFileCode::getAuthoritySourceFile)
+        .map(sourceFile -> getSubfield0Value(authority.getNaturalId(), sourceFile))
+        .orElse(authority.getNaturalId());
     bibSubfields.put("0", List.of(zeroValue));
     bibSubfields.put("9", List.of(authority.getId().toString()));
 

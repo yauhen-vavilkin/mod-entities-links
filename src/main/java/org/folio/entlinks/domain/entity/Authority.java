@@ -105,7 +105,9 @@ public class Authority extends MetadataEntity implements Persistable<UUID>, Iden
     super(other);
     this.id = other.id;
     this.naturalId = other.naturalId;
-    this.authoritySourceFile = new AuthoritySourceFile(other.authoritySourceFile);
+    this.authoritySourceFile = Optional.ofNullable(other.authoritySourceFile)
+        .map(AuthoritySourceFile::new)
+        .orElse(null);
     this.source = other.source;
     this.heading = other.heading;
     this.headingType = other.headingType;

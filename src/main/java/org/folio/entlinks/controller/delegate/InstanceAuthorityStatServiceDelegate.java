@@ -16,7 +16,7 @@ import org.folio.entlinks.domain.dto.AuthorityStatsDto;
 import org.folio.entlinks.domain.dto.AuthorityStatsDtoCollection;
 import org.folio.entlinks.domain.dto.LinkAction;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
-import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
+import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.utils.DateUtils;
 import org.folio.spring.tools.client.UsersClient;
@@ -30,9 +30,9 @@ public class InstanceAuthorityStatServiceDelegate {
 
   private static final String NOT_SPECIFIED_SOURCE_FILE = "Not specified";
   private final AuthorityDataStatService dataStatService;
-  private final AuthoritySourceFilesService sourceFilesService;
   private final DataStatsMapper dataStatMapper;
   private final UsersClient usersClient;
+  private final AuthoritySourceFileRepository sourceFileRepository;
 
   public AuthorityStatsDtoCollection fetchAuthorityLinksStats(OffsetDateTime fromDate, OffsetDateTime toDate,
                                                               LinkAction action, Integer limit) {
@@ -102,9 +102,9 @@ public class InstanceAuthorityStatServiceDelegate {
 
   private String getSourceFileName(String uuid) {
     if (isNotBlank(uuid)) {
-      var sourceFile = sourceFilesService.fetchAuthoritySources().get(UUID.fromString(uuid));
+      var sourceFile = sourceFileRepository.findById(UUID.fromString(uuid)).orElse(null);
       if (sourceFile != null) {
-        return sourceFile.name();
+        return sourceFile.getName();
       }
     }
     return NOT_SPECIFIED_SOURCE_FILE;

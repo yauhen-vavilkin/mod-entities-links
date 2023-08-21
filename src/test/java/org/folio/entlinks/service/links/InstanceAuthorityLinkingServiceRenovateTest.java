@@ -30,10 +30,10 @@ import org.folio.entlinks.domain.dto.StrippedParsedRecordCollection;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
+import org.folio.entlinks.domain.repository.AuthoritySourceFileCodeRepository;
 import org.folio.entlinks.domain.repository.InstanceLinkRepository;
 import org.folio.entlinks.exception.DeletedLinkingAuthorityException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
-import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.spring.test.type.UnitTest;
@@ -57,8 +57,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class InstanceAuthorityLinkingServiceRenovateTest {
 
-  private final AuthoritySourceFilesService sourceFilesService = mock(AuthoritySourceFilesService.class);
-  private final RenovateLinksService renovateLinksService = spy(new RenovateLinksService(sourceFilesService));
+  private final AuthoritySourceFileCodeRepository sourceFileCodeRepository =
+      mock(AuthoritySourceFileCodeRepository.class);
+  private final RenovateLinksService renovateLinksService = spy(new RenovateLinksService(sourceFileCodeRepository));
 
   @Mock
   private InstanceLinkRepository instanceLinkRepository;

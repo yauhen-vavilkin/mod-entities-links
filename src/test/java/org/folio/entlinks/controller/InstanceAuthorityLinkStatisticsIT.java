@@ -96,6 +96,7 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
     var authority3 = authority(0, 0);
     authority3.setId(AUTHORITY_ID);
     authority3.setNaturalId(AUTHORITY_ID.toString());
+    authority3.setAuthoritySourceFile(null);
     databaseHelper.saveAuthority(TENANT_ID, authority3);
   }
 
