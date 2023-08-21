@@ -168,9 +168,9 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
 
     // send delete event to mark authority as deleted
     doDelete(authorityEndpoint(AUTHORITY_ID));
-    // wait until stat for DELETE event is saved to database and for UPDATE is removed from database
+    // wait until stat saved to database
     await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(() ->
-        assertEquals(1, databaseHelper.countRows(AUTHORITY_DATA_STAT_TABLE, TENANT_ID))
+        assertEquals(2, databaseHelper.countRows(AUTHORITY_DATA_STAT_TABLE, TENANT_ID))
     );
 
     doGet(authorityStatsEndpoint(UPDATE_HEADING, FROM_DATE, TO_DATE, 1))

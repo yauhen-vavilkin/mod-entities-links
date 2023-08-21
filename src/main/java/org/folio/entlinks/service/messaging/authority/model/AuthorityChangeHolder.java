@@ -10,6 +10,7 @@ import lombok.Setter;
 import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
 import org.folio.entlinks.domain.dto.InventoryEvent;
 import org.folio.entlinks.domain.dto.InventoryEventType;
+import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.jetbrains.annotations.NotNull;
@@ -103,8 +104,12 @@ public class AuthorityChangeHolder {
       }
     }
 
+    var authority = new Authority();
+    authority.setId(getAuthorityId());
+    authority.setNaturalId(getNewNaturalId() == null ? getOldNaturalId() : getNewNaturalId());
+    authority.setDeleted(this.getInventoryEventType().equals(InventoryEventType.DELETE));
     AuthorityDataStat authorityDataStat = AuthorityDataStat.builder()
-        .authorityId(getAuthorityId())
+        .authority(authority)
         .authorityNaturalIdOld(getOldNaturalId())
         .authorityNaturalIdNew(getNewNaturalId())
         .authoritySourceFileOld(getOldSourceFileId())

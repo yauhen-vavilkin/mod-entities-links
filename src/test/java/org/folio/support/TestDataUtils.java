@@ -179,10 +179,13 @@ public class TestDataUtils {
   }
 
   public static AuthorityDataStat authorityDataStat(UUID userId, UUID sourceFileId, AuthorityDataStatAction action) {
+    var authority = new Authority();
+    authority.setNaturalId("naturalId");
+    authority.setId(UUID.randomUUID());
     return AuthorityDataStat.builder()
       .id(randomUUID())
       .action(action)
-      .authorityId(UUID.randomUUID())
+      .authority(authority)
       .authorityNaturalIdOld("naturalIdOld")
       .authorityNaturalIdNew("naturalIdNew")
       .authoritySourceFileNew(sourceFileId)
@@ -221,7 +224,7 @@ public class TestDataUtils {
   public static AuthorityStatsDto getStatDataDto(AuthorityDataStat dataStat, UsersClient.User user) {
     AuthorityStatsDto dto = new AuthorityStatsDto();
     dto.setId(dataStat.getId());
-    dto.setAuthorityId(dataStat.getAuthorityId());
+    dto.setAuthorityId(dataStat.getAuthority().getId());
     dto.setAction(LinkAction.fromValue(dataStat.getAction().name()));
     dto.setHeadingNew(dataStat.getHeadingNew());
     dto.setHeadingOld(dataStat.getHeadingOld());

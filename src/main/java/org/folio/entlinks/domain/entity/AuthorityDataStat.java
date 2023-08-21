@@ -6,6 +6,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.sql.Timestamp;
 import java.util.Objects;
@@ -35,7 +37,9 @@ public class AuthorityDataStat extends AuditableEntity {
   private UUID id;
 
   @ToString.Exclude
-  private UUID authorityId;
+  @ManyToOne
+  @JoinColumn(name = "authority_id")
+  private Authority authority;
 
   @Enumerated(EnumType.STRING)
   @Type(PostgreSQLEnumType.class)

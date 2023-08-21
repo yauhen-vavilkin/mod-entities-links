@@ -15,6 +15,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface DataStatsMapper {
 
+  @Mapping(target = "authorityId", source = "authority.id")
   @Mapping(target = "naturalIdOld", source = "authorityNaturalIdOld")
   @Mapping(target = "naturalIdNew", source = "authorityNaturalIdNew")
   @Mapping(target = "sourceFileOld", source = "authoritySourceFileOld")

@@ -7,7 +7,6 @@ import static org.folio.entlinks.utils.DateUtils.currentTs;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -67,11 +66,6 @@ public class AuthorityDataStatService {
     }
   }
 
-  @Transactional
-  public void deleteByAuthorityIds(Set<UUID> authorityIds) {
-    statRepository.deleteByAuthorityIds(authorityIds);
-  }
-
   private void checkIfAllFailed(List<LinkUpdateReport> reports, AuthorityDataStat dataStat) {
     reports.stream()
       .filter(linkUpdateReport -> CollectionUtils.isEmpty(linkUpdateReport.getLinkIds())
@@ -95,7 +89,7 @@ public class AuthorityDataStatService {
 
         linkingService.saveAll(report.getInstanceId(), links);
       } else if (dataStat.isPresent()) {
-        var authorityId = dataStat.get().getAuthorityId();
+        var authorityId = dataStat.get().getAuthority().getId();
         linkingService.updateStatus(authorityId, status, report.getFailCause());
       }
     });
