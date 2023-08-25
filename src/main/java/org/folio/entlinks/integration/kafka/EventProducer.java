@@ -29,7 +29,10 @@ public class EventProducer<T extends BaseEvent> {
   public void sendMessage(String key, T msgBody, Object... headers) {
     log.debug("Sending event to Kafka [topic: {}]", topicName);
     log.debug("Sending event to Kafka [topic: {}, body: {}]", topicName, msgBody);
-    assert headers.length % 2 == 0;
+    if (headers.length % 2 != 0) {
+      throw new IllegalArgumentException(
+          String.format("Wrong number of %s header key and value pairs are provided", headers.length));
+    }
     var headersMap = new HashMap<String, Collection<String>>();
     for (int i = 0; i < headers.length; i += 2) {
       headersMap.put(headers[i].toString(), List.of(headers[i + 1].toString()));
