@@ -484,14 +484,14 @@ components:
                   - key: moduleTo
                     value: null
 
-    inventoryEvent:
-      $ref: schemas/inventoryEvent.json
+    authorityEvent:
+      $ref: schemas/authorityEvent.json
 
-    inventoryEventType:
-      $ref: schemas/inventoryEventType.json
+    authorityEventType:
+      $ref: schemas/authorityEventType.json
 
-    authorityInventoryRecord:
-      $ref: schemas/authorityInventoryRecord.json
+    authorityRecord:
+      $ref: schemas/authorityRecord.json
 
     sourceRecord:
       $ref: schemas/mod-source-record-storage/sourceRecord.json

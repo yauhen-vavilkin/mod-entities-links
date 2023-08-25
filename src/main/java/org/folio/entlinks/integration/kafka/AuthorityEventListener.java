@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.logging.log4j.message.FormattedMessageFactory;
-import org.folio.entlinks.domain.dto.InventoryEvent;
+import org.folio.entlinks.domain.dto.AuthorityEvent;
 import org.folio.entlinks.service.messaging.authority.InstanceAuthorityLinkUpdateService;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
 import org.folio.spring.tools.systemuser.SystemUserScopedExecutionService;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 @Log4j2
 @Component
 @RequiredArgsConstructor
-public class AuthorityInventoryEventListener {
+public class AuthorityEventListener {
 
   private final InstanceAuthorityLinkUpdateService instanceAuthorityLinkUpdateService;
   private final SystemUserScopedExecutionService executionService;
@@ -30,18 +30,18 @@ public class AuthorityInventoryEventListener {
                  topicPattern = "#{folioKafkaProperties.listener['authority'].topicPattern}",
                  groupId = "#{folioKafkaProperties.listener['authority'].groupId}",
                  concurrency = "#{folioKafkaProperties.listener['authority'].concurrency}")
-  public void handleEvents(List<ConsumerRecord<String, InventoryEvent>> consumerRecords) {
+  public void handleEvents(List<ConsumerRecord<String, AuthorityEvent>> consumerRecords) {
     log.info("Processing authorities from Kafka events [number of records: {}]", consumerRecords.size());
 
-    var inventoryEvents =
+    var authorityEvents =
       consumerRecords.stream()
         .map(consumerRecord -> consumerRecord.value().id(UUID.fromString(consumerRecord.key())))
-        .collect(Collectors.groupingBy(InventoryEvent::getTenant));
+        .collect(Collectors.groupingBy(AuthorityEvent::getTenant));
 
-    inventoryEvents.forEach(this::handleAuthorityEventsForTenant);
+    authorityEvents.forEach(this::handleAuthorityEventsForTenant);
   }
 
-  private void handleAuthorityEventsForTenant(String tenant, List<InventoryEvent> events) {
+  private void handleAuthorityEventsForTenant(String tenant, List<AuthorityEvent> events) {
     executionService.executeSystemUserScoped(tenant, () -> {
       log.info("Triggering updates for authority records [number of records: {}, tenant: {}]", events.size(), tenant);
       messageBatchProcessor.consumeBatchWithFallback(events, DEFAULT_KAFKA_RETRY_TEMPLATE_NAME,
@@ -50,7 +50,7 @@ public class AuthorityInventoryEventListener {
     });
   }
 
-  private void logFailedEvent(InventoryEvent event, Exception e) {
+  private void logFailedEvent(AuthorityEvent event, Exception e) {
     if (event == null) {
       log.warn("Failed to process authority event [event: null]", e);
       return;

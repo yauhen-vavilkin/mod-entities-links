@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
-import org.folio.entlinks.domain.dto.InventoryEvent;
+import org.folio.entlinks.domain.dto.AuthorityEvent;
+import org.folio.entlinks.domain.dto.AuthorityRecord;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
@@ -58,14 +58,14 @@ class InstanceAuthorityLinkUpdateServiceTest {
   @Test
   void handleAuthoritiesChanges_positive_updateEvent() {
     final var id = UUID.randomUUID();
-    final var inventoryEvents = List.of(new InventoryEvent().id(id)
-      .type("UPDATE")._new(new AuthorityInventoryRecord().naturalId("new")));
+    final var authorityEvents = List.of(
+        new AuthorityEvent().id(id).type("UPDATE")._new(new AuthorityRecord().naturalId("new")));
 
     var expected = new LinksChangeEvent().type(LinksChangeEvent.TypeEnum.UPDATE);
     when(linkingService.countLinksByAuthorityIds(Set.of(id))).thenReturn(Map.of(id, 1));
     when(updateHandler.handle(anyList())).thenReturn(List.of(expected));
 
-    service.handleAuthoritiesChanges(inventoryEvents);
+    service.handleAuthoritiesChanges(authorityEvents);
 
     verify(eventProducer).sendMessages(argumentCaptor.capture());
     verify(authorityDataStatService).createInBatch(anyList());
@@ -79,12 +79,12 @@ class InstanceAuthorityLinkUpdateServiceTest {
   @Test
   void handleAuthoritiesChanges_positive_updateEventWhenNoLinksExist() {
     final var id = UUID.randomUUID();
-    final var inventoryEvents = List.of(new InventoryEvent().id(id)
-      .type("UPDATE")._new(new AuthorityInventoryRecord().naturalId("new")));
+    final var authorityEvents = List.of(
+        new AuthorityEvent().id(id).type("UPDATE")._new(new AuthorityRecord().naturalId("new")));
 
     when(linkingService.countLinksByAuthorityIds(Set.of(id))).thenReturn(Collections.emptyMap());
 
-    service.handleAuthoritiesChanges(inventoryEvents);
+    service.handleAuthoritiesChanges(authorityEvents);
 
     verify(eventProducer, never()).sendMessages(argumentCaptor.capture());
     verify(authorityDataStatService).createInBatch(anyList());
@@ -94,15 +94,15 @@ class InstanceAuthorityLinkUpdateServiceTest {
   @Test
   void handleAuthoritiesChanges_positive_deleteEvent() {
     final var id = UUID.randomUUID();
-    final var inventoryEvents = List.of(new InventoryEvent().id(id)
-      .type("DELETE").old(new AuthorityInventoryRecord().naturalId("old")));
+    final var authorityEvents = List.of(
+        new AuthorityEvent().id(id).type("DELETE").old(new AuthorityRecord().naturalId("old")));
 
     var changeEvent = new LinksChangeEvent().type(LinksChangeEvent.TypeEnum.DELETE);
 
     when(linkingService.countLinksByAuthorityIds(Set.of(id))).thenReturn(Map.of(id, 1));
     when(deleteHandler.handle(any())).thenReturn(List.of(changeEvent));
 
-    service.handleAuthoritiesChanges(inventoryEvents);
+    service.handleAuthoritiesChanges(authorityEvents);
 
     verify(eventProducer).sendMessages(argumentCaptor.capture());
     verify(authorityDataStatService).createInBatch(anyList());

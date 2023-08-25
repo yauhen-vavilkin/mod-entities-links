@@ -7,9 +7,9 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
-import org.folio.entlinks.domain.dto.InventoryEvent;
-import org.folio.entlinks.domain.dto.InventoryEventType;
+import org.folio.entlinks.domain.dto.AuthorityEvent;
+import org.folio.entlinks.domain.dto.AuthorityEventType;
+import org.folio.entlinks.domain.dto.AuthorityRecord;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 public class AuthorityChangeHolder {
 
   @Getter
-  private final @NotNull InventoryEvent event;
+  private final @NotNull AuthorityEvent event;
   private final @NotNull Map<AuthorityChangeField, AuthorityChange> changes;
   private final @NotNull Map<AuthorityChangeField, String> fieldTagRelation;
   @Getter
@@ -107,7 +107,7 @@ public class AuthorityChangeHolder {
     var authority = new Authority();
     authority.setId(getAuthorityId());
     authority.setNaturalId(getNewNaturalId() == null ? getOldNaturalId() : getNewNaturalId());
-    authority.setDeleted(this.getInventoryEventType().equals(InventoryEventType.DELETE));
+    authority.setDeleted(this.getInventoryEventType().equals(AuthorityEventType.DELETE));
     AuthorityDataStat authorityDataStat = AuthorityDataStat.builder()
         .authority(authority)
         .authorityNaturalIdOld(getOldNaturalId())
@@ -129,8 +129,8 @@ public class AuthorityChangeHolder {
   }
 
   @NotNull
-  private InventoryEventType getInventoryEventType() {
-    return InventoryEventType.fromValue(event.getType());
+  private AuthorityEventType getInventoryEventType() {
+    return AuthorityEventType.fromValue(event.getType());
   }
 
   private AuthorityDataStatAction getAuthorityDataStatAction() {
@@ -147,12 +147,12 @@ public class AuthorityChangeHolder {
   }
 
   @Nullable
-  private String getNaturalId(AuthorityInventoryRecord inventoryRecord) {
+  private String getNaturalId(AuthorityRecord inventoryRecord) {
     return inventoryRecord != null ? inventoryRecord.getNaturalId() : null;
   }
 
   @Nullable
-  private UUID getSourceFileId(AuthorityInventoryRecord inventoryRecord) {
+  private UUID getSourceFileId(AuthorityRecord inventoryRecord) {
     return inventoryRecord != null ? inventoryRecord.getSourceFileId() : null;
   }
 

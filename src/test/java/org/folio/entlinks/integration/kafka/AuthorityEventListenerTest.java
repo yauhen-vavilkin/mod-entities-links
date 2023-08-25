@@ -11,9 +11,8 @@ import static org.mockito.Mockito.when;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
-import org.folio.entlinks.domain.dto.AuthorityInventoryRecordMetadata;
-import org.folio.entlinks.domain.dto.InventoryEvent;
+import org.folio.entlinks.domain.dto.AuthorityEvent;
+import org.folio.entlinks.domain.dto.AuthorityRecord;
 import org.folio.entlinks.service.messaging.authority.InstanceAuthorityLinkUpdateService;
 import org.folio.spring.test.type.UnitTest;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
@@ -30,7 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @UnitTest
 @ExtendWith(MockitoExtension.class)
-class AuthorityInventoryEventListenerTest {
+class AuthorityEventListenerTest {
 
   @Mock
   private SystemUserScopedExecutionService executionService;
@@ -40,10 +39,10 @@ class AuthorityInventoryEventListenerTest {
   private MessageBatchProcessor messageBatchProcessor;
 
   @Mock
-  private ConsumerRecord<String, InventoryEvent> consumerRecord;
+  private ConsumerRecord<String, AuthorityEvent> consumerRecord;
 
   @InjectMocks
-  private AuthorityInventoryEventListener listener;
+  private AuthorityEventListener listener;
 
   @BeforeEach
   void setUp() {
@@ -57,8 +56,8 @@ class AuthorityInventoryEventListenerTest {
   @ParameterizedTest
   void shouldHandleEvent_positive_whenLinksExists(String type) {
     var authId = UUID.randomUUID();
-    var newRecord = new AuthorityInventoryRecord().id(authId);
-    var oldRecord = new AuthorityInventoryRecord().id(authId);
+    var newRecord = new AuthorityRecord().id(authId);
+    var oldRecord = new AuthorityRecord().id(authId);
     var event = TestDataUtils.authorityEvent(type, newRecord, oldRecord);
 
     mockBatchSuccessHandling(messageBatchProcessor);
@@ -75,9 +74,9 @@ class AuthorityInventoryEventListenerTest {
   void shouldHandleEvent_positive_whenNoLinksExists(String type) {
     var authId = UUID.randomUUID();
     var updatedByUserId = UUID.randomUUID();
-    var meta = new AuthorityInventoryRecordMetadata().updatedByUserId(updatedByUserId);
-    var newRecord = new AuthorityInventoryRecord().id(authId).metadata(meta);
-    var oldRecord = new AuthorityInventoryRecord().id(authId).metadata(meta.updatedByUserId(updatedByUserId));
+    var meta = new org.folio.entlinks.domain.dto.AuthorityRecordMetadata().updatedByUserId(updatedByUserId);
+    var newRecord = new AuthorityRecord().id(authId).metadata(meta);
+    var oldRecord = new AuthorityRecord().id(authId).metadata(meta.updatedByUserId(updatedByUserId));
     var event = TestDataUtils.authorityEvent(type, newRecord, oldRecord);
 
     mockBatchSuccessHandling(messageBatchProcessor);
@@ -92,8 +91,8 @@ class AuthorityInventoryEventListenerTest {
   @Test
   void shouldNotHandleEvent_negative_whenExceptionOccurred() {
     var authId = UUID.randomUUID();
-    var newRecord = new AuthorityInventoryRecord().id(authId);
-    var oldRecord = new AuthorityInventoryRecord().id(authId);
+    var newRecord = new AuthorityRecord().id(authId);
+    var oldRecord = new AuthorityRecord().id(authId);
     var event = TestDataUtils.authorityEvent("UPDATE", newRecord, oldRecord);
 
     mockBatchFailedHandling(messageBatchProcessor, new RuntimeException("test message"));

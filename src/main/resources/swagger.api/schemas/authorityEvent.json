@@ -22,11 +22,11 @@
     },
     "new": {
       "description": "New authority record",
-      "$ref": "authorityInventoryRecord.json"
+      "$ref": "authorityRecord.json"
     },
     "old": {
       "description": "Old authority record",
-      "$ref": "authorityInventoryRecord.json"
+      "$ref": "authorityRecord.json"
     }
   }
 }

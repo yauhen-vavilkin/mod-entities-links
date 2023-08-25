@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.folio.entlinks.domain.dto.InventoryEvent;
+import org.folio.entlinks.domain.dto.AuthorityEvent;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.integration.kafka.AuthorityChangeFilterStrategy;
@@ -41,8 +41,8 @@ public class KafkaConfiguration {
    * @return {@link org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory} object as Spring bean.
    */
   @Bean
-  public ConcurrentKafkaListenerContainerFactory<String, InventoryEvent> authorityListenerFactory(
-    ConsumerFactory<String, InventoryEvent> consumerFactory) {
+  public ConcurrentKafkaListenerContainerFactory<String, AuthorityEvent> authorityListenerFactory(
+    ConsumerFactory<String, AuthorityEvent> consumerFactory) {
     var factory = listenerFactory(consumerFactory);
     factory.setRecordFilterStrategy(new AuthorityChangeFilterStrategy());
     return factory;
@@ -51,13 +51,13 @@ public class KafkaConfiguration {
   /**
    * Creates and configures {@link org.springframework.kafka.core.ConsumerFactory} as Spring bean.
    *
-   * <p>Key type - {@link String}, value - {@link InventoryEvent}.</p>
+   * <p>Key type - {@link String}, value - {@link AuthorityEvent}.</p>
    *
    * @return typed {@link org.springframework.kafka.core.ConsumerFactory} object as Spring bean.
    */
   @Bean
-  public ConsumerFactory<String, InventoryEvent> authorityConsumerFactory(KafkaProperties kafkaProperties) {
-    return consumerFactoryForEvent(kafkaProperties, InventoryEvent.class);
+  public ConsumerFactory<String, AuthorityEvent> authorityConsumerFactory(KafkaProperties kafkaProperties) {
+    return consumerFactoryForEvent(kafkaProperties, AuthorityEvent.class);
   }
 
   /**

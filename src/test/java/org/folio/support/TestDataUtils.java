@@ -30,7 +30,8 @@ import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
 import org.folio.entlinks.domain.dto.AuthorityDtoNote;
-import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
+import org.folio.entlinks.domain.dto.AuthorityEvent;
+import org.folio.entlinks.domain.dto.AuthorityRecord;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthorityStatsDto;
 import org.folio.entlinks.domain.dto.BibStatsDto;
@@ -39,7 +40,6 @@ import org.folio.entlinks.domain.dto.ExternalIdsHolder;
 import org.folio.entlinks.domain.dto.FieldContent;
 import org.folio.entlinks.domain.dto.InstanceLinkDto;
 import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
-import org.folio.entlinks.domain.dto.InventoryEvent;
 import org.folio.entlinks.domain.dto.LinkAction;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.dto.ParsedRecordContent;
@@ -68,12 +68,11 @@ public class TestDataUtils {
   public static final UUID[] AUTHORITY_IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID(), randomUUID()};
   public static final String[] NATURAL_IDS = new String[] {"naturalId1", "naturalId2", "naturalId3", "naturalId4"};
 
-  public static InventoryEvent inventoryEvent(String resource, String type,
-                                              AuthorityInventoryRecord n, AuthorityInventoryRecord o) {
-    return new InventoryEvent().type(type).resourceName(resource).tenant(TENANT_ID)._new(n).old(o);
+  public static AuthorityEvent inventoryEvent(String resource, String type, AuthorityRecord n, AuthorityRecord o) {
+    return new AuthorityEvent().type(type).resourceName(resource).tenant(TENANT_ID)._new(n).old(o);
   }
 
-  public static InventoryEvent authorityEvent(String type, AuthorityInventoryRecord n, AuthorityInventoryRecord o) {
+  public static AuthorityEvent authorityEvent(String type, AuthorityRecord n, AuthorityRecord o) {
     return inventoryEvent("authority", type, n, o);
   }
 
@@ -386,11 +385,6 @@ public class TestDataUtils {
   public record Link(UUID authorityId, String tag, String naturalId,
                      char[] subfields, int linkingRuleId,
                      InstanceAuthorityLinkStatus status, String errorCause) {
-
-    //public static final UUID[] AUTH_IDS = new UUID[] {UUID.fromString("845642cf-d4eb-4c2e-a067-db580c9a1abd"),
-    //  UUID.fromString("1b8867a1-2f1d-4f6a-8023-5abaf980c24c"),
-    //  UUID.fromString("1c8f571c-eff8-43fa-90a5-2dca70a35f2d"),
-    //  UUID.fromString("91c3d682-7a6b-4c6f-802b-b2793e591fa4")};
     public static final String[] TAGS = new String[] {"100", "240", "700", "710"};
     public static final String[] AUTHORITY_TAGS = new String[] {"100", "110"};
     public static final Map<String, Map<String, Boolean>> SUBFIELD_VALIDATIONS_BY_TAG = Map.of(

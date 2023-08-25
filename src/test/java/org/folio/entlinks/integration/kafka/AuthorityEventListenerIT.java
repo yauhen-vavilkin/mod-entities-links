@@ -12,7 +12,7 @@ import static org.folio.support.base.TestConstants.DELETE_TYPE;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.UPDATE_TYPE;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
-import static org.folio.support.base.TestConstants.inventoryAuthorityTopic;
+import static org.folio.support.base.TestConstants.authorityTopic;
 import static org.folio.support.base.TestConstants.linksInstanceAuthorityTopic;
 import static org.folio.support.base.TestConstants.linksInstanceEndpoint;
 import static org.hamcrest.Matchers.equalTo;
@@ -31,7 +31,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import org.assertj.core.api.BDDSoftAssertions;
 import org.folio.entlinks.domain.dto.AuthorityDto;
-import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
+import org.folio.entlinks.domain.dto.AuthorityRecord;
 import org.folio.entlinks.domain.dto.ChangeTarget;
 import org.folio.entlinks.domain.dto.ChangeTargetLink;
 import org.folio.entlinks.domain.dto.FieldChange;
@@ -61,7 +61,7 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
   DatabaseHelper.AUTHORITY_TABLE,
   DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE
 })
-class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
+class AuthorityEventListenerIT extends IntegrationTestBase {
 
   private static final UUID AUTHORITY_ID = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
   private static final UUID SOURCE_FILE_ID = UUID.fromString("af045f2f-e851-4613-984c-4bc13430454a");
@@ -110,8 +110,8 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId3, link3)), instanceId3);
 
     var event = TestDataUtils.authorityEvent(DELETE_TYPE, null,
-      new AuthorityInventoryRecord().id(link1.authorityId()).naturalId("oldNaturalId"));
-    sendKafkaMessage(inventoryAuthorityTopic(), link1.authorityId().toString(), event);
+      new AuthorityRecord().id(link1.authorityId()).naturalId("oldNaturalId"));
+    sendKafkaMessage(authorityTopic(), link1.authorityId().toString(), event);
 
     var received = getReceivedEvent();
 
@@ -161,9 +161,9 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
 
     // prepare and send inventory update authority event
     var event = TestDataUtils.authorityEvent(UPDATE_TYPE,
-      new AuthorityInventoryRecord().id(authorityId).personalName("new personal name").naturalId(naturalId),
-      new AuthorityInventoryRecord().id(authorityId).personalNameTitle("old").naturalId(naturalId));
-    sendKafkaMessage(inventoryAuthorityTopic(), authorityId.toString(), event);
+      new AuthorityRecord().id(authorityId).personalName("new personal name").naturalId(naturalId),
+      new AuthorityRecord().id(authorityId).personalNameTitle("old").naturalId(naturalId));
+    sendKafkaMessage(authorityTopic(), authorityId.toString(), event);
 
     var received = getReceivedEvent();
 
@@ -271,10 +271,10 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
 
     // prepare and send inventory update authority event
     var event = TestDataUtils.authorityEvent(UPDATE_TYPE,
-      new AuthorityInventoryRecord().id(AUTHORITY_ID).personalName("new personal name").naturalId(naturalId)
-        .sourceFileId(SOURCE_FILE_ID),
-      new AuthorityInventoryRecord().id(AUTHORITY_ID).personalName("old").naturalId(naturalId));
-    sendKafkaMessage(inventoryAuthorityTopic(), AUTHORITY_ID.toString(), event);
+      new AuthorityRecord().id(AUTHORITY_ID).personalName("new personal name").naturalId(naturalId)
+          .sourceFileId(SOURCE_FILE_ID),
+      new AuthorityRecord().id(AUTHORITY_ID).personalName("old").naturalId(naturalId));
+    sendKafkaMessage(authorityTopic(), AUTHORITY_ID.toString(), event);
 
     var received = getReceivedEvent();
 
