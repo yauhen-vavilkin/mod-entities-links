@@ -47,6 +47,6 @@ public class LinkEventsUtils {
 
   public static Map<UUID, List<InstanceAuthorityLink>> groupLinksByAuthorityId(List<InstanceAuthorityLink> links) {
     return links.stream()
-      .collect(Collectors.groupingBy(link -> link.getAuthorityData().getId()));
+      .collect(Collectors.groupingBy(link -> link.getAuthority().getId()));
   }
 }

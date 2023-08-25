@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.domain.dto.FieldContent;
 import org.folio.entlinks.domain.dto.StrippedParsedRecord;
-import org.folio.entlinks.domain.entity.AuthorityData;
+import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.integration.dto.AuthorityParsedContent;
@@ -30,22 +30,22 @@ import org.springframework.stereotype.Service;
 public class AuthorityRuleValidationService {
 
   public AuthorityRuleValidationResult validateAuthorityData(Map<UUID, List<InstanceAuthorityLink>> linksByAuthorityId,
-                                                             Map<UUID, AuthorityData> mapOfAuthorityData,
+                                                             Map<UUID, Authority> authoritiesById,
                                                              Map<UUID, String> authorityNaturalIds,
                                                              List<StrippedParsedRecord> authoritySources) {
     var invalidLinks = new LinkedList<InstanceAuthorityLink>();
-    var validAuthorityData = new HashSet<AuthorityData>();
+    var validAuthorityData = new HashSet<Authority>();
 
-    for (AuthorityData authorityData : mapOfAuthorityData.values()) {
-      var authorityId = authorityData.getId();
+    for (var authority : authoritiesById.values()) {
+      var authorityId = authority.getId();
       var naturalId = authorityNaturalIds.get(authorityId);
-      var authority = findAuthorityById(authorityId, authoritySources);
+      var authorityRecord = findAuthorityById(authorityId, authoritySources);
 
-      if (isNull(naturalId) || authority.isEmpty()) {
+      if (isNull(naturalId) || authorityRecord.isEmpty()) {
         invalidLinks.addAll(linksByAuthorityId.remove(authorityId));
       } else {
         var authorityLinks = linksByAuthorityId.get(authorityId);
-        var invalidLinksForAuthority = removeValidAuthorityLinks(authority.get(), authorityLinks);
+        var invalidLinksForAuthority = removeValidAuthorityLinks(authorityRecord.get(), authorityLinks);
 
         if (!invalidLinksForAuthority.isEmpty()) {
           invalidLinks.addAll(invalidLinksForAuthority);
@@ -55,8 +55,8 @@ public class AuthorityRuleValidationService {
           continue;
         }
 
-        authorityData.setNaturalId(naturalId);
-        validAuthorityData.add(authorityData);
+        authority.setNaturalId(naturalId);
+        validAuthorityData.add(authority);
       }
     }
     return new AuthorityRuleValidationResult(validAuthorityData, mapToValidLinkList(linksByAuthorityId), invalidLinks);

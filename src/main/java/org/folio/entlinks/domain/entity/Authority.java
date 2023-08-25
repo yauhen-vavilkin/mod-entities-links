@@ -20,6 +20,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.With;
 import org.folio.entlinks.domain.entity.base.Identifiable;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -28,6 +29,7 @@ import org.springframework.data.domain.Persistable;
 
 @Getter
 @Setter
+@With
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -47,6 +49,7 @@ public class Authority extends MetadataEntity implements Persistable<UUID>, Iden
   public static final String SAFT_HEADINGS_COLUMN = "saft_headings";
   public static final String IDENTIFIERS_COLUMN = "identifiers";
   public static final String NOTES_COLUMN = "notes";
+  public static final String DELETED_COLUMN = "deleted";
 
   @Id
   @Column(name = ID_COLUMN, nullable = false)
@@ -92,13 +95,19 @@ public class Authority extends MetadataEntity implements Persistable<UUID>, Iden
   @JdbcTypeCode(SqlTypes.JSON)
   private List<AuthorityNote> notes;
 
+  @Column(name = DELETED_COLUMN)
+  private boolean deleted = false;
+
   @Transient
   private boolean isNew = true;
 
   public Authority(Authority other) {
+    super(other);
     this.id = other.id;
     this.naturalId = other.naturalId;
-    this.authoritySourceFile = new AuthoritySourceFile(other.authoritySourceFile);
+    this.authoritySourceFile = Optional.ofNullable(other.authoritySourceFile)
+        .map(AuthoritySourceFile::new)
+        .orElse(null);
     this.source = other.source;
     this.heading = other.heading;
     this.headingType = other.headingType;
@@ -116,6 +125,7 @@ public class Authority extends MetadataEntity implements Persistable<UUID>, Iden
     this.notes = Optional.ofNullable(other.getNotes()).orElse(List.of()).stream()
         .map(AuthorityNote::new)
         .toList();
+    this.deleted = other.deleted;
   }
 
   @Override

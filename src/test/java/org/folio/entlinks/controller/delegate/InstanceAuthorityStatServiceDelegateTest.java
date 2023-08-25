@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -11,19 +12,19 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
-import org.folio.entlinks.client.AuthoritySourceFileClient.AuthoritySourceFile;
 import org.folio.entlinks.controller.converter.DataStatsMapper;
 import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
 import org.folio.entlinks.domain.dto.AuthorityStatsDto;
 import org.folio.entlinks.domain.dto.LinkAction;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
-import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
+import org.folio.entlinks.domain.entity.AuthoritySourceFile;
+import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
+import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.spring.test.type.UnitTest;
 import org.folio.spring.tools.client.UsersClient;
@@ -52,15 +53,24 @@ class InstanceAuthorityStatServiceDelegateTest {
   private static final int LIMIT_SIZE = 2;
 
   private @Mock AuthorityDataStatService statService;
-  private @Mock AuthoritySourceFilesService sourceFilesService;
+  private @Mock AuthoritySourceFileRepository sourceFileRepository;
   private @Mock DataStatsMapper mapper;
   private @Mock UsersClient usersClient;
   private @InjectMocks InstanceAuthorityStatServiceDelegate delegate;
 
+  private AuthoritySourceFile sourceFile;
 
   @BeforeEach
   void setUp() {
-    delegate = new InstanceAuthorityStatServiceDelegate(statService, sourceFilesService, mapper, usersClient);
+    delegate = new InstanceAuthorityStatServiceDelegate(statService, mapper, usersClient, sourceFileRepository);
+    sourceFile = new AuthoritySourceFile();
+    sourceFile.setId(SOURCE_FILE_ID);
+    sourceFile.setBaseUrl(BASE_URL);
+    sourceFile.setName(SOURCE_FILE_NAME);
+    var sourceFileCode = new AuthoritySourceFileCode();
+    sourceFileCode.setCode("e1");
+    sourceFile.addCode(sourceFileCode);
+
     var statData = List.of(
       TestDataUtils.authorityDataStat(USER_ID_1, SOURCE_FILE_ID, AuthorityDataStatAction.UPDATE_HEADING),
       TestDataUtils.authorityDataStat(USER_ID_2, SOURCE_FILE_ID, AuthorityDataStatAction.UPDATE_HEADING)
@@ -81,13 +91,8 @@ class InstanceAuthorityStatServiceDelegateTest {
 
   @Test
   void fetchStats() {
-    //  GIVEN
-    AuthoritySourceFile sourceFile = new AuthoritySourceFile(SOURCE_FILE_ID, BASE_URL, SOURCE_FILE_NAME, codes("e1"));
-    Map<UUID, AuthoritySourceFile> expectedMap = new HashMap<>();
-    expectedMap.put(sourceFile.id(), sourceFile);
-
     //  WHEN
-    when(sourceFilesService.fetchAuthoritySources()).thenReturn(expectedMap);
+    when(sourceFileRepository.findById(any(UUID.class))).thenReturn(Optional.of(sourceFile));
     var authorityChangeStatDtoCollection = delegate
       .fetchAuthorityLinksStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION, LIMIT_SIZE);
 
@@ -114,8 +119,8 @@ class InstanceAuthorityStatServiceDelegateTest {
       assertNotNull(statDto.getMetadata().getCompletedAt());
       assertNotNull(statDto.getNaturalIdNew());
       assertNotNull(statDto.getNaturalIdOld());
-      assertNotNull(sourceFile.name());
-      assertNotNull(statDto.getSourceFileOld());
+      assertEquals(sourceFile.getName(), statDto.getSourceFileOld());
+      assertEquals(sourceFile.getName(), statDto.getSourceFileNew());
     }
 
     var resultUserIds = authorityChangeStatDtoCollection.getStats()
@@ -129,14 +134,10 @@ class InstanceAuthorityStatServiceDelegateTest {
 
   @Test
   void fetchStats_whenUpdatedUserIsNull() {
-    //  GIVEN
-    AuthoritySourceFile sourceFile = new AuthoritySourceFile(SOURCE_FILE_ID, BASE_URL, SOURCE_FILE_NAME, codes("e1"));
-    Map<UUID, AuthoritySourceFile> expectedMap = new HashMap<>();
-    expectedMap.put(sourceFile.id(), sourceFile);
-
     //  WHEN
-    when(sourceFilesService.fetchAuthoritySources()).thenReturn(expectedMap);
+    when(sourceFileRepository.findById(any(UUID.class))).thenReturn(Optional.of(sourceFile));
     when(usersClient.query(anyString())).thenReturn(ResultList.of(0, null));
+
     var authorityChangeStatDtoCollection = delegate
       .fetchAuthorityLinksStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION, LIMIT_SIZE);
 
@@ -163,18 +164,16 @@ class InstanceAuthorityStatServiceDelegateTest {
       assertNotNull(statDto.getMetadata().getCompletedAt());
       assertNotNull(statDto.getNaturalIdNew());
       assertNotNull(statDto.getNaturalIdOld());
-      assertNotNull(sourceFile.name());
-      assertNotNull(statDto.getSourceFileOld());
+      assertEquals(sourceFile.getName(), statDto.getSourceFileOld());
+      assertEquals(sourceFile.getName(), statDto.getSourceFileNew());
     }
   }
 
   @Test
   void fetchStats_withoutSourceFile() {
-    //  GIVEN
-    Map<UUID, AuthoritySourceFile> expectedMap = new HashMap<>();
-
     //  WHEN
-    when(sourceFilesService.fetchAuthoritySources()).thenReturn(expectedMap);
+    when(sourceFileRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
+
     var authorityChangeStatDtoCollection = delegate
       .fetchAuthorityLinksStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION, LIMIT_SIZE);
 
@@ -197,6 +196,7 @@ class InstanceAuthorityStatServiceDelegateTest {
   void fetchStats_withoutMetadata() {
     //  WHEN
     when(usersClient.query(anyString())).thenReturn(null);
+
     var authorityChangeStatDtoCollection = delegate
       .fetchAuthorityLinksStats(FROM_DATE, TO_DATE, DATA_STAT_ACTION, LIMIT_SIZE);
 
@@ -214,9 +214,5 @@ class InstanceAuthorityStatServiceDelegateTest {
 
     assertNull(authorityChangeStatDtoCollection.getNext());
     assertThat(List.of(USER_ID_1, USER_ID_2)).containsAll(resultUserIds);
-  }
-
-  private List<String> codes(String... codes) {
-    return List.of(codes);
   }
 }

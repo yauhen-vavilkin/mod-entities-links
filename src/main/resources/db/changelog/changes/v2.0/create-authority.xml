@@ -30,6 +30,7 @@
       <column name="saft_headings" type="jsonb"/>
       <column name="identifiers" type="jsonb"/>
       <column name="notes" type="jsonb"/>
+      <column name="deleted" type="bool" defaultValue="false"/>
       <column name="created_date" type="DATETIME">
         <constraints nullable="false"/>
       </column>

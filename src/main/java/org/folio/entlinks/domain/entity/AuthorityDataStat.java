@@ -39,7 +39,7 @@ public class AuthorityDataStat extends AuditableEntity {
   @ToString.Exclude
   @ManyToOne
   @JoinColumn(name = "authority_id")
-  private AuthorityData authorityData;
+  private Authority authority;
 
   @Enumerated(EnumType.STRING)
   @Type(PostgreSQLEnumType.class)

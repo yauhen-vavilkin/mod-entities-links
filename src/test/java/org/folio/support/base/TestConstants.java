@@ -15,7 +15,6 @@ public class TestConstants {
   public static final String TENANT_ID = "test";
   public static final String USER_ID = "38d3a441-c100-5e8d-bd12-71bde492b723";
 
-  public static final String INVENTORY_AUTHORITY_TOPIC = "inventory.authority";
   public static final String INSTANCE_AUTHORITY_TOPIC = "links.instance-authority";
   public static final String INSTANCE_AUTHORITY_STATS_TOPIC = "links.instance-authority-stats";
   public static final String AUTHORITY_TOPIC = "authorities.authority";
@@ -34,10 +33,6 @@ public class TestConstants {
   private static final String AUTHORITY_SOURCE_FILES_ENDPOINT = "/authority-source-files";
   private static final String AUTHORITY_STORAGE_ENDPOINT = "/authority-storage/authorities";
   private static final String AUTHORITY_STORAGE_REINDEX_ENDPOINT = "/authority-storage/reindex";
-
-  public static String inventoryAuthorityTopic() {
-    return fullTopicName(INVENTORY_AUTHORITY_TOPIC, TENANT_ID);
-  }
 
   public static String authorityTopic() {
     return fullTopicName(AUTHORITY_TOPIC, TENANT_ID);

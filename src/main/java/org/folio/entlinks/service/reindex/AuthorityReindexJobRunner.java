@@ -34,7 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthorityReindexJobRunner implements ReindexJobRunner {
 
   private static final String COUNT_QUERY_TEMPLATE = "SELECT COUNT(*) FROM %s_mod_entities_links.authority";
-  private static final String SELECT_QUERY_TEMPLATE = "SELECT * FROM %s_mod_entities_links.authority";
+  private static final String SELECT_QUERY_TEMPLATE =
+      "SELECT * FROM %s_mod_entities_links.authority WHERE deleted = false";
 
   private final JdbcTemplate jdbcTemplate;
   private final FolioExecutionContext folioExecutionContext;

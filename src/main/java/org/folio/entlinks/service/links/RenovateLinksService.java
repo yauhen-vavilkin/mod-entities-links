@@ -17,9 +17,10 @@ import org.apache.commons.collections4.ListUtils;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.dto.StrippedParsedRecord;
 import org.folio.entlinks.domain.dto.SubfieldChange;
+import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
+import org.folio.entlinks.domain.repository.AuthoritySourceFileCodeRepository;
 import org.folio.entlinks.exception.MarcAuthorityNotFoundException;
-import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
 import org.folio.entlinks.service.links.model.AuthorityRuleValidationResult;
 import org.folio.entlinks.service.messaging.authority.model.FieldChangeHolder;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class RenovateLinksService {
 
-  private final AuthoritySourceFilesService sourceFilesService;
+  private final AuthoritySourceFileCodeRepository sourceFileCodeRepository;
 
   public List<LinksChangeEvent> renovateBibs(UUID instanceId,
                                              List<StrippedParsedRecord> authoritySources,
@@ -89,7 +90,7 @@ public class RenovateLinksService {
 
     for (var link : links) {
       var linkingRule = link.getLinkingRule();
-      var naturalId = link.getAuthorityData().getNaturalId();
+      var naturalId = link.getAuthority().getNaturalId();
       var changedTag = linkingRule.getAuthorityField();
 
       authority.getParsedRecord().getContent().getFields().stream()
@@ -108,8 +109,10 @@ public class RenovateLinksService {
   }
 
   private SubfieldChange getSubfield0Change(String naturalId) {
-    var sourceFiles = sourceFilesService.fetchAuthoritySources();
-    var subfield0Value = getSubfield0Value(sourceFiles, naturalId);
+    var subfield0Value = sourceFileCodeRepository.findFirstByCodeStartsWith(naturalId)
+        .map(AuthoritySourceFileCode::getAuthoritySourceFile)
+        .map(sourceFile -> getSubfield0Value(naturalId, sourceFile))
+        .orElse(naturalId);
     return new SubfieldChange().code("0").value(subfield0Value);
   }
 }

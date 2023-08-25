@@ -8,9 +8,13 @@ import static org.folio.support.MatchUtils.errorMessageMatch;
 import static org.folio.support.MatchUtils.errorParameterMatch;
 import static org.folio.support.MatchUtils.errorTotalMatch;
 import static org.folio.support.MatchUtils.errorTypeMatch;
+import static org.folio.support.TestDataUtils.AuthorityTestData.authority;
+import static org.folio.support.TestDataUtils.AuthorityTestData.authoritySourceFile;
 import static org.folio.support.TestDataUtils.Link.TAGS;
+import static org.folio.support.TestDataUtils.NATURAL_IDS;
 import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
+import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.authoritiesLinksCountEndpoint;
 import static org.folio.support.base.TestConstants.linksInstanceEndpoint;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -28,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.folio.entlinks.domain.dto.InstanceLinkDto;
@@ -40,11 +45,13 @@ import org.folio.entlinks.exception.type.ErrorType;
 import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
+import org.folio.support.TestDataUtils;
 import org.folio.support.TestDataUtils.Link;
 import org.folio.support.base.IntegrationTestBase;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -52,7 +59,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 @IntegrationTest
-@DatabaseCleanup(tables = DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE)
+@DatabaseCleanup(tables = {
+  DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE,
+  DatabaseHelper.AUTHORITY_TABLE,
+  DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class InstanceAuthorityLinksIT extends IntegrationTestBase {
 
   public static Stream<Arguments> requiredFieldMissingProvider() {
@@ -79,6 +89,12 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
     );
   }
 
+  @BeforeEach
+  void setup() {
+    var sourceFile = authoritySourceFile(0);
+    databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile);
+  }
+
   @Test
   void getInstanceLinks_positive_noLinksFound() throws Exception {
     doGet(linksInstanceEndpoint(), randomUUID())
@@ -100,8 +116,8 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
   @SneakyThrows
   void updateInstanceLinks_positive_saveIncomingLinks_whenAnyExist() {
     var instanceId = randomUUID();
-    var incomingLinks = linksDtoCollection(linksDto(instanceId,
-      Link.of(0, 0), Link.of(1, 1)));
+    var incomingLinks = createLinkDtoCollection(2, instanceId);
+    createAuthoritiesForLinks(incomingLinks.getLinks());
     doPut(linksInstanceEndpoint(), incomingLinks, instanceId);
 
     doGet(linksInstanceEndpoint(), instanceId)
@@ -114,8 +130,8 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
   @SneakyThrows
   void updateInstanceLinks_positive_deleteAllLinks_whenIncomingIsEmpty() {
     var instanceId = randomUUID();
-    var existedLinks = linksDtoCollection(linksDto(instanceId,
-      Link.of(0, 0), Link.of(1, 1)));
+    var existedLinks = createLinkDtoCollection(2, instanceId);
+    createAuthoritiesForLinks(existedLinks.getLinks());
     doPut(linksInstanceEndpoint(), existedLinks, instanceId);
 
     var incomingLinks = linksDtoCollection(emptyList());
@@ -130,19 +146,15 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
   @SneakyThrows
   void updateInstanceLinks_positive_deleteAllExistedAndSaveAllIncomingLinks() {
     var instanceId = randomUUID();
-    var existedLinks = linksDtoCollection(linksDto(instanceId,
-      Link.of(0, 0),
-      Link.of(1, 1),
-      Link.of(2, 2),
-      Link.of(3, 3)
-    ));
+    var existedLinks = createLinkDtoCollection(4, instanceId);
+    createAuthoritiesForLinks(existedLinks.getLinks());
     doPut(linksInstanceEndpoint(), existedLinks, instanceId);
 
     var incomingLinks = linksDtoCollection(linksDto(instanceId,
-      Link.of(0, 2),
-      Link.of(1, 3),
-      Link.of(2, 1),
-      Link.of(3, 0)
+      Link.of(0, 2, TestDataUtils.NATURAL_IDS[0]),
+      Link.of(1, 3, TestDataUtils.NATURAL_IDS[1]),
+      Link.of(2, 1, TestDataUtils.NATURAL_IDS[2]),
+      Link.of(3, 0, TestDataUtils.NATURAL_IDS[3])
     ));
     doPut(linksInstanceEndpoint(), incomingLinks, instanceId);
 
@@ -156,18 +168,12 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
   @SneakyThrows
   void updateInstanceLinks_positive_saveOnlyNewLinks() {
     var instanceId = randomUUID();
-    var existedLinks = linksDtoCollection(linksDto(instanceId,
-      Link.of(0, 0),
-      Link.of(1, 1)
-    ));
+    var existedLinks = createLinkDtoCollection(2, instanceId);
+    createAuthoritiesForLinks(existedLinks.getLinks());
     doPut(linksInstanceEndpoint(), existedLinks, instanceId);
 
-    var incomingLinks = linksDtoCollection(linksDto(instanceId,
-      Link.of(0, 0),
-      Link.of(1, 1),
-      Link.of(2, 2),
-      Link.of(3, 3)
-    ));
+    var incomingLinks = createLinkDtoCollection(4, instanceId);
+    createAuthoritiesForLinks(incomingLinks.getLinks().subList(2, 4));
     doPut(linksInstanceEndpoint(), incomingLinks, instanceId);
 
     doGet(linksInstanceEndpoint(), instanceId)
@@ -180,15 +186,15 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
   @SneakyThrows
   void updateInstanceLinks_positive_updateExistedLinks() {
     var instanceId = randomUUID();
-    var existedLinks = linksDtoCollection(linksDto(instanceId,
-      Link.of(0, 0, "12345"),
-      Link.of(1, 1, "7890")
-    ));
+    var existedLinks = createLinkDtoCollection(2, instanceId);
+    createAuthoritiesForLinks(existedLinks.getLinks());
     doPut(linksInstanceEndpoint(), existedLinks, instanceId);
 
+    databaseHelper.updateAuthorityNaturalId(TENANT_ID, TestDataUtils.AUTHORITY_IDS[0], NATURAL_IDS[2]);
+    databaseHelper.updateAuthorityNaturalId(TENANT_ID, TestDataUtils.AUTHORITY_IDS[1], NATURAL_IDS[3]);
     var incomingLinks = linksDtoCollection(linksDto(instanceId,
-      Link.of(0, 0),
-      Link.of(1, 1)
+      Link.of(0, 0, TestDataUtils.NATURAL_IDS[2]),
+      Link.of(1, 1, TestDataUtils.NATURAL_IDS[3])
     ));
     doPut(linksInstanceEndpoint(), incomingLinks, instanceId);
 
@@ -202,19 +208,15 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
   @SneakyThrows
   void updateInstanceLinks_positive_deleteAndSaveLinks_whenHaveDifference() {
     var instanceId = randomUUID();
-    var existedLinks = linksDtoCollection(linksDto(instanceId,
-      Link.of(0, 0),
-      Link.of(1, 1),
-      Link.of(2, 2),
-      Link.of(3, 3)
-    ));
+    var existedLinks = createLinkDtoCollection(4, instanceId);
+    createAuthoritiesForLinks(existedLinks.getLinks());
     doPut(linksInstanceEndpoint(), existedLinks, instanceId);
 
     var incomingLinks = linksDtoCollection(linksDto(instanceId,
-      Link.of(0, 0),
-      Link.of(1, 1),
-      Link.of(2, 3),
-      Link.of(3, 2)
+      Link.of(0, 0, TestDataUtils.NATURAL_IDS[0]),
+      Link.of(1, 1, TestDataUtils.NATURAL_IDS[1]),
+      Link.of(2, 3, TestDataUtils.NATURAL_IDS[2]),
+      Link.of(3, 2, TestDataUtils.NATURAL_IDS[3])
     ));
     doPut(linksInstanceEndpoint(), incomingLinks, instanceId);
 
@@ -228,8 +230,11 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
   @SneakyThrows
   void updateInstanceLinks_positive_ignoreReadOnlyFields() {
     var instanceId = randomUUID();
-    var incomingLinks = linksDtoCollection(linksDto(instanceId,
-      Link.of(InstanceAuthorityLinkStatus.ERROR, "test")));
+    var link = Link.of(InstanceAuthorityLinkStatus.ERROR, "test");
+    var incomingLinks = linksDtoCollection(linksDto(instanceId, link));
+    var authority = authority(0, 0);
+    authority.setNaturalId(link.naturalId());
+    databaseHelper.saveAuthority(TENANT_ID, authority);
     doPut(linksInstanceEndpoint(), incomingLinks, instanceId);
 
     var expectedLinks = linksDtoCollection(linksDto(instanceId,
@@ -307,7 +312,9 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
   @SneakyThrows
   void countNumberOfTitles_positive_whenInstanceLinksExist() {
     var instanceId = randomUUID();
-    var authorityId = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
+    var authorityId = TestDataUtils.AUTHORITY_IDS[0];
+    var authority1 = authority(0, 0);
+    databaseHelper.saveAuthority(TENANT_ID, authority1);
     var links = linksDtoCollection(linksDto(instanceId,
       new Link(authorityId, TAGS[1]),
       new Link(authorityId, TAGS[2]),
@@ -316,7 +323,9 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
     doPut(linksInstanceEndpoint(), links, instanceId);
 
     var secondInstanceId = randomUUID();
-    var secondAuthorityId = UUID.fromString("845642cf-d4eb-4c2e-a067-db580c9a1abd");
+    var secondAuthorityId = TestDataUtils.AUTHORITY_IDS[1];
+    var authority2 = authority(1, 0);
+    databaseHelper.saveAuthority(TENANT_ID, authority2);
     var secondLinks = linksDtoCollection(linksDto(secondInstanceId,
       new Link(authorityId, TAGS[1]),
       new Link(authorityId, TAGS[2]),
@@ -325,11 +334,11 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
     ));
     doPut(linksInstanceEndpoint(), secondLinks, secondInstanceId);
 
-    var requestBody = new UuidCollection().ids(List.of(authorityId, secondAuthorityId));
+    var requestBody = new UuidCollection(List.of(authorityId, secondAuthorityId));
     doPost(authoritiesLinksCountEndpoint(), requestBody)
       .andExpect(status().isOk())
       .andExpect(linksMatch(hasSize(2)))
-      .andExpect(content().json(asJson(new LinksCountDtoCollection().links(
+      .andExpect(content().json(asJson(new LinksCountDtoCollection(
         List.of(
           new LinksCountDto().id(secondAuthorityId).totalLinks(1),
           new LinksCountDto().id(authorityId).totalLinks(2)
@@ -339,7 +348,7 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
   @Test
   @SneakyThrows
   void countNumberOfTitles_positive_whenInstanceLinksNotExistThenReturnZeroCount() {
-    var requestBody = new UuidCollection().ids(List.of(randomUUID(), randomUUID()));
+    var requestBody = new UuidCollection(List.of(randomUUID(), randomUUID()));
     doPost(authoritiesLinksCountEndpoint(), requestBody)
       .andExpect(status().isOk())
       .andExpect(linksMatch(hasSize(2)))
@@ -350,7 +359,7 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
   @Test
   @SneakyThrows
   void countNumberOfTitles_positive_whenRequestBodyIsEmptyThenReturnEmptyList() {
-    var requestBody = new UuidCollection().ids(List.of());
+    var requestBody = new UuidCollection(List.of());
     doPost(authoritiesLinksCountEndpoint(), requestBody)
       .andExpect(status().isOk())
       .andExpect(linksMatch(hasSize(0)));
@@ -365,6 +374,22 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
       .andExpect(errorTotalMatch(1))
       .andExpect(errorTypeMatch(is("HttpMessageNotReadableException")))
       .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())));
+  }
+
+  private InstanceLinkDtoCollection createLinkDtoCollection(int num, UUID instanceId) {
+    var links = IntStream.range(0, num)
+        .mapToObj(i -> Link.of(i, i, TestDataUtils.NATURAL_IDS[i]))
+        .toArray(Link[]::new);
+    return linksDtoCollection(linksDto(instanceId, links));
+  }
+
+  private void createAuthoritiesForLinks(List<InstanceLinkDto> links) {
+    var authority = authority(0, 0);
+    links.forEach(link -> {
+      authority.setId(link.getAuthorityId());
+      authority.setNaturalId(link.getAuthorityNaturalId());
+      databaseHelper.saveAuthority(TENANT_ID, authority);
+    });
   }
 
   private ResultMatcher totalRecordsMatch(int recordsTotal) {

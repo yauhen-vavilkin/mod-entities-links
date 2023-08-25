@@ -1,0 +1,109 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
+
+  <changeSet id="MODELINKS-108@@drop-fk-authority-id-authority-data" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <tableExists tableName="authority_data"/>
+        <tableExists tableName="instance_authority_link"/>
+        <foreignKeyConstraintExists foreignKeyName="fk_instance_authority_link_authority_data_id"
+                                    schemaName="${database.defaultSchemaName}"
+                                    foreignKeyTableName="instance_authority_link"/>
+      </and>
+    </preConditions>
+
+    <comment>Drop FK for authority_id in instance_authority_link referenced to authority_data.id</comment>
+
+    <dropForeignKeyConstraint baseTableName="instance_authority_link"
+                              constraintName="fk_instance_authority_link_authority_data_id"/>
+  </changeSet>
+
+  <changeSet id="MODELINKS-108@@drop-fk-authority-id-authority-data-stat" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <tableExists tableName="authority_data"/>
+        <tableExists tableName="authority_data_stat"/>
+        <foreignKeyConstraintExists foreignKeyName="fk_authority_data_stat_authority_data_id"
+                                    schemaName="${database.defaultSchemaName}"
+                                    foreignKeyTableName="authority_data_stat"/>
+      </and>
+    </preConditions>
+
+    <comment>Drop FK for authority_id in authority_data_stat referenced to authority_data.id</comment>
+
+    <dropForeignKeyConstraint baseTableName="authority_data_stat"
+                              constraintName="fk_authority_data_stat_authority_data_id"/>
+  </changeSet>
+
+  <changeSet id="MODELINKS-108@@drop-authority_data-table" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <tableExists tableName="authority_data"/>
+        <not>
+          <foreignKeyConstraintExists foreignKeyName="fk_authority_data_stat_authority_data_id"
+                                      schemaName="${database.defaultSchemaName}"
+                                      foreignKeyTableName="authority_data_stat"/>
+        </not>
+        <not>
+          <foreignKeyConstraintExists foreignKeyName="fk_instance_authority_link_authority_data_id"
+                                      schemaName="${database.defaultSchemaName}"
+                                      foreignKeyTableName="instance_authority_link"/>
+        </not>
+      </and>
+    </preConditions>
+
+    <comment>Drop authority_data table</comment>
+
+    <dropTable cascadeConstraints="true" tableName="authority_data"/>
+  </changeSet>
+
+  <changeSet id="MODELINKS-2@@add-instance_authority_link-authority_id-foreign-key" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <tableExists tableName="authority"/>
+        <tableExists tableName="instance_authority_link"/>
+        <not>
+          <foreignKeyConstraintExists foreignKeyName="fk_instance_authority_link_authority_id"
+                                      schemaName="${database.defaultSchemaName}"
+                                      foreignKeyTableName="instance_authority_link"/>
+        </not>
+      </and>
+    </preConditions>
+
+    <comment>Add FK for authority_id in instance_authority_link referenced to authority.id</comment>
+
+    <addForeignKeyConstraint baseTableName="instance_authority_link"
+                             baseColumnNames="authority_id"
+                             referencedTableName="authority"
+                             referencedColumnNames="id"
+                             constraintName="fk_instance_authority_link_authority_id"
+                             deleteCascade="true"
+                             onDelete="CASCADE"/>
+  </changeSet>
+
+  <changeSet id="MODELINKS-2@@add-authority_data_stat-authority_id-foreign-key" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <tableExists tableName="authority"/>
+        <tableExists tableName="authority_data_stat"/>
+        <not>
+          <foreignKeyConstraintExists foreignKeyName="fk_authority_data_stat_authority_id"
+                                      schemaName="${database.defaultSchemaName}"
+                                      foreignKeyTableName="authority_data_stat"/>
+        </not>
+      </and>
+    </preConditions>
+
+    <comment>Add FK for authority_id in authority_data_stat referenced to authority.id</comment>
+
+    <addForeignKeyConstraint baseTableName="authority_data_stat"
+                             baseColumnNames="authority_id"
+                             referencedTableName="authority"
+                             referencedColumnNames="id"
+                             constraintName="fk_authority_data_stat_authority_id"/>
+  </changeSet>
+
+</databaseChangeLog>

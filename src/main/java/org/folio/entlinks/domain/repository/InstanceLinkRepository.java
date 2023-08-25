@@ -20,18 +20,18 @@ public interface InstanceLinkRepository extends JpaRepository<InstanceAuthorityL
 
   List<InstanceAuthorityLink> findByInstanceId(UUID instanceId);
 
-  @Query("select l from InstanceAuthorityLink l where l.authorityData.id = :id order by l.id")
+  @Query("select l from InstanceAuthorityLink l where l.authority.id = :id order by l.id")
   Page<InstanceAuthorityLink> findByAuthorityId(@Param("id") UUID id, Pageable pageable);
 
-  @Query("select l.authorityData.id as id, count(distinct l.instanceId) as totalLinks"
-    + " from InstanceAuthorityLink l where l.authorityData.id in :authorityIds"
+  @Query("select l.authority.id as id, count(distinct l.instanceId) as totalLinks"
+    + " from InstanceAuthorityLink l where l.authority.id in :authorityIds"
     + " group by id")
   List<LinkCountView> countLinksByAuthorityIds(@Param("authorityIds") Set<UUID> authorityIds);
 
   @Modifying
   @Query("""
     update InstanceAuthorityLink i set i.status = :status, i.errorCause = :errorCause
-    where i.authorityData.id = :authorityId""")
+    where i.authority.id = :authorityId""")
   void updateStatusAndErrorCauseByAuthorityId(@Param("status") InstanceAuthorityLinkStatus status,
                                               @Param("errorCause") String errorCause,
                                               @Param("authorityId") UUID authorityId);
@@ -39,7 +39,7 @@ public interface InstanceLinkRepository extends JpaRepository<InstanceAuthorityL
 
 
   @Modifying
-  @Query("delete from InstanceAuthorityLink i where i.authorityData.id in :authorityIds")
+  @Query("delete from InstanceAuthorityLink i where i.authority.id in :authorityIds")
   void deleteByAuthorityIds(@Param("authorityIds") Collection<UUID> authorityIds);
 
 }

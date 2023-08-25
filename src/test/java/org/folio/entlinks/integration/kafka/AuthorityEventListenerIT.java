@@ -3,17 +3,22 @@ package org.folio.entlinks.integration.kafka;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.support.KafkaTestUtils.createAndStartTestConsumer;
+import static org.folio.support.TestDataUtils.AUTHORITY_IDS;
+import static org.folio.support.TestDataUtils.AuthorityTestData.authority;
+import static org.folio.support.TestDataUtils.NATURAL_IDS;
 import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.base.TestConstants.DELETE_TYPE;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.UPDATE_TYPE;
-import static org.folio.support.base.TestConstants.inventoryAuthorityTopic;
+import static org.folio.support.base.TestConstants.authorityEndpoint;
+import static org.folio.support.base.TestConstants.authorityTopic;
 import static org.folio.support.base.TestConstants.linksInstanceAuthorityTopic;
 import static org.folio.support.base.TestConstants.linksInstanceEndpoint;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,17 +30,20 @@ import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import org.assertj.core.api.BDDSoftAssertions;
-import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
+import org.folio.entlinks.domain.dto.AuthorityDto;
+import org.folio.entlinks.domain.dto.AuthorityRecord;
 import org.folio.entlinks.domain.dto.ChangeTarget;
 import org.folio.entlinks.domain.dto.ChangeTargetLink;
 import org.folio.entlinks.domain.dto.FieldChange;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.dto.SubfieldChange;
+import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
 import org.folio.support.TestDataUtils;
+import org.folio.support.TestDataUtils.Link;
 import org.folio.support.base.IntegrationTestBase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,8 +55,17 @@ import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 
 @IntegrationTest
-@DatabaseCleanup(tables = DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE)
-class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
+@DatabaseCleanup(tables = {
+  DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE,
+  DatabaseHelper.AUTHORITY_DATA_STAT_TABLE,
+  DatabaseHelper.AUTHORITY_TABLE,
+  DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE
+})
+class AuthorityEventListenerIT extends IntegrationTestBase {
+
+  private static final UUID AUTHORITY_ID = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
+  private static final UUID SOURCE_FILE_ID = UUID.fromString("af045f2f-e851-4613-984c-4bc13430454a");
+  private static final String BASE_URL = "id.loc.gov/authorities/names/";
 
   private KafkaMessageListenerContainer<String, LinksChangeEvent> container;
   private BlockingQueue<ConsumerRecord<String, LinksChangeEvent>> consumerRecords;
@@ -58,6 +75,20 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
     consumerRecords = new LinkedBlockingQueue<>();
     container = createAndStartTestConsumer(linksInstanceAuthorityTopic(), consumerRecords, kafkaProperties,
       LinksChangeEvent.class);
+
+    var sourceFile1 = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
+    var sourceFile2 = new AuthoritySourceFile(sourceFile1);
+    sourceFile2.setId(SOURCE_FILE_ID);
+    sourceFile2.setName("LC Name Authority file (LCNAF)");
+    sourceFile2.setBaseUrl(BASE_URL);
+    databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile1);
+    databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile2);
+
+    var authority1 = authority(0, 0);
+    databaseHelper.saveAuthority(TENANT_ID, authority1);
+    var authority2 = authority(0, 0);
+    authority2.setId(AUTHORITY_ID);
+    databaseHelper.saveAuthority(TENANT_ID, authority2);
   }
 
   @AfterEach
@@ -71,18 +102,16 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
     var instanceId1 = UUID.randomUUID();
     var instanceId2 = UUID.randomUUID();
     var instanceId3 = UUID.randomUUID();
-    var link1 = TestDataUtils.Link.of(0, 0);
-    var link2 = TestDataUtils.Link.of(0, 2);
-    var link3 = TestDataUtils.Link.of(0, 0);
+    var link1 = Link.of(0, 0, NATURAL_IDS[0]);
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId1, link1)), instanceId1);
+    var link2 = Link.of(0, 2, NATURAL_IDS[0]);
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId2, link2)), instanceId2);
+    var link3 = Link.of(0, 0, NATURAL_IDS[0]);
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId3, link3)), instanceId3);
-    // clear LinksChangeEvent queue filled by link renovation
-    clearMessages(3);
 
     var event = TestDataUtils.authorityEvent(DELETE_TYPE, null,
-      new AuthorityInventoryRecord().id(link1.authorityId()).naturalId("oldNaturalId"));
-    sendKafkaMessage(inventoryAuthorityTopic(), link1.authorityId().toString(), event);
+      new AuthorityRecord().id(link1.authorityId()).naturalId("oldNaturalId"));
+    sendKafkaMessage(authorityTopic(), link1.authorityId().toString(), event);
 
     var received = getReceivedEvent();
 
@@ -118,30 +147,23 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
       .andExpect(jsonPath("$.links", hasSize(0)));
     doGet(linksInstanceEndpoint(), instanceId3)
       .andExpect(jsonPath("$.links", hasSize(0)));
-
-    // checking authorityData state field for deleting
-    var authorityData = databaseHelper.getAuthority(link1.authorityId());
-    assertions.then(authorityData.getId()).as("Id").isEqualTo(link1.authorityId());
-    assertions.then(authorityData.getId()).as("Natural Id").isEqualTo("oldNaturalId");
-    assertions.then(authorityData.isDeleted()).as("State").isTrue();
   }
 
   @SneakyThrows
   @Test
   void shouldHandleUpdateEvent_positive_whenAuthorityLinkExistAndFieldChangedFromOneToAnother() {
     // prepare links
-    var authorityId = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
+    var authorityId = AUTHORITY_IDS[0];
     var instanceId = UUID.randomUUID();
-    var link = new TestDataUtils.Link(authorityId, "240", "naturalId", new char[] {'a', 'b', 'c'});
+    var naturalId = NATURAL_IDS[0];
+    var link = new Link(authorityId, "240", naturalId, new char[] {'a', 'b', 'c'});
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
-    // clear LinksChangeEvent queue filled by link renovation
-    clearMessages(1);
 
     // prepare and send inventory update authority event
     var event = TestDataUtils.authorityEvent(UPDATE_TYPE,
-      new AuthorityInventoryRecord().id(authorityId).personalName("new personal name").naturalId("naturalId"),
-      new AuthorityInventoryRecord().id(authorityId).personalNameTitle("old").naturalId("naturalId"));
-    sendKafkaMessage(inventoryAuthorityTopic(), authorityId.toString(), event);
+      new AuthorityRecord().id(authorityId).personalName("new personal name").naturalId(naturalId),
+      new AuthorityRecord().id(authorityId).personalNameTitle("old").naturalId(naturalId));
+    sendKafkaMessage(authorityTopic(), authorityId.toString(), event);
 
     var received = getReceivedEvent();
 
@@ -180,20 +202,20 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
     var instanceId1 = UUID.randomUUID();
     var instanceId2 = UUID.randomUUID();
     var instanceId3 = UUID.randomUUID();
-    var link1 = TestDataUtils.Link.of(0, 0);
-    var link2 = TestDataUtils.Link.of(0, 2);
-    var link3 = TestDataUtils.Link.of(0, 0);
+    var link1 = Link.of(0, 0, NATURAL_IDS[0]);
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId1, link1)), instanceId1);
+    var link2 = Link.of(0, 2, NATURAL_IDS[0]);
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId2, link2)), instanceId2);
+    var link3 = Link.of(0, 0, NATURAL_IDS[0]);
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId3, link3)), instanceId3);
-    // clear LinksChangeEvent queue filled by link renovation
-    clearMessages(3);
 
-    var event = TestDataUtils.authorityEvent(UPDATE_TYPE,
-      new AuthorityInventoryRecord().id(link1.authorityId()).naturalId("newNaturalId")
-        .sourceFileId(UUID.fromString("af045f2f-e851-4613-984c-4bc13430454a")),
-      new AuthorityInventoryRecord().id(link1.authorityId()).naturalId("1"));
-    sendKafkaMessage(inventoryAuthorityTopic(), link1.authorityId().toString(), event);
+    var existingAuthorityContent = doGet(authorityEndpoint(link1.authorityId()))
+        .andReturn().getResponse().getContentAsString();
+    var authorityDto = objectMapper.readValue(existingAuthorityContent, AuthorityDto.class);
+    var updatedNaturalId = "newNaturalId";
+    authorityDto.setSourceFileId(SOURCE_FILE_ID);
+    authorityDto.setNaturalId(updatedNaturalId);
+    tryPut(authorityEndpoint(link1.authorityId()), authorityDto).andExpect(status().isAccepted());
 
     var received = getReceivedEvent();
 
@@ -207,6 +229,7 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
       .contains(XOkapiHeaders.TENANT, XOkapiHeaders.URL, XOkapiHeaders.TOKEN);
 
     var value = received.value();
+    var expectedSubfieldChange = subfieldChange("0", BASE_URL + updatedNaturalId);
     assertions.then(value.getTenant()).as("Tenant").isEqualTo(TENANT_ID);
     assertions.then(value.getType()).as("Type").isEqualTo(LinksChangeEvent.TypeEnum.UPDATE);
     assertions.then(value.getAuthorityId()).as("Authority ID").isEqualTo(link1.authorityId());
@@ -217,10 +240,12 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
       ));
     assertions.then(value.getSubfieldsChanges()).as("Subfield changes")
       .isEqualTo(List.of(
-        new FieldChange()
-          .field(link1.tag()).subfields(List.of(subfieldChange("0", "id.loc.gov/authorities/names/newNaturalId"))),
-        new FieldChange()
-          .field(link2.tag()).subfields(List.of(subfieldChange("0", "id.loc.gov/authorities/names/newNaturalId")))));
+          new FieldChange()
+              .field(link1.tag())
+              .subfields(List.of(expectedSubfieldChange)),
+          new FieldChange()
+              .field(link2.tag())
+              .subfields(List.of(expectedSubfieldChange))));
     assertions.then(value.getJobId()).as("Job ID").isNotNull();
     assertions.then(value.getTs()).as("Timestamp").isNotNull();
 
@@ -228,30 +253,28 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
 
     // check that links were updated according to authority changes
     doGet(linksInstanceEndpoint(), instanceId1)
-      .andExpect(jsonPath("$.links[0].authorityNaturalId", equalTo("newNaturalId")));
+      .andExpect(jsonPath("$.links[0].authorityNaturalId", equalTo(updatedNaturalId)));
     doGet(linksInstanceEndpoint(), instanceId2)
-      .andExpect(jsonPath("$.links[0].authorityNaturalId", equalTo("newNaturalId")));
+      .andExpect(jsonPath("$.links[0].authorityNaturalId", equalTo(updatedNaturalId)));
     doGet(linksInstanceEndpoint(), instanceId3)
-      .andExpect(jsonPath("$.links[0].authorityNaturalId", equalTo("newNaturalId")));
+      .andExpect(jsonPath("$.links[0].authorityNaturalId", equalTo(updatedNaturalId)));
   }
 
   @SneakyThrows
   @Test
   void shouldHandleUpdateEvent_positive_whenAuthorityLinkExistAndHeadingChanged() {
     // prepare links
-    var authorityId = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
     var instanceId = UUID.randomUUID();
-    var link = new TestDataUtils.Link(authorityId, "240", "naturalId", new char[] {'a', 'b', 'c'});
+    var naturalId = NATURAL_IDS[0];
+    var link = new Link(AUTHORITY_ID, "240", naturalId, new char[] {'a', 'b', 'c'});
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId, link)), instanceId);
-    // clear LinksChangeEvent queue filled by link renovation
-    clearMessages(1);
 
     // prepare and send inventory update authority event
     var event = TestDataUtils.authorityEvent(UPDATE_TYPE,
-      new AuthorityInventoryRecord().id(authorityId).personalName("new personal name").naturalId("naturalId")
-        .sourceFileId(UUID.fromString("af045f2f-e851-4613-984c-4bc13430454a")),
-      new AuthorityInventoryRecord().id(authorityId).personalName("old").naturalId("naturalId"));
-    sendKafkaMessage(inventoryAuthorityTopic(), authorityId.toString(), event);
+      new AuthorityRecord().id(AUTHORITY_ID).personalName("new personal name").naturalId(naturalId)
+          .sourceFileId(SOURCE_FILE_ID),
+      new AuthorityRecord().id(AUTHORITY_ID).personalName("old").naturalId(naturalId));
+    sendKafkaMessage(authorityTopic(), AUTHORITY_ID.toString(), event);
 
     var received = getReceivedEvent();
 
@@ -385,12 +408,6 @@ class AuthorityInventoryEventListenerIT extends IntegrationTestBase {
   @SneakyThrows
   private ConsumerRecord<String, LinksChangeEvent> getReceivedEvent() {
     return consumerRecords.poll(10, TimeUnit.SECONDS);
-  }
-
-  private void clearMessages(int count) {
-    for (int i = 0; i < count; i++) {
-      getReceivedEvent();
-    }
   }
 
   private ChangeTarget updateTarget(String tag, UUID... instanceIds) {

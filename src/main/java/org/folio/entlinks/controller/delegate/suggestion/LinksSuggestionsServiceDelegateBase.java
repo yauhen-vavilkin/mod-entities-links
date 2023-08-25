@@ -3,10 +3,8 @@ package org.folio.entlinks.controller.delegate.suggestion;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
-import static org.apache.commons.collections4.CollectionUtils.removeAll;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,9 +16,8 @@ import org.folio.entlinks.client.SourceStorageClient;
 import org.folio.entlinks.controller.converter.SourceContentMapper;
 import org.folio.entlinks.domain.dto.ParsedRecordContentCollection;
 import org.folio.entlinks.domain.dto.StrippedParsedRecordCollection;
-import org.folio.entlinks.domain.entity.AuthorityData;
+import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
-import org.folio.entlinks.domain.repository.AuthorityDataRepository;
 import org.folio.entlinks.integration.dto.FieldParsedContent;
 import org.folio.entlinks.integration.dto.SourceParsedContent;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
@@ -40,7 +37,6 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
 
   private final InstanceAuthorityLinkingRulesService linkingRulesService;
   private final LinksSuggestionService suggestionService;
-  private final AuthorityDataRepository dataRepository;
   private final SourceStorageClient sourceStorageClient;
   private final SourceContentMapper contentMapper;
 
@@ -54,7 +50,7 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
     var authoritySearchIds = extractIdsOfLinkableFields(marcBibsContent, rules, ignoreAutoLinkingEnabled);
     log.info("{} authority search ids was extracted", authoritySearchIds.size());
 
-    var authorities = findAuthorities(authoritySearchIds);
+    var authorities = findExistingAuthorities(authoritySearchIds);
     log.info("{} authorities to suggest found", authorities.size());
 
     if (isNotEmpty(authorities)) {
@@ -71,30 +67,13 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
 
   protected abstract String getSearchSubfield();
 
-  private List<AuthorityData> findAuthorities(Set<T> ids) {
-    var authorityData = findExistingAuthorities(ids);
-    var existIds = authorityData.stream()
-      .map(this::extractId)
-      .collect(Collectors.toSet());
-    log.info("{} authority data found by ids", authorityData.size());
+  protected abstract List<Authority> findExistingAuthorities(Set<T> ids);
 
-    if (!existIds.containsAll(ids)) {
-      var idsToSearch = new HashSet<>(removeAll(ids, existIds));
-      var authoritiesFromSearch = searchAndSaveAuthorities(idsToSearch);
-      log.info("{} authority data was saved", authoritiesFromSearch.size());
+  protected abstract T extractId(Authority authorityData);
 
-      authorityData.addAll(authoritiesFromSearch);
-    }
-    return authorityData;
-  }
-
-  protected abstract List<AuthorityData> findExistingAuthorities(Set<T> ids);
-
-  protected abstract T extractId(AuthorityData authorityData);
-
-  private StrippedParsedRecordCollection fetchAuthorityParsedRecords(List<AuthorityData> authorityData) {
-    if (isNotEmpty(authorityData)) {
-      var ids = authorityData.stream().map(AuthorityData::getId).collect(Collectors.toSet());
+  private StrippedParsedRecordCollection fetchAuthorityParsedRecords(List<Authority> authorities) {
+    if (isNotEmpty(authorities)) {
+      var ids = authorities.stream().map(Authority::getId).collect(Collectors.toSet());
       var authorityFetchRequest = sourceStorageClient.buildBatchFetchRequestForAuthority(ids,
         linkingRulesService.getMinAuthorityField(),
         linkingRulesService.getMaxAuthorityField());
@@ -103,13 +82,6 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
     }
     return new StrippedParsedRecordCollection(Collections.emptyList(), 0);
   }
-
-  private List<AuthorityData> searchAndSaveAuthorities(Set<T> ids) {
-    var authorityData = searchAuthorities(ids);
-    return dataRepository.saveAll(authorityData);
-  }
-
-  protected abstract List<AuthorityData> searchAuthorities(Set<T> ids);
 
   private Set<T> extractIdsOfLinkableFields(List<SourceParsedContent> contentCollection,
                                             Map<String, List<InstanceAuthorityLinkingRule>> rules,
