@@ -25,7 +25,7 @@
         <constraints nullable="false"/>
       </column>
       <column name="base_url" type="varchar(250)">
-        <constraints nullable="false" unique="true" uniqueConstraintName="authority_source_file_base_url_unq"/>
+        <constraints unique="true" uniqueConstraintName="authority_source_file_base_url_unq"/>
       </column>
       <column name="source" type="varchar(100)">
         <constraints nullable="false"/>

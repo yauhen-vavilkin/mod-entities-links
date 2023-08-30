@@ -28,7 +28,7 @@ post:
         schema:
           $ref: '../../schemas/authority-source-file/authoritySourceFileDto.yaml'
   responses:
-    '200':
+    '201':
       description: Record successfully created
       content:
         application/json:

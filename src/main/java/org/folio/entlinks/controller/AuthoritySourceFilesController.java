@@ -9,6 +9,7 @@ import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDtoCollection;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
 import org.folio.entlinks.rest.resource.AuthoritySourceFileApi;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,7 +24,7 @@ public class AuthoritySourceFilesController implements AuthoritySourceFileApi {
   @Override
   public ResponseEntity<AuthoritySourceFileDto> createAuthoritySourceFile(AuthoritySourceFileDto authoritySourceFile) {
     var created = delegate.createAuthoritySourceFile(authoritySourceFile);
-    return ResponseEntity.ok(created);
+    return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 
   @Override
@@ -54,6 +55,6 @@ public class AuthoritySourceFilesController implements AuthoritySourceFileApi {
   @Override
   public ResponseEntity<Void> updateAuthoritySourceFile(UUID id, AuthoritySourceFileDto authoritySourceFile) {
     delegate.updateAuthoritySourceFile(id, authoritySourceFile);
-    return ResponseEntity.accepted().build();
+    return noContent().build();
   }
 }

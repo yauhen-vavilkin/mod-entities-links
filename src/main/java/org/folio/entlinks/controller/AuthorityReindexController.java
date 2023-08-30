@@ -6,6 +6,7 @@ import org.folio.entlinks.controller.delegate.ReindexServiceDelegate;
 import org.folio.entlinks.domain.dto.ReindexJobDto;
 import org.folio.entlinks.domain.dto.ReindexJobDtoCollection;
 import org.folio.entlinks.rest.resource.AuthorityStorageReindexApi;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,7 +25,7 @@ public class AuthorityReindexController implements AuthorityStorageReindexApi {
 
   @Override
   public ResponseEntity<ReindexJobDto> submitReindexJob() {
-    return ResponseEntity.ok(reindexServiceDelegate.startAuthoritiesReindex());
+    return ResponseEntity.status(HttpStatus.CREATED).body(reindexServiceDelegate.startAuthoritiesReindex());
   }
 
   @Override

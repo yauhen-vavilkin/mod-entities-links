@@ -143,7 +143,8 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var dto = new AuthoritySourceFileDto("name", List.of("code"), "type", SourceEnum.FOLIO)
       .baseUrl("url");
 
-    doPost(authoritySourceFilesEndpoint(), dto)
+    tryPost(authoritySourceFilesEndpoint(), dto)
+      .andExpect(status().isCreated())
       .andExpect(jsonPath("name", is(dto.getName())))
       .andExpect(jsonPath("source", is(dto.getSource().getValue())))
       .andExpect(jsonPath("codes", is(dto.getCodes())))
@@ -236,7 +237,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     modified.setType(entity.getType());
     modified.setBaseUrl(entity.getBaseUrl());
 
-    tryPut(authoritySourceFilesEndpoint(modified.getId()), modified).andExpect(status().isAccepted());
+    tryPut(authoritySourceFilesEndpoint(modified.getId()), modified).andExpect(status().isNoContent());
 
     var content = doGet(authoritySourceFilesEndpoint(modified.getId()))
       .andExpect(jsonPath("name", is(modified.getName())))

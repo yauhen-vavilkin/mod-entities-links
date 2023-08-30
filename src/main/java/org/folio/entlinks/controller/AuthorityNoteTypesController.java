@@ -8,6 +8,7 @@ import org.folio.entlinks.controller.delegate.AuthorityNoteTypeServiceDelegate;
 import org.folio.entlinks.domain.dto.AuthorityNoteTypeDto;
 import org.folio.entlinks.domain.dto.AuthorityNoteTypeDtoCollection;
 import org.folio.entlinks.rest.resource.AuthorityNoteTypeApi;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,7 +23,7 @@ public class AuthorityNoteTypesController implements AuthorityNoteTypeApi {
   @Override
   public ResponseEntity<AuthorityNoteTypeDto> createAuthorityNoteType(AuthorityNoteTypeDto authorityNoteType) {
     var created = delegate.createAuthorityNoteType(authorityNoteType);
-    return ResponseEntity.ok(created);
+    return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 
   @Override
@@ -47,6 +48,6 @@ public class AuthorityNoteTypesController implements AuthorityNoteTypeApi {
   @Override
   public ResponseEntity<Void> updateAuthorityNoteType(UUID id, AuthorityNoteTypeDto authorityNoteType) {
     delegate.updateAuthorityNoteType(id, authorityNoteType);
-    return ResponseEntity.accepted().build();
+    return ResponseEntity.noContent().build();
   }
 }

@@ -169,7 +169,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
     dto.setId(id);
     createSourceFile(0);
 
-    var content = doPost(authorityEndpoint(), dto)
+    var content = tryPost(authorityEndpoint(), dto)
+      .andExpect(status().isCreated())
       .andExpect(jsonPath("id", is(id.toString())))
       .andExpect(jsonPath("source", is(dto.getSource())))
       .andExpect(jsonPath("naturalId", is(dto.getNaturalId())))
@@ -202,7 +203,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var dto = authorityDto(0, 0);
     createSourceFile(0);
 
-    var content = doPost(authorityEndpoint(), dto)
+    var content = tryPost(authorityEndpoint(), dto)
+      .andExpect(status().isCreated())
       .andExpect(jsonPath("id", notNullValue()))
       .andExpect(jsonPath("source", is(dto.getSource())))
       .andExpect(jsonPath("naturalId", is(dto.getNaturalId())))
@@ -233,7 +235,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var dto = authorityDto(0, 0);
     dto.setSourceFileId(null);
 
-    doPost(authorityEndpoint(), dto)
+    tryPost(authorityEndpoint(), dto)
+      .andExpect(status().isCreated())
       .andExpect(jsonPath("source", is(dto.getSource())))
       .andExpect(jsonPath("naturalId", is(dto.getNaturalId())))
       .andExpect(jsonPath("personalName", is(dto.getPersonalName())))
@@ -272,7 +275,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     dto.setId(randomUUID());
     dto.setSourceFileId(null);
 
-    doPost(authorityEndpoint(), dto);
+    tryPost(authorityEndpoint(), dto).andExpect(status().isCreated());
     getReceivedEvent();
 
     tryPost(authorityEndpoint(), dto)
@@ -301,7 +304,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     expected.setSftCorporateName(List.of("sftCorporateName"));
     expected.setSaftCorporateName(List.of("saftCorporateName"));
 
-    tryPut(authorityEndpoint(expected.getId()), expected).andExpect(status().isAccepted());
+    tryPut(authorityEndpoint(expected.getId()), expected).andExpect(status().isNoContent());
 
     var content = doGet(authorityEndpoint(expected.getId()))
       .andExpect(jsonPath("source", is(expected.getSource())))

@@ -27,7 +27,7 @@ put:
         schema:
           $ref: '../../schemas/authority-source-file/authoritySourceFileDto.yaml'
   responses:
-    '202':
+    '204':
       description: Record successfully updated
     '400':
       $ref: '../../responses/badRequestResponse.yaml'

@@ -6,6 +6,7 @@ import org.folio.entlinks.controller.delegate.AuthorityServiceDelegate;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
 import org.folio.entlinks.rest.resource.AuthorityStorageApi;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,7 +21,7 @@ public class AuthorityController implements AuthorityStorageApi {
   @Override
   public ResponseEntity<AuthorityDto> createAuthority(AuthorityDto authority) {
     var created = delegate.createAuthority(authority);
-    return ResponseEntity.ok(created);
+    return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 
   @Override
@@ -43,6 +44,6 @@ public class AuthorityController implements AuthorityStorageApi {
   @Override
   public ResponseEntity<Void> updateAuthority(UUID id, AuthorityDto authority) {
     delegate.updateAuthority(id, authority);
-    return ResponseEntity.accepted().build();
+    return ResponseEntity.noContent().build();
   }
 }

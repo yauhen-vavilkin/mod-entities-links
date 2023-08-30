@@ -24,7 +24,7 @@ post:
   tags:
     - authority-storage-reindex
   responses:
-    '200':
+    '201':
       description: Reindex job has been submitted
       content:
         application/json:

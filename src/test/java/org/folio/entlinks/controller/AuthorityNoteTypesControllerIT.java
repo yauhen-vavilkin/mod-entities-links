@@ -178,7 +178,8 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
 
     var dto = new AuthorityNoteTypeDto("name", "source");
 
-    doPost(authorityNoteTypesEndpoint(), dto)
+    tryPost(authorityNoteTypesEndpoint(), dto)
+        .andExpect(status().isCreated())
         .andExpect(jsonPath("name", is(dto.getName())))
         .andExpect(jsonPath("source", is(dto.getSource())))
         .andExpect(jsonPath("metadata.createdDate").isNotEmpty())
@@ -217,7 +218,7 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
     modified.setName("updated name");
     modified.setSource("updated source");
 
-    tryPut(authorityNoteTypesEndpoint(modified.getId()), modified).andExpect(status().isAccepted());
+    tryPut(authorityNoteTypesEndpoint(modified.getId()), modified).andExpect(status().isNoContent());
 
     doGet(authorityNoteTypesEndpoint(modified.getId()))
         .andExpect(jsonPath("name", is(modified.getName())))

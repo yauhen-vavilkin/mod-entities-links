@@ -126,13 +126,12 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
 
   @Test
   @DisplayName("Submit Reindex Job and Publish Events")
-  void submitReindexJob_positive_shouldSubmitJobAndPublishReindexEventForAllAuthorities()
-      throws JsonProcessingException, UnsupportedEncodingException {
+  void submitReindexJob_positive_shouldSubmitJobAndPublishReindexEventForAllAuthorities() throws Exception {
     assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_REINDEX_JOB_TABLE, TENANT_ID) == 0);
     var dtos = createAuthorityData(false);
     assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 3);
 
-    doPost(authorityReindexEndpoint(), null);
+    tryPost(authorityReindexEndpoint(), null).andExpect(status().isCreated());
 
     var receivedEvents = List.of(getReceivedEvent(), getReceivedEvent(), getReceivedEvent());
     verifyReceivedEvents(receivedEvents, dtos);
