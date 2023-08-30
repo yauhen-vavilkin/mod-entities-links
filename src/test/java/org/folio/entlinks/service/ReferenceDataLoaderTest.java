@@ -8,23 +8,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.ObjectCodec;
-import com.fasterxml.jackson.core.Version;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import java.util.Optional;
 import java.util.UUID;
-import lombok.SneakyThrows;
 import org.folio.entlinks.domain.entity.AuthorityNoteType;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
-import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
+import org.folio.entlinks.domain.repository.AuthorityNoteTypeRepository;
+import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.service.authority.AuthorityNoteTypeService;
 import org.folio.entlinks.service.authority.AuthoritySourceFileService;
+import org.folio.entlinks.service.dataloader.ReferenceDataLoader;
 import org.folio.spring.test.type.UnitTest;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -39,31 +33,26 @@ class ReferenceDataLoaderTest {
 
   private final AuthorityNoteTypeService noteTypeService = mock(AuthorityNoteTypeService.class);
 
+  private final AuthorityNoteTypeRepository noteTypeRepository = mock(AuthorityNoteTypeRepository.class);
+
   private final AuthoritySourceFileService sourceFileService = mock(AuthoritySourceFileService.class);
 
-  private final ReferenceDataLoader referenceDataLoader =
-      new ReferenceDataLoader(noteTypeService, sourceFileService, OBJECT_MAPPER);
+  private final AuthoritySourceFileRepository sourceFileRepository = mock(AuthoritySourceFileRepository.class);
 
-  @BeforeAll
-  static void setUp() {
-    var module = new SimpleModule(
-        "CustomDeserializer",
-        new Version(1, 0, 0, null, null, null));
-    module.addDeserializer(AuthoritySourceFile.class, new CustomAuthoritySourceFileDeserializer());
-    OBJECT_MAPPER.registerModule(module);
-  }
+  private final ReferenceDataLoader referenceDataLoader = new ReferenceDataLoader(noteTypeService, sourceFileService,
+      noteTypeRepository, sourceFileRepository, OBJECT_MAPPER);
 
   @Test
   void shouldLoadReferenceData() {
-    when(noteTypeService.getById(any(UUID.class))).thenReturn(null);
+    when(noteTypeRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
     when(noteTypeService.create(any(AuthorityNoteType.class))).thenAnswer(i -> i.getArguments()[0]);
-    when(sourceFileService.getById(any(UUID.class))).thenReturn(null);
+    when(sourceFileRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
     when(sourceFileService.create(any(AuthoritySourceFile.class))).thenAnswer(i -> i.getArguments()[0]);
 
     referenceDataLoader.loadRefData();
 
-    verify(noteTypeService).getById(any(UUID.class));
-    verify(sourceFileService).getById(any(UUID.class));
+    verify(noteTypeRepository).findById(any(UUID.class));
+    verify(sourceFileRepository).findById(any(UUID.class));
 
     var noteTypeCaptor = ArgumentCaptor.forClass(AuthorityNoteType.class);
     var sourceFileCaptor = ArgumentCaptor.forClass(AuthoritySourceFile.class);
@@ -87,45 +76,4 @@ class ReferenceDataLoaderTest {
     assertEquals("folio", loadedSourceFile.getSource());
   }
 
-  static class CustomAuthoritySourceFileDeserializer extends StdDeserializer<AuthoritySourceFile> {
-
-    CustomAuthoritySourceFileDeserializer() {
-      this(null);
-    }
-
-    CustomAuthoritySourceFileDeserializer(Class<?> vc) {
-      super(vc);
-    }
-
-    @SneakyThrows
-    @Override
-    public AuthoritySourceFile deserialize(JsonParser parser, DeserializationContext deserializer) {
-      var sourceFile = new AuthoritySourceFile();
-      ObjectCodec codec = parser.getCodec();
-      JsonNode node = codec.readTree(parser);
-
-      // get source file codes
-      var iterator = node.get("codes").elements();
-      while (iterator.hasNext()) {
-        var codeNode = iterator.next();
-        var code = codeNode.asText();
-        var sourceFileCode = new AuthoritySourceFileCode();
-        sourceFileCode.setCode(code);
-        sourceFile.addCode(sourceFileCode);
-      }
-      var id = node.get("id").asText();
-      var type = node.get("type").asText();
-      var name = node.get("name").asText();
-      var url = node.get("baseUrl").asText();
-      var source = node.get("source").asText();
-
-      sourceFile.setId(UUID.fromString(id));
-      sourceFile.setName(name);
-      sourceFile.setType(type);
-      sourceFile.setBaseUrl(url);
-      sourceFile.setSource(source);
-
-      return sourceFile;
-    }
-  }
 }

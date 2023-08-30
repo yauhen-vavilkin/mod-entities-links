@@ -1,7 +1,7 @@
 package org.folio.entlinks.service.tenant;
 
 import lombok.extern.log4j.Log4j2;
-import org.folio.entlinks.service.ReferenceDataLoader;
+import org.folio.entlinks.service.dataloader.ReferenceDataLoader;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.liquibase.FolioSpringLiquibase;
 import org.folio.spring.service.TenantService;

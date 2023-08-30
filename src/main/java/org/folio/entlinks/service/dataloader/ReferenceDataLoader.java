@@ -1,12 +1,16 @@
-package org.folio.entlinks.service;
+package org.folio.entlinks.service.dataloader;
 
+import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import java.io.IOException;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.domain.entity.AuthorityNoteType;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
+import org.folio.entlinks.domain.repository.AuthorityNoteTypeRepository;
+import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.service.authority.AuthorityNoteTypeService;
 import org.folio.entlinks.service.authority.AuthoritySourceFileService;
 import org.springframework.core.io.Resource;
@@ -28,6 +32,8 @@ public class ReferenceDataLoader {
 
   private final AuthorityNoteTypeService noteTypeService;
   private final AuthoritySourceFileService sourceFileService;
+  private final AuthorityNoteTypeRepository noteTypeRepository;
+  private final AuthoritySourceFileRepository sourceFileRepository;
   private final ObjectMapper mapper;
 
   @Async
@@ -57,6 +63,7 @@ public class ReferenceDataLoader {
   }
 
   private void loadAuthoritySourceFiles() {
+    registerAuthoritySourceFileDeserializer();
     for (var res : getResources(AUTHORITY_SOURCE_FILES_DIR)) {
       AuthoritySourceFile sourceFile = deserializeRecord(AuthoritySourceFile.class, res);
 
@@ -67,6 +74,14 @@ public class ReferenceDataLoader {
         sourceFileService.create(sourceFile);
       }
     }
+  }
+
+  private void registerAuthoritySourceFileDeserializer() {
+    var module = new SimpleModule(
+        "AuthoritySourceFileDeserializer",
+        new Version(1, 0, 0, null, null, null));
+    module.addDeserializer(AuthoritySourceFile.class, new SourceFileDeserializer());
+    mapper.registerModule(module);
   }
 
   private <T> T deserializeRecord(Class<T> resourceType, Resource res) {
@@ -89,18 +104,28 @@ public class ReferenceDataLoader {
   }
 
   private AuthorityNoteType getExistingNoteType(AuthorityNoteType noteType) {
-    if (noteType.getId() != null) {
-      return noteTypeService.getById(noteType.getId());
+    if (noteType == null) {
+      return null;
     }
 
-    return noteTypeService.getByName(noteType.getName());
+    var id = noteType.getId();
+    if (id != null) {
+      return noteTypeRepository.findById(id).orElse(null);
+    }
+
+    return noteTypeRepository.findByName(noteType.getName()).orElse(null);
   }
 
   private AuthoritySourceFile getExistingSourceFile(AuthoritySourceFile sourceFile) {
-    if (sourceFile.getId() != null) {
-      return sourceFileService.getById(sourceFile.getId());
+    if (sourceFile == null) {
+      return null;
     }
 
-    return sourceFileService.getByName(sourceFile.getName());
+    var id = sourceFile.getId();
+    if (id != null) {
+      return sourceFileRepository.findById(id).orElse(null);
+    }
+
+    return sourceFileRepository.findByName(sourceFile.getName()).orElse(null);
   }
 }
