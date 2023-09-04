@@ -74,7 +74,7 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
   void setUp(@Autowired KafkaProperties kafkaProperties) {
     consumerRecords = new LinkedBlockingQueue<>();
     container = createAndStartTestConsumer(linksInstanceAuthorityTopic(), consumerRecords, kafkaProperties,
-      LinksChangeEvent.class);
+        objectMapper, LinksChangeEvent.class);
 
     var sourceFile1 = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
     var sourceFile2 = new AuthoritySourceFile(sourceFile1);
@@ -215,7 +215,7 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
     var updatedNaturalId = "newNaturalId";
     authorityDto.setSourceFileId(SOURCE_FILE_ID);
     authorityDto.setNaturalId(updatedNaturalId);
-    tryPut(authorityEndpoint(link1.authorityId()), authorityDto).andExpect(status().isAccepted());
+    tryPut(authorityEndpoint(link1.authorityId()), authorityDto).andExpect(status().isNoContent());
 
     var received = getReceivedEvent();
 

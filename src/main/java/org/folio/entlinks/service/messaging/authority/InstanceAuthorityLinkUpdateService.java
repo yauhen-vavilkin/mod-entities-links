@@ -119,7 +119,7 @@ public class InstanceAuthorityLinkUpdateService {
           var authorityChangeField = AuthorityChangeField.fromValue(difference.fieldName());
           return new AuthorityChange(authorityChangeField, difference.val1(), difference.val2());
         } catch (IllegalArgumentException e) {
-          log.debug("Not supported authority change [fieldName: {}]", difference);
+          log.warn("Not supported authority change [fieldName: {}]", difference);
           return null;
         }
       })

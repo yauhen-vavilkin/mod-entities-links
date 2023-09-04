@@ -63,7 +63,7 @@ class InstanceAuthorityStatsEventListenerIT extends IntegrationTestBase {
   void setUp(@Autowired KafkaProperties kafkaProperties) {
     consumerRecords = new LinkedBlockingQueue<>();
     container = createAndStartTestConsumer(linksInstanceAuthorityTopic(), consumerRecords, kafkaProperties,
-      LinksChangeEvent.class);
+        objectMapper, LinksChangeEvent.class);
   }
 
   @AfterEach

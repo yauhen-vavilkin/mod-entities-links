@@ -42,7 +42,7 @@ public class KafkaConfiguration {
    */
   @Bean
   public ConcurrentKafkaListenerContainerFactory<String, AuthorityEvent> authorityListenerFactory(
-    ConsumerFactory<String, AuthorityEvent> consumerFactory) {
+      ConsumerFactory<String, AuthorityEvent> consumerFactory) {
     var factory = listenerFactory(consumerFactory);
     factory.setRecordFilterStrategy(new AuthorityChangeFilterStrategy());
     return factory;
@@ -68,7 +68,7 @@ public class KafkaConfiguration {
    */
   @Bean
   public ConcurrentKafkaListenerContainerFactory<String, LinkUpdateReport> statsListenerFactory(
-    ConsumerFactory<String, LinkUpdateReport> consumerFactory) {
+      ConsumerFactory<String, LinkUpdateReport> consumerFactory) {
     return listenerFactory(consumerFactory);
   }
 
@@ -117,7 +117,7 @@ public class KafkaConfiguration {
    */
   @Bean
   public KafkaTemplate<String, LinksChangeEvent> linksChangeKafkaTemplate(
-    ProducerFactory<String, LinksChangeEvent> factory) {
+      ProducerFactory<String, LinksChangeEvent> factory) {
     return new KafkaTemplate<>(factory);
   }
 
@@ -130,19 +130,19 @@ public class KafkaConfiguration {
    */
   @Bean
   public KafkaTemplate<String, LinkUpdateReport> linksUpdateKafkaTemplate(
-    ProducerFactory<String, LinkUpdateReport> linkUpdateProducerFactory) {
+      ProducerFactory<String, LinkUpdateReport> linkUpdateProducerFactory) {
     return new KafkaTemplate<>(linkUpdateProducerFactory);
   }
 
   @Bean
   public EventProducer<LinksChangeEvent> linksChangeEventMessageProducerService(
-    KafkaTemplate<String, LinksChangeEvent> template) {
+      KafkaTemplate<String, LinksChangeEvent> template) {
     return new EventProducer<>(template, "links.instance-authority");
   }
 
   @Bean
   public EventProducer<LinkUpdateReport> linkUpdateReportMessageProducerService(
-    KafkaTemplate<String, LinkUpdateReport> template) {
+      KafkaTemplate<String, LinkUpdateReport> template) {
     return new EventProducer<>(template, "links.instance-authority-stats");
   }
 
@@ -153,18 +153,18 @@ public class KafkaConfiguration {
 
   @Bean
   public KafkaTemplate<String, DomainEvent<?>> domainKafkaTemplate(
-    ProducerFactory<String, DomainEvent<?>> domainProducerFactory) {
+      ProducerFactory<String, DomainEvent<?>> domainProducerFactory) {
     return new KafkaTemplate<>(domainProducerFactory);
   }
 
   @Bean
   public EventProducer<DomainEvent<?>> authorityDomainMessageProducerService(
-    KafkaTemplate<String, DomainEvent<?>> template) {
+      KafkaTemplate<String, DomainEvent<?>> template) {
     return new EventProducer<>(template, "authorities.authority");
   }
 
   private <T> ConcurrentKafkaListenerContainerFactory<String, T> listenerFactory(
-    ConsumerFactory<String, T> consumerFactory) {
+      ConsumerFactory<String, T> consumerFactory) {
     var factory = new ConcurrentKafkaListenerContainerFactory<String, T>();
     factory.setBatchListener(true);
     factory.setConsumerFactory(consumerFactory);

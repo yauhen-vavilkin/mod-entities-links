@@ -80,7 +80,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @BeforeEach
   void setUp(@Autowired KafkaProperties kafkaProperties) {
     consumerRecords = new LinkedBlockingQueue<>();
-    container = createAndStartTestConsumer(authorityTopic(), consumerRecords, kafkaProperties, DomainEvent.class);
+    container = createAndStartTestConsumer(authorityTopic(), consumerRecords, kafkaProperties,
+        objectMapper, DomainEvent.class);
   }
 
   @AfterEach
