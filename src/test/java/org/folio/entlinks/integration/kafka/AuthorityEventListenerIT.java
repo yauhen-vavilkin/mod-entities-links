@@ -215,7 +215,7 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
     var updatedNaturalId = "newNaturalId";
     authorityDto.setSourceFileId(SOURCE_FILE_ID);
     authorityDto.setNaturalId(updatedNaturalId);
-    tryPut(authorityEndpoint(link1.authorityId()), authorityDto).andExpect(status().isAccepted());
+    tryPut(authorityEndpoint(link1.authorityId()), authorityDto).andExpect(status().isNoContent());
 
     var received = getReceivedEvent();
 

@@ -7,6 +7,7 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.collections4.MapUtils;
 import org.folio.entlinks.domain.dto.AuthorityEvent;
 import org.folio.entlinks.domain.dto.AuthorityEventType;
 import org.folio.entlinks.domain.dto.AuthorityRecord;
@@ -73,6 +74,10 @@ public class AuthorityChangeHolder {
       authorityChanges.remove(AuthorityChangeField.NATURAL_ID);
       return authorityChanges.get(0);
     }
+  }
+
+  public boolean changesExist() {
+    return MapUtils.isNotEmpty(changes);
   }
 
   public AuthorityDataStat toAuthorityDataStat() {

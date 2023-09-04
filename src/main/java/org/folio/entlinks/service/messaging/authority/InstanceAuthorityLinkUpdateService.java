@@ -55,6 +55,7 @@ public class InstanceAuthorityLinkUpdateService {
     var fieldTagRelation = mappingRulesProcessingService.getFieldTagRelations();
     var changeHolders = events.stream()
         .map(event -> toAuthorityChangeHolder(event, fieldTagRelation, linksNumberByAuthorityId))
+        .filter(AuthorityChangeHolder::changesExist)
         .toList();
 
     prepareAndSaveAuthorityDataStats(changeHolders);
