@@ -5,7 +5,6 @@ import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_
 import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
 import static org.folio.spring.tools.config.properties.FolioEnvironment.getFolioEnvName;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,9 +37,8 @@ public class KafkaTestUtils {
     String topicName,
     BlockingQueue<ConsumerRecord<String, T>> queue,
     KafkaProperties properties,
-    ObjectMapper objectMapper,
     Class<T> eventClass) {
-    var deserializer = new JsonDeserializer<>(eventClass, objectMapper, false);
+    var deserializer = new JsonDeserializer<>(eventClass, false);
     properties.getConsumer().setGroupId("test-group");
     Map<String, Object> config = new HashMap<>(properties.buildConsumerProperties());
     config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);

@@ -74,7 +74,7 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
   void setUp(@Autowired KafkaProperties kafkaProperties) {
     consumerRecords = new LinkedBlockingQueue<>();
     container = createAndStartTestConsumer(linksInstanceAuthorityTopic(), consumerRecords, kafkaProperties,
-        objectMapper, LinksChangeEvent.class);
+        LinksChangeEvent.class);
 
     var sourceFile1 = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
     var sourceFile2 = new AuthoritySourceFile(sourceFile1);
