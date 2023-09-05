@@ -2,9 +2,8 @@ package org.folio.entlinks.config;
 
 import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
-import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
-import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -15,6 +14,7 @@ import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.integration.kafka.AuthorityChangeFilterStrategy;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.reindex.event.DomainEvent;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +33,9 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
  */
 @Configuration
 public class KafkaConfiguration {
+
+  @Autowired
+  private ObjectMapper objectMapper;
 
   /**
    * Creates and configures {@link org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory} as
@@ -93,7 +96,7 @@ public class KafkaConfiguration {
    */
   @Bean
   public ProducerFactory<String, LinksChangeEvent> producerFactory(KafkaProperties kafkaProperties) {
-    return new DefaultKafkaProducerFactory<>(getProducerConfigProps(kafkaProperties));
+    return getProducerConfigProps(kafkaProperties);
   }
 
   /**
@@ -105,7 +108,7 @@ public class KafkaConfiguration {
    */
   @Bean
   public ProducerFactory<String, LinkUpdateReport> linkUpdateProducerFactory(KafkaProperties kafkaProperties) {
-    return new DefaultKafkaProducerFactory<>(getProducerConfigProps(kafkaProperties));
+    return getProducerConfigProps(kafkaProperties);
   }
 
   /**
@@ -148,7 +151,7 @@ public class KafkaConfiguration {
 
   @Bean
   public ProducerFactory<String, DomainEvent<?>> domainProducerFactory(KafkaProperties kafkaProperties) {
-    return new DefaultKafkaProducerFactory<>(getProducerConfigProps(kafkaProperties));
+    return getProducerConfigProps(kafkaProperties);
   }
 
   @Bean
@@ -173,17 +176,15 @@ public class KafkaConfiguration {
   }
 
   private <T> ConsumerFactory<String, T> consumerFactoryForEvent(KafkaProperties kafkaProperties, Class<T> eventClass) {
-    var deserializer = new JsonDeserializer<>(eventClass, false);
+    var deserializer = new JsonDeserializer<>(eventClass, objectMapper, false);
     Map<String, Object> config = new HashMap<>(kafkaProperties.buildConsumerProperties());
     config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     config.put(VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
     return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), deserializer);
   }
 
-  private Map<String, Object> getProducerConfigProps(KafkaProperties kafkaProperties) {
-    Map<String, Object> configProps = new HashMap<>(kafkaProperties.buildProducerProperties());
-    configProps.put(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-    configProps.put(VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-    return configProps;
+  private <T> ProducerFactory<String, T> getProducerConfigProps(KafkaProperties kafkaProperties) {
+    return new DefaultKafkaProducerFactory<>(kafkaProperties.buildProducerProperties(),
+        new StringSerializer(), new JsonSerializer<>(objectMapper));
   }
 }
