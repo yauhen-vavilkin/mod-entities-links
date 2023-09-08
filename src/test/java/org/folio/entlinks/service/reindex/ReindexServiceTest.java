@@ -1,6 +1,8 @@
 package org.folio.entlinks.service.reindex;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.entlinks.domain.entity.ReindexJobStatus.IDS_PUBLISHED;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -64,7 +66,7 @@ class ReindexServiceTest {
 
   @Test
   void shouldThrowIllegalStateExceptionForCancelWhenJobFinishedPublishingEvents() {
-    var job = new ReindexJob().withJobStatus(ReindexJobStatus.IDS_PUBLISHED);
+    var job = new ReindexJob().withJobStatus(IDS_PUBLISHED);
     when(repository.findById(any(UUID.class))).thenReturn(Optional.of(job));
     var id = UUID.randomUUID();
 
@@ -173,5 +175,15 @@ class ReindexServiceTest {
     assertThat(result).isEqualTo(page);
     verify(repository).findByCql(any(String.class), any(Pageable.class));
     verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldLogJobSuccess() {
+    var expected = new ReindexJob();
+    when(repository.findById(any(UUID.class))).thenReturn(Optional.of(expected));
+
+    service.logJobSuccess(UUID.randomUUID());
+
+    assertEquals(IDS_PUBLISHED, expected.getJobStatus());
   }
 }

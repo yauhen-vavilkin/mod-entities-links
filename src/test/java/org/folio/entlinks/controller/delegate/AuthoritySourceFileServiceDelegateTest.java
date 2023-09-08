@@ -6,9 +6,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.UUID;
 import org.folio.entlinks.controller.converter.AuthoritySourceFileMapper;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
+import org.folio.entlinks.domain.dto.AuthoritySourceFileDtoCollection;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.service.authority.AuthoritySourceFileService;
@@ -20,6 +22,8 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 
 @UnitTest
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +44,31 @@ class AuthoritySourceFileServiceDelegateTest {
 
   @Captor
   private ArgumentCaptor<AuthoritySourceFile> sourceFileArgumentCaptor;
+
+  @Test
+  void shouldGetSourceFileCollectionByQuery() {
+    var expectedCollection = new AuthoritySourceFileDtoCollection();
+    when(service.getAll(any(Integer.class), any(Integer.class), any(String.class)))
+        .thenReturn(new PageImpl<>(List.of()));
+    when(mapper.toAuthoritySourceFileCollection(any(Page.class))).thenReturn(expectedCollection);
+
+    var sourceFiles = delegate.getAuthoritySourceFiles(0, 100, "cql.allRecords=1");
+
+    assertEquals(expectedCollection, sourceFiles);
+  }
+
+  @Test
+  void shouldGetSourceFileById() {
+    var sourceFile = new AuthoritySourceFile();
+    var id = UUID.randomUUID();
+    var expected = new AuthoritySourceFileDto();
+    when(service.getById(id)).thenReturn(sourceFile);
+    when(mapper.toDto(sourceFile)).thenReturn(expected);
+
+    var sourceFileDto = delegate.getAuthoritySourceFileById(id);
+
+    assertEquals(expected, sourceFileDto);
+  }
 
   @Test
   void shouldNormalizeBaseUrlForSourceFileCreate() {
