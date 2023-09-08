@@ -10,8 +10,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.logging.log4j.message.FormattedMessageFactory;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
+import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
-import org.folio.spring.tools.systemuser.SystemUserScopedExecutionService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
