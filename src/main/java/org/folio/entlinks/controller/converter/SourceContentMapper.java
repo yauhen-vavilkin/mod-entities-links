@@ -13,7 +13,7 @@ import org.folio.entlinks.domain.dto.ParsedRecordContent;
 import org.folio.entlinks.domain.dto.ParsedRecordContentCollection;
 import org.folio.entlinks.domain.dto.StrippedParsedRecord;
 import org.folio.entlinks.domain.dto.StrippedParsedRecordCollection;
-import org.folio.entlinks.domain.entity.AuthorityData;
+import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.integration.dto.AuthorityParsedContent;
 import org.folio.entlinks.integration.dto.FieldParsedContent;
 import org.folio.entlinks.integration.dto.SourceParsedContent;
@@ -47,16 +47,16 @@ public interface SourceContentMapper {
   }
 
   default List<AuthorityParsedContent> convertToAuthorityParsedContent(StrippedParsedRecordCollection recordCollection,
-                                                                       List<AuthorityData> authorityData) {
+                                                                       List<Authority> authorities) {
     return recordCollection.getRecords().stream()
-      .map(parsedRecord -> convertToAuthorityParsedContent(parsedRecord, authorityData))
+      .map(parsedRecord -> convertToAuthorityParsedContent(parsedRecord, authorities))
       .toList();
   }
 
   default AuthorityParsedContent convertToAuthorityParsedContent(StrippedParsedRecord parsedRecord,
-                                                                 List<AuthorityData> authorityData) {
+                                                                 List<Authority> authorities) {
     var authorityId = parsedRecord.getExternalIdsHolder().getAuthorityId();
-    var naturalId = extractNaturalId(authorityData, authorityId);
+    var naturalId = extractNaturalId(authorities, authorityId);
     var leader = parsedRecord.getParsedRecord().getContent().getLeader();
     var fields = convertFieldsToOneMap(parsedRecord.getParsedRecord().getContent().getFields());
 
@@ -113,10 +113,10 @@ public interface SourceContentMapper {
     return Map.of(field.getTag(), fieldContent);
   }
 
-  private String extractNaturalId(List<AuthorityData> authorityData, UUID authorityId) {
-    return authorityData.stream()
-      .filter(data -> data.getId().equals(authorityId))
-      .map(AuthorityData::getNaturalId)
+  private String extractNaturalId(List<Authority> authorities, UUID authorityId) {
+    return authorities.stream()
+      .filter(authority -> authorityId.equals(authority.getId()))
+      .map(Authority::getNaturalId)
       .findAny()
       .orElse(null);
   }

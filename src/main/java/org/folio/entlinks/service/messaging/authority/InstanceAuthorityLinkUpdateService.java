@@ -9,8 +9,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
-import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
-import org.folio.entlinks.domain.dto.InventoryEvent;
+import org.folio.entlinks.domain.dto.AuthorityEvent;
+import org.folio.entlinks.domain.dto.AuthorityRecord;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.integration.kafka.EventProducer;
@@ -46,16 +46,17 @@ public class InstanceAuthorityLinkUpdateService {
       .collect(Collectors.toMap(AuthorityChangeHandler::supportedAuthorityChangeType, handler -> handler));
   }
 
-  public void handleAuthoritiesChanges(List<InventoryEvent> events) {
+  public void handleAuthoritiesChanges(List<AuthorityEvent> events) {
     var incomingAuthorityIds = events.stream()
-      .map(InventoryEvent::getId)
-      .collect(Collectors.toSet());
+        .map(AuthorityEvent::getId)
+        .collect(Collectors.toSet());
     var linksNumberByAuthorityId = linkingService.countLinksByAuthorityIds(incomingAuthorityIds);
 
     var fieldTagRelation = mappingRulesProcessingService.getFieldTagRelations();
     var changeHolders = events.stream()
-      .map(event -> toAuthorityChangeHolder(event, fieldTagRelation, linksNumberByAuthorityId))
-      .toList();
+        .map(event -> toAuthorityChangeHolder(event, fieldTagRelation, linksNumberByAuthorityId))
+        .filter(AuthorityChangeHolder::changesExist)
+        .toList();
 
     prepareAndSaveAuthorityDataStats(changeHolders);
 
@@ -89,13 +90,13 @@ public class InstanceAuthorityLinkUpdateService {
 
   private void prepareAndSaveAuthorityDataStats(List<AuthorityChangeHolder> changeHolders) {
     var authorityDataStats = changeHolders.stream()
-      .map(AuthorityChangeHolder::toAuthorityDataStat)
-      .toList();
+        .map(AuthorityChangeHolder::toAuthorityDataStat)
+        .toList();
 
     var dataStats = authorityDataStatService.createInBatch(authorityDataStats);
     for (AuthorityChangeHolder changeHolder : changeHolders) {
       for (AuthorityDataStat authorityDataStat : dataStats) {
-        if (authorityDataStat.getAuthorityData().getId() == changeHolder.getAuthorityId()) {
+        if (Objects.equals(authorityDataStat.getAuthority().getId(), changeHolder.getAuthorityId())) {
           changeHolder.setAuthorityDataStatId(authorityDataStat.getId());
           break;
         }
@@ -103,7 +104,7 @@ public class InstanceAuthorityLinkUpdateService {
     }
   }
 
-  private AuthorityChangeHolder toAuthorityChangeHolder(InventoryEvent event,
+  private AuthorityChangeHolder toAuthorityChangeHolder(AuthorityEvent event,
                                                         Map<AuthorityChangeField, String> fieldTagRelation,
                                                         Map<UUID, Integer> linksNumberByAuthorityId) {
     var difference = getAuthorityChanges(event.getNew(), event.getOld());
@@ -112,8 +113,7 @@ public class InstanceAuthorityLinkUpdateService {
   }
 
   @SneakyThrows
-  private Map<AuthorityChangeField, AuthorityChange> getAuthorityChanges(AuthorityInventoryRecord s1,
-                                                                         AuthorityInventoryRecord s2) {
+  private Map<AuthorityChangeField, AuthorityChange> getAuthorityChanges(AuthorityRecord s1, AuthorityRecord s2) {
     return getDifference(s1, s2).stream()
       .map(difference -> {
         try {

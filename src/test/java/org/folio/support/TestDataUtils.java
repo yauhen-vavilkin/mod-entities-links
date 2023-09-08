@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus.ACTUAL;
 import static org.folio.entlinks.utils.DateUtils.fromTimestamp;
 import static org.folio.support.base.TestConstants.TENANT_ID;
+import static org.folio.support.base.TestConstants.USER_ID;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -17,6 +18,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,7 +27,12 @@ import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
-import org.folio.entlinks.domain.dto.AuthorityInventoryRecord;
+import org.folio.entlinks.domain.dto.AuthorityDto;
+import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
+import org.folio.entlinks.domain.dto.AuthorityDtoNote;
+import org.folio.entlinks.domain.dto.AuthorityEvent;
+import org.folio.entlinks.domain.dto.AuthorityRecord;
+import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthorityStatsDto;
 import org.folio.entlinks.domain.dto.BibStatsDto;
 import org.folio.entlinks.domain.dto.BibStatsDtoCollection;
@@ -33,7 +40,6 @@ import org.folio.entlinks.domain.dto.ExternalIdsHolder;
 import org.folio.entlinks.domain.dto.FieldContent;
 import org.folio.entlinks.domain.dto.InstanceLinkDto;
 import org.folio.entlinks.domain.dto.InstanceLinkDtoCollection;
-import org.folio.entlinks.domain.dto.InventoryEvent;
 import org.folio.entlinks.domain.dto.LinkAction;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
 import org.folio.entlinks.domain.dto.ParsedRecordContent;
@@ -41,25 +47,32 @@ import org.folio.entlinks.domain.dto.RecordType;
 import org.folio.entlinks.domain.dto.StrippedParsedRecord;
 import org.folio.entlinks.domain.dto.StrippedParsedRecordCollection;
 import org.folio.entlinks.domain.dto.StrippedParsedRecordParsedRecord;
-import org.folio.entlinks.domain.entity.AuthorityData;
+import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.domain.entity.AuthorityDataStatStatus;
+import org.folio.entlinks.domain.entity.AuthoritySourceFile;
+import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
+import org.folio.entlinks.domain.entity.ReindexJob;
+import org.folio.entlinks.domain.entity.ReindexJobResource;
+import org.folio.entlinks.domain.entity.ReindexJobStatus;
 import org.folio.spring.tools.client.UsersClient;
 import org.folio.spring.tools.model.ResultList;
 
 @UtilityClass
 public class TestDataUtils {
 
-  public static InventoryEvent inventoryEvent(String resource, String type,
-                                              AuthorityInventoryRecord n, AuthorityInventoryRecord o) {
-    return new InventoryEvent().type(type).resourceName(resource).tenant(TENANT_ID)._new(n).old(o);
+  public static final UUID[] AUTHORITY_IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID(), randomUUID()};
+  public static final String[] NATURAL_IDS = new String[] {"naturalId1", "naturalId2", "naturalId3", "naturalId4"};
+
+  public static AuthorityEvent inventoryEvent(String resource, String type, AuthorityRecord n, AuthorityRecord o) {
+    return new AuthorityEvent().type(type).resourceName(resource).tenant(TENANT_ID)._new(n).old(o);
   }
 
-  public static InventoryEvent authorityEvent(String type, AuthorityInventoryRecord n, AuthorityInventoryRecord o) {
+  public static AuthorityEvent authorityEvent(String type, AuthorityRecord n, AuthorityRecord o) {
     return inventoryEvent("authority", type, n, o);
   }
 
@@ -84,6 +97,8 @@ public class TestDataUtils {
   }
 
   public static List<InstanceAuthorityLink> links(int count, String error) {
+    var authority = new Authority();
+    authority.setNaturalId("naturalId");
     return Stream.generate(() -> 0)
       .map(i -> {
         var link = InstanceAuthorityLink.builder()
@@ -92,9 +107,7 @@ public class TestDataUtils {
           .linkingRule(InstanceAuthorityLinkingRule.builder()
             .bibField("100")
             .build())
-          .authorityData(AuthorityData.builder()
-            .naturalId("naturalId")
-            .build())
+          .authority(authority)
           .errorCause(error)
           .build();
         link.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
@@ -139,7 +152,7 @@ public class TestDataUtils {
       .map(link -> new BibStatsDto()
         .instanceId(link.getInstanceId())
         .bibRecordTag(link.getLinkingRule().getBibField())
-        .authorityNaturalId(link.getAuthorityData().getNaturalId())
+        .authorityNaturalId(link.getAuthority().getNaturalId())
         .updatedAt(fromTimestamp(link.getUpdatedAt()))
         .errorCause(link.getErrorCause()))
       .toList();
@@ -165,13 +178,13 @@ public class TestDataUtils {
   }
 
   public static AuthorityDataStat authorityDataStat(UUID userId, UUID sourceFileId, AuthorityDataStatAction action) {
+    var authority = new Authority();
+    authority.setNaturalId("naturalId");
+    authority.setId(UUID.randomUUID());
     return AuthorityDataStat.builder()
       .id(randomUUID())
       .action(action)
-      .authorityData(AuthorityData.builder()
-        .id(UUID.randomUUID())
-        .naturalId("naturalIdNew")
-        .build())
+      .authority(authority)
       .authorityNaturalIdOld("naturalIdOld")
       .authorityNaturalIdNew("naturalIdNew")
       .authoritySourceFileNew(sourceFileId)
@@ -210,7 +223,7 @@ public class TestDataUtils {
   public static AuthorityStatsDto getStatDataDto(AuthorityDataStat dataStat, UsersClient.User user) {
     AuthorityStatsDto dto = new AuthorityStatsDto();
     dto.setId(dataStat.getId());
-    dto.setAuthorityId(dataStat.getAuthorityData().getId());
+    dto.setAuthorityId(dataStat.getAuthority().getId());
     dto.setAction(LinkAction.fromValue(dataStat.getAction().name()));
     dto.setHeadingNew(dataStat.getHeadingNew());
     dto.setHeadingOld(dataStat.getHeadingOld());
@@ -263,19 +276,115 @@ public class TestDataUtils {
         var parsedRecord = new StrippedParsedRecordParsedRecord(recordContent);
 
         return new StrippedParsedRecord(UUID.randomUUID(), RecordType.MARC_AUTHORITY, parsedRecord)
-          .externalIdsHolder(new ExternalIdsHolder().authorityId(link.getAuthorityData().getId()));
+          .externalIdsHolder(new ExternalIdsHolder().authorityId(link.getAuthority().getId()));
       })
       .toList();
+  }
+
+  @UtilityClass
+  public class AuthorityTestData {
+    private static final String CREATED_DATE = "2021-10-28T06:31:31+05:00";
+
+    private static final String[] SOURCES = new String[] {"source1", "source2", "source3", "source4"};
+    private static final String[] HEADINGS =
+        new String[] {"headingPersonalName", "headingCorporateName", "headingGenreTerm", "headingGenreTerm"};
+    private static final String[] HEADING_TYPES =
+        new String[] {"personalName", "corporateName", "genreTerm", "genreTerm"};
+    private static final Character[] HEADING_CODES = new Character[] {'a', 'b', 'c', 'd'};
+
+    private static final UUID[] SOURCE_FILE_IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID()};
+    private static final Integer[] SOURCE_FILE_CODE_IDS = new Integer[] {1, 2, 3};
+    private static final String[] SOURCE_FILE_CODES = new String[] {"code1", "code2", "code3"};
+    private static final String[] SOURCE_FILE_NAMES = new String[] {"name1", "name2", "name3"};
+    private static final AuthoritySourceFileDto.SourceEnum[] SOURCE_FILE_SOURCES =
+        new AuthoritySourceFileDto.SourceEnum[] {AuthoritySourceFileDto.SourceEnum.FOLIO,
+          AuthoritySourceFileDto.SourceEnum.LOCAL, AuthoritySourceFileDto.SourceEnum.FOLIO};
+    private static final String[] SOURCE_FILE_TYPES = new String[] {"type1", "type2", "type3"};
+    private static final String[] SOURCE_FILE_URLS = new String[] {"baseUrl1", "baseUrl2", "baseUrl3"};
+
+    public static Authority authority(int authorityIdNum, int sourceFileIdNum) {
+      var entity = new Authority();
+      entity.setId(AUTHORITY_IDS[authorityIdNum]);
+      entity.setSource(SOURCES[authorityIdNum]);
+      entity.setNaturalId(NATURAL_IDS[authorityIdNum]);
+      entity.setHeading(HEADINGS[authorityIdNum]);
+      entity.setHeadingType(HEADING_TYPES[authorityIdNum]);
+      entity.setSubjectHeadingCode(HEADING_CODES[authorityIdNum]);
+      entity.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
+      entity.setCreatedByUserId(UUID.fromString(USER_ID));
+      entity.setUpdatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
+      entity.setUpdatedByUserId(UUID.fromString(USER_ID));
+      entity.setAuthoritySourceFile(authoritySourceFile(sourceFileIdNum));
+      return entity;
+    }
+
+    public static AuthoritySourceFile authoritySourceFile(int sourceFileIdNum) {
+      var entity = new AuthoritySourceFile();
+      entity.setId(SOURCE_FILE_IDS[sourceFileIdNum]);
+      entity.setName(SOURCE_FILE_NAMES[sourceFileIdNum]);
+      entity.setSource(SOURCE_FILE_SOURCES[sourceFileIdNum].getValue());
+      entity.setType(SOURCE_FILE_TYPES[sourceFileIdNum]);
+      entity.setBaseUrl(SOURCE_FILE_URLS[sourceFileIdNum]  + "/");
+
+      var code = authoritySourceFileCode(sourceFileIdNum);
+      entity.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
+      entity.setCreatedByUserId(UUID.fromString(USER_ID));
+      entity.setUpdatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
+      entity.setUpdatedByUserId(UUID.fromString(USER_ID));
+      entity.setAuthoritySourceFileCodes(Set.of(code));
+
+      return entity;
+    }
+
+    public static AuthoritySourceFileCode authoritySourceFileCode(int sourceFileCodeIdNum) {
+      var code = new AuthoritySourceFileCode();
+      code.setId(SOURCE_FILE_CODE_IDS[sourceFileCodeIdNum]);
+      code.setCode(SOURCE_FILE_CODES[sourceFileCodeIdNum]);
+      return code;
+    }
+
+    public static ReindexJob authorityReindexJob() {
+      var reindexJob = new ReindexJob();
+      reindexJob.setId(UUID.randomUUID());
+      reindexJob.setJobStatus(ReindexJobStatus.IN_PROGRESS);
+      reindexJob.setPublished(2);
+      reindexJob.setResourceName(ReindexJobResource.AUTHORITY);
+      reindexJob.setSubmittedDate(OffsetDateTime.now());
+      return reindexJob;
+    }
+
+    public static AuthorityDto authorityDto(int authorityIdNum, int sourceFileIdNum) {
+      var dto = new AuthorityDto();
+      dto.setId(AUTHORITY_IDS[authorityIdNum]);
+      dto.setPersonalName(HEADINGS[authorityIdNum]);
+      dto.setSource(SOURCES[authorityIdNum]);
+      dto.setNaturalId(NATURAL_IDS[authorityIdNum]);
+      dto.sourceFileId(SOURCE_FILE_IDS[sourceFileIdNum]);
+      dto.setSubjectHeadings("a");
+
+      var noteDto = new AuthorityDtoNote(UUID.randomUUID(), "note");
+      noteDto.setStaffOnly(false);
+      dto.setNotes(List.of(noteDto));
+
+      var identifier = new AuthorityDtoIdentifier("identifier_value", UUID.randomUUID());
+      dto.setIdentifiers(List.of(identifier));
+
+      dto.addSftPersonalNameItem("sftPersonalName1");
+      dto.addSftPersonalNameItem("sftPersonalName2");
+      dto.addSaftPersonalNameItem("saftPersonalName1");
+      dto.addSaftPersonalNameItem("saftPersonalName2");
+      dto.addSftMeetingNameItem("sftMeetingNameItem1");
+      dto.addSftMeetingNameItem("sftMeetingNameItem2");
+      dto.addSaftMeetingNameItem("sftMeetingNameItem1");
+      dto.addSaftMeetingNameItem("sftMeetingNameItem2");
+
+      return dto;
+    }
   }
 
   public record Link(UUID authorityId, String tag, String naturalId,
                      char[] subfields, int linkingRuleId,
                      InstanceAuthorityLinkStatus status, String errorCause) {
-
-    public static final UUID[] AUTH_IDS = new UUID[] {UUID.fromString("845642cf-d4eb-4c2e-a067-db580c9a1abd"),
-      UUID.fromString("1b8867a1-2f1d-4f6a-8023-5abaf980c24c"),
-      UUID.fromString("1c8f571c-eff8-43fa-90a5-2dca70a35f2d"),
-      UUID.fromString("91c3d682-7a6b-4c6f-802b-b2793e591fa4")};
     public static final String[] TAGS = new String[] {"100", "240", "700", "710"};
     public static final String[] AUTHORITY_TAGS = new String[] {"100", "110"};
     public static final Map<String, Map<String, Boolean>> SUBFIELD_VALIDATIONS_BY_TAG = Map.of(
@@ -314,17 +423,17 @@ public class TestDataUtils {
     }
 
     public static Link of(int authIdNum, int tagNum) {
-      return new Link(AUTH_IDS[authIdNum], TAGS[tagNum]);
+      return new Link(AUTHORITY_IDS[authIdNum], TAGS[tagNum]);
     }
 
     public static Link of(int authIdNum, int tagNum, String naturalId) {
       var tag = TAGS[tagNum];
-      return new Link(AUTH_IDS[authIdNum], tag, naturalId, TAGS_TO_SUBFIELDS.get(tag).toCharArray());
+      return new Link(AUTHORITY_IDS[authIdNum], tag, naturalId, TAGS_TO_SUBFIELDS.get(tag).toCharArray());
     }
 
     public static Link of(InstanceAuthorityLinkStatus status, String errorCause) {
-      return new Link(AUTH_IDS[0], TAGS[0], AUTH_IDS[0].toString(), TAGS_TO_SUBFIELDS.get(TAGS[0]).toCharArray(),
-        1, status, errorCause);
+      return new Link(AUTHORITY_IDS[0], TAGS[0], AUTHORITY_IDS[0].toString(),
+          TAGS_TO_SUBFIELDS.get(TAGS[0]).toCharArray(), 1, status, errorCause);
     }
 
     public InstanceLinkDto toDto(UUID instanceId) {
@@ -338,12 +447,12 @@ public class TestDataUtils {
     }
 
     public InstanceAuthorityLink toEntity(UUID instanceId) {
+      var authority = new Authority();
+      authority.setNaturalId(naturalId);
+      authority.setId(authorityId);
       return InstanceAuthorityLink.builder()
         .instanceId(instanceId)
-        .authorityData(AuthorityData.builder()
-          .id(authorityId)
-          .naturalId(naturalId)
-          .build())
+        .authority(authority)
         .linkingRule(InstanceAuthorityLinkingRule.builder()
           .id(TAGS_TO_RULE_IDS.get(tag))
           .bibField(tag)

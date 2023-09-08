@@ -17,9 +17,8 @@ public interface AuthorityDataStatRepository extends JpaRepository<AuthorityData
     where a.action = :action
           and a.startedAt >= :startedAtStart
           and a.startedAt <= :startedAtEnd
-          and a.authorityData.deleted = false""")
+          and a.authority.deleted = false""")
   List<AuthorityDataStat> findActualByActionAndDate(@Param("action") AuthorityDataStatAction action,
                                                     @Param("startedAtStart") Timestamp startedAtStart,
                                                     @Param("startedAtEnd") Timestamp startedAtEnd, Pageable pageable);
-
 }

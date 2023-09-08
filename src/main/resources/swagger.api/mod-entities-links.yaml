@@ -290,6 +290,30 @@ paths:
         '500':
           $ref: '#/components/responses/serverErrorResponse'
 
+  /authority-storage/authorities:
+    $ref: './paths/authority-storage/authorities.yaml'
+
+  /authority-storage/authorities/{id}:
+    $ref: './paths/authority-storage/authorities-by-id.yaml'
+
+  /authority-storage/reindex:
+    $ref: './paths/authority-storage-reindex/reindex.yaml'
+
+  /authority-storage/reindex/{id}:
+    $ref: './paths/authority-storage-reindex/reindex-by-id.yaml'
+
+  /authority-note-types:
+    $ref: './paths/authority-note-types/authority-note-types.yaml'
+
+  /authority-note-types/{id}:
+    $ref: './paths/authority-note-types/authority-note-types-by-id.yaml'
+
+  /authority-source-files:
+    $ref: './paths/authority-source-files/authority-source-files.yaml'
+
+  /authority-source-files/{id}:
+    $ref: './paths/authority-source-files/authority-source-files-by-id.yaml'
+
 components:
   schemas:
     instanceLinkDtoCollection:
@@ -460,14 +484,14 @@ components:
                   - key: moduleTo
                     value: null
 
-    inventoryEvent:
-      $ref: schemas/inventoryEvent.json
+    authorityEvent:
+      $ref: schemas/authorityEvent.json
 
-    inventoryEventType:
-      $ref: schemas/inventoryEventType.json
+    authorityEventType:
+      $ref: schemas/authorityEventType.json
 
-    authorityInventoryRecord:
-      $ref: schemas/authorityInventoryRecord.json
+    authorityRecord:
+      $ref: schemas/authorityRecord.json
 
     sourceRecord:
       $ref: schemas/mod-source-record-storage/sourceRecord.json
@@ -490,8 +514,29 @@ components:
     linkStatus:
       $ref: schemas/authority/control/linkStatus.json
 
-    authoritySearchResult:
-      $ref: schemas/mod-search/authoritySearchResult.json
+    authorityDto:
+      $ref: schemas/authority-storage/authorityDto.yaml
+
+    authorityDtoCollection:
+      $ref: schemas/authority-storage/authorityDtoCollection.yaml
+
+    authorityNoteTypeDto:
+      $ref: schemas/authority-note-type/authorityNoteTypeDto.yaml
+
+    authorityNoteTypeDtoCollection:
+      $ref: schemas/authority-note-type/authorityNoteTypeDtoCollection.yaml
+
+    authoritySourceFileDto:
+      $ref: schemas/authority-source-file/authoritySourceFileDto.yaml
+
+    authoritySourceFileDtoCollection:
+      $ref: schemas/authority-source-file/authoritySourceFileDtoCollection.yaml
+
+    reindexJobDto:
+      $ref: schemas/authority-storage-reindex/reindexJobDto.yaml
+
+    reindexJobDtoCollection:
+      $ref: schemas/authority-storage-reindex/reindexJobDtoCollection.yaml
 
     linksChangeEvent:
       type: object
@@ -647,27 +692,20 @@ components:
 
   responses:
     badRequestResponse:
-      description: Validation errors.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/errorResponse"
+      $ref: './responses/badRequestResponse.yaml'
     unprocessableEntityResponse:
-      description: Validation error for the request.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/errorResponse'
+      $ref: './responses/unprocessableEntityResponse.yaml'
     notFoundResponse:
-      description: Validation error for the request.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/errorResponse'
+      $ref: './responses/notFoundResponse.yaml'
     serverErrorResponse:
-      description: Internal server error.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/errorResponse'
+      $ref: './responses/serverErrorResponse.yaml'
 
+  parameters:
+    cql-query:
+      $ref: './parameters/cql-query.yaml'
+    offset-param:
+      $ref: './parameters/offset-param.yaml'
+    limit-param:
+      $ref: './parameters/limit-param.yaml'
+    record-id-param:
+      $ref: './parameters/record-id-param.yaml'

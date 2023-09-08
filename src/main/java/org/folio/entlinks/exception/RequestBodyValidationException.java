@@ -2,7 +2,7 @@ package org.folio.entlinks.exception;
 
 import java.util.List;
 import lombok.Getter;
-import org.folio.entlinks.exception.type.ErrorCode;
+import org.folio.entlinks.exception.type.ErrorType;
 import org.folio.tenant.domain.dto.Parameter;
 
 /**
@@ -20,7 +20,7 @@ public class RequestBodyValidationException extends BaseException {
    * @param invalidParameters list of invalid parameters {@link Parameter}
    */
   public RequestBodyValidationException(String message, List<Parameter> invalidParameters) {
-    super(message, ErrorCode.VALIDATION_ERROR);
+    super(message, ErrorType.VALIDATION_ERROR);
     this.invalidParameters = invalidParameters;
   }
 

@@ -38,7 +38,7 @@ public class KafkaTestUtils {
     BlockingQueue<ConsumerRecord<String, T>> queue,
     KafkaProperties properties,
     Class<T> eventClass) {
-    var deserializer = new JsonDeserializer<>(eventClass);
+    var deserializer = new JsonDeserializer<>(eventClass, false);
     properties.getConsumer().setGroupId("test-group");
     Map<String, Object> config = new HashMap<>(properties.buildConsumerProperties());
     config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);

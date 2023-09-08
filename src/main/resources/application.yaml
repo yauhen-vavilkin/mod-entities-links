@@ -20,6 +20,7 @@ spring:
   jpa:
     properties:
       hibernate:
+        ddl-auto: validate
         dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
           batch_size: 20
@@ -71,6 +72,9 @@ folio:
     permissionsFilePath: permissions/mod-entities-links-permissions.csv
   kafka:
     topics:
+      - name: authorities.authority
+        numPartitions: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS:50}
+        replicationFactor: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_REPLICATION_FACTOR:}
       - name: links.instance-authority
         numPartitions: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS:10}
         replicationFactor: ${KAFKA_INSTANCE_AUTHORITY_TOPIC_REPLICATION_FACTOR:}
@@ -80,7 +84,7 @@ folio:
     listener:
       authority:
         concurrency: ${KAFKA_AUTHORITIES_CONSUMER_CONCURRENCY:1}
-        topic-pattern: (${folio.environment}\.)(.*\.)inventory\.authority
+        topic-pattern: (${folio.environment}\.)(.*\.)authorities\.authority
         group-id: ${folio.environment}-mod-entities-links-authorities-group
       instance-authority-stats:
         concurrency: ${KAFKA_INSTANCE_AUTHORITY_STATS_CONSUMER_CONCURRENCY:1}

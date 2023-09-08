@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.folio.support.TestDataUtils.links;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -15,17 +16,18 @@ import static org.mockito.Mockito.when;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.folio.entlinks.domain.dto.LinkStatus;
-import org.folio.entlinks.domain.entity.AuthorityData;
+import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.projection.LinkCountView;
 import org.folio.entlinks.domain.repository.InstanceLinkRepository;
+import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.spring.test.type.UnitTest;
 import org.folio.support.TestDataUtils.Link;
 import org.junit.jupiter.api.Test;
@@ -46,8 +48,9 @@ class InstanceAuthorityLinkingServiceTest {
 
   @Mock
   private InstanceLinkRepository instanceLinkRepository;
+
   @Mock
-  private AuthorityDataService authorityDataService;
+  private AuthorityService authorityService;
 
   @InjectMocks
   private InstanceAuthorityLinkingService service;
@@ -131,6 +134,7 @@ class InstanceAuthorityLinkingServiceTest {
     when(instanceLinkRepository.findByInstanceId(any(UUID.class))).thenReturn(existedLinks);
     doNothing().when(instanceLinkRepository).deleteAllInBatch(any());
     when(instanceLinkRepository.saveAll(any())).thenReturn(emptyList());
+    mockAuthorities(incomingLinks);
 
     service.updateLinks(instanceId, incomingLinks);
 
@@ -186,10 +190,10 @@ class InstanceAuthorityLinkingServiceTest {
       Link.of(3, 2)
     );
 
-    mockSavingAuthorityData();
     when(instanceLinkRepository.findByInstanceId(instanceId)).thenReturn(existedLinks);
     doNothing().when(instanceLinkRepository).deleteAllInBatch(any());
     when(instanceLinkRepository.saveAll(any())).thenReturn(emptyList());
+    mockAuthorities(incomingLinks);
 
     service.updateLinks(instanceId, incomingLinks);
 
@@ -221,10 +225,10 @@ class InstanceAuthorityLinkingServiceTest {
       Link.of(3, 3)
     );
 
-    mockSavingAuthorityData();
     when(instanceLinkRepository.findByInstanceId(instanceId)).thenReturn(existedLinks);
     doNothing().when(instanceLinkRepository).deleteAllInBatch(any());
     when(instanceLinkRepository.saveAll(any())).thenReturn(emptyList());
+    mockAuthorities(incomingLinks);
 
     service.updateLinks(instanceId, incomingLinks);
 
@@ -256,10 +260,10 @@ class InstanceAuthorityLinkingServiceTest {
       Link.of(3, 2)
     );
 
-    mockSavingAuthorityData();
     when(instanceLinkRepository.findByInstanceId(instanceId)).thenReturn(existedLinks);
     doNothing().when(instanceLinkRepository).deleteAllInBatch(any());
     when(instanceLinkRepository.saveAll(any())).thenReturn(emptyList());
+    mockAuthorities(incomingLinks);
 
     service.updateLinks(instanceId, incomingLinks);
 
@@ -338,13 +342,6 @@ class InstanceAuthorityLinkingServiceTest {
       .isEqualTo(expectedLinks);
   }
 
-  @SuppressWarnings("unchecked")
-  private void mockSavingAuthorityData() {
-    when(authorityDataService.saveAll(any(Collection.class)))
-      .thenAnswer(invocation -> ((Collection<AuthorityData>) invocation.getArgument(0)).stream()
-        .collect(Collectors.toMap(AuthorityData::getId, a -> a)));
-  }
-
   private ArgumentCaptor<List<InstanceAuthorityLink>> linksCaptor() {
     @SuppressWarnings("unchecked") var listClass = (Class<List<InstanceAuthorityLink>>) (Class<?>) List.class;
     return ArgumentCaptor.forClass(listClass);
@@ -362,6 +359,14 @@ class InstanceAuthorityLinkingServiceTest {
         return totalLinks;
       }
     };
+  }
+
+  private void mockAuthorities(List<InstanceAuthorityLink> links) {
+    var authoritiesById = links.stream()
+        .map(InstanceAuthorityLink::getAuthority)
+        .collect(Collectors.toMap(Authority::getId, Function.identity()));
+
+    when(authorityService.getAllByIds(anyCollection())).thenReturn(authoritiesById);
   }
 
 }

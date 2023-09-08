@@ -8,7 +8,6 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
@@ -34,20 +33,12 @@ public class AuthorityDataStatService {
 
   private final AuthorityDataStatRepository statRepository;
 
-  private final AuthorityDataService authorityDataService;
   private final InstanceAuthorityLinkingService linkingService;
 
   public List<AuthorityDataStat> createInBatch(List<AuthorityDataStat> stats) {
-    var authorityDataSet = stats.stream()
-      .map(AuthorityDataStat::getAuthorityData)
-      .collect(Collectors.toSet());
-    var savedAuthorityData = authorityDataService.saveAll(authorityDataSet);
-
     for (AuthorityDataStat stat : stats) {
       stat.setId(UUID.randomUUID());
       stat.setStatus(AuthorityDataStatStatus.IN_PROGRESS);
-      var authorityData = savedAuthorityData.get(stat.getAuthorityData().getId());
-      stat.setAuthorityData(authorityData);
     }
 
     return statRepository.saveAll(stats);
@@ -98,7 +89,7 @@ public class AuthorityDataStatService {
 
         linkingService.saveAll(report.getInstanceId(), links);
       } else if (dataStat.isPresent()) {
-        var authorityId = dataStat.get().getAuthorityData().getId();
+        var authorityId = dataStat.get().getAuthority().getId();
         linkingService.updateStatus(authorityId, status, report.getFailCause());
       }
     });

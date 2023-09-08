@@ -1,0 +1,36 @@
+description: Reindex authorities
+get:
+  operationId: getReindexJobs
+  tags:
+    - authority-storage-reindex
+  parameters:
+    - $ref: '../../parameters/cql-query.yaml'
+    - $ref: '../../parameters/offset-param.yaml'
+    - $ref: '../../parameters/limit-param.yaml'
+  responses:
+    '200':
+      description: Returns a list of authorities
+      content:
+        application/json:
+          example: examples/authorities.sample
+          schema:
+            $ref: '../../schemas/authority-storage-reindex/reindexJobDtoCollection.yaml'
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'
+post:
+  operationId: submitReindexJob
+  tags:
+    - authority-storage-reindex
+  responses:
+    '201':
+      description: Reindex job has been submitted
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/authority-storage-reindex/reindexJobDto.yaml'
+    '400':
+      $ref: '../../responses/badRequestResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'

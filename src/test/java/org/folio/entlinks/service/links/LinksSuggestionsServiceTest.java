@@ -1,29 +1,33 @@
 package org.folio.entlinks.service.links;
 
 import static java.util.Collections.emptyMap;
-import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.DISABLED_AUTO_LINKING;
-import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.MORE_THAN_ONE_SUGGESTIONS;
-import static org.folio.entlinks.service.links.model.LinksSuggestionErrorCode.NO_SUGGESTIONS;
+import static org.folio.entlinks.config.constants.ErrorCode.DISABLED_AUTO_LINKING;
+import static org.folio.entlinks.config.constants.ErrorCode.MORE_THAN_ONE_SUGGESTIONS;
+import static org.folio.entlinks.config.constants.ErrorCode.NO_SUGGESTIONS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
-import org.folio.entlinks.client.AuthoritySourceFileClient.AuthoritySourceFile;
 import org.folio.entlinks.domain.dto.LinkDetails;
 import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.dto.SubfieldModification;
+import org.folio.entlinks.domain.entity.AuthoritySourceFile;
+import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
+import org.folio.entlinks.domain.repository.AuthoritySourceFileCodeRepository;
 import org.folio.entlinks.integration.dto.AuthorityParsedContent;
 import org.folio.entlinks.integration.dto.FieldParsedContent;
 import org.folio.entlinks.integration.dto.SourceParsedContent;
-import org.folio.entlinks.integration.internal.AuthoritySourceFilesService;
 import org.folio.spring.test.type.UnitTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -46,8 +50,21 @@ class LinksSuggestionsServiceTest {
   private static final String SOURCE_FILE_NAME = "sourceFileName";
 
   private @Spy AuthorityRuleValidationService authorityRuleValidationService;
-  private @Mock AuthoritySourceFilesService sourceFilesService;
+  private @Mock AuthoritySourceFileCodeRepository sourceFileCodeRepository;
   private @InjectMocks LinksSuggestionService linksSuggestionService;
+
+  private AuthoritySourceFileCode sourceFileCode;
+
+  @BeforeEach
+  void setup() {
+    var sourceFile = new AuthoritySourceFile();
+    sourceFile.setId(SOURCE_FILE_ID);
+    sourceFile.setBaseUrl(BASE_URL);
+    sourceFile.setName(SOURCE_FILE_NAME);
+    sourceFileCode = new AuthoritySourceFileCode();
+    sourceFileCode.setCode("e1");
+    sourceFile.addCode(sourceFileCode);
+  }
 
   @ParameterizedTest
   @ValueSource(strings = {NATURAL_ID_SUBFIELD, ID_SUBFIELD})
@@ -55,9 +72,7 @@ class LinksSuggestionsServiceTest {
     var rules = getMapRule("100", "100");
     var bib = getBibParsedRecordContent("100", null);
     var authority = getAuthorityParsedRecordContent("100");
-    var sourceFile = new AuthoritySourceFile(SOURCE_FILE_ID, BASE_URL, SOURCE_FILE_NAME, codes("e1"));
-
-    when(sourceFilesService.fetchAuthoritySources()).thenReturn(Map.of(sourceFile.id(), sourceFile));
+    when(sourceFileCodeRepository.findFirstByCodeStartsWith(anyString())).thenReturn(Optional.of(sourceFileCode));
 
     linksSuggestionService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
@@ -85,9 +100,7 @@ class LinksSuggestionsServiceTest {
     initialBibSubfields.put("c", List.of("c value"));
     var bib = getBibParsedRecordContent("100", initialBibSubfields, null);
     var authority = getAuthorityParsedRecordContent("100");
-    var sourceFile = new AuthoritySourceFile(SOURCE_FILE_ID, BASE_URL, SOURCE_FILE_NAME, codes("e1"));
-
-    when(sourceFilesService.fetchAuthoritySources()).thenReturn(Map.of(sourceFile.id(), sourceFile));
+    when(sourceFileCodeRepository.findFirstByCodeStartsWith(anyString())).thenReturn(Optional.of(sourceFileCode));
 
     linksSuggestionService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
@@ -113,9 +126,7 @@ class LinksSuggestionsServiceTest {
     var rules = getMapRule("100", "100");
     var bib = getBibParsedRecordContent("100", getActualLinksDetails());
     var authority = getAuthorityParsedRecordContent("100");
-    var sourceFile = new AuthoritySourceFile(SOURCE_FILE_ID, BASE_URL, SOURCE_FILE_NAME, codes("e1"));
-
-    when(sourceFilesService.fetchAuthoritySources()).thenReturn(Map.of(sourceFile.id(), sourceFile));
+    when(sourceFileCodeRepository.findFirstByCodeStartsWith(anyString())).thenReturn(Optional.of(sourceFileCode));
 
     linksSuggestionService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
@@ -148,7 +159,7 @@ class LinksSuggestionsServiceTest {
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
-    assertEquals(NO_SUGGESTIONS.getErrorCode(), linkDetails.getErrorCause());
+    assertEquals(NO_SUGGESTIONS.getCode(), linkDetails.getErrorCause());
   }
 
   @ParameterizedTest
@@ -166,7 +177,7 @@ class LinksSuggestionsServiceTest {
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
-    assertEquals(MORE_THAN_ONE_SUGGESTIONS.getErrorCode(), linkDetails.getErrorCause());
+    assertEquals(MORE_THAN_ONE_SUGGESTIONS.getCode(), linkDetails.getErrorCause());
     assertNull(linkDetails.getAuthorityId());
     assertNull(linkDetails.getAuthorityNaturalId());
     assertNull(linkDetails.getLinkingRuleId());
@@ -185,7 +196,7 @@ class LinksSuggestionsServiceTest {
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
-    assertEquals(NO_SUGGESTIONS.getErrorCode(), linkDetails.getErrorCause());
+    assertEquals(NO_SUGGESTIONS.getCode(), linkDetails.getErrorCause());
   }
 
   @ParameterizedTest
@@ -203,7 +214,7 @@ class LinksSuggestionsServiceTest {
 
     var linkDetails = bib.getFields().get(0).getLinkDetails();
     assertEquals(LinkStatus.ERROR, linkDetails.getStatus());
-    assertEquals(DISABLED_AUTO_LINKING.getErrorCode(), linkDetails.getErrorCause());
+    assertEquals(DISABLED_AUTO_LINKING.getCode(), linkDetails.getErrorCause());
   }
 
   @ParameterizedTest
@@ -214,9 +225,7 @@ class LinksSuggestionsServiceTest {
     disableAutoLinkingFeature(rules.get("100"));
     var bib = getBibParsedRecordContent("100", getActualLinksDetails());
     var authority = getAuthorityParsedRecordContent("100");
-    var sourceFile = new AuthoritySourceFile(SOURCE_FILE_ID, BASE_URL, SOURCE_FILE_NAME, codes("e1"));
-
-    when(sourceFilesService.fetchAuthoritySources()).thenReturn(Map.of(sourceFile.id(), sourceFile));
+    when(sourceFileCodeRepository.findFirstByCodeStartsWith(anyString())).thenReturn(Optional.of(sourceFileCode));
 
     linksSuggestionService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, true);
@@ -313,9 +322,5 @@ class LinksSuggestionsServiceTest {
 
   private void disableAutoLinkingFeature(List<InstanceAuthorityLinkingRule> rules) {
     rules.forEach(rule -> rule.setAutoLinkingEnabled(false));
-  }
-
-  private List<String> codes(String... codes) {
-    return List.of(codes);
   }
 }

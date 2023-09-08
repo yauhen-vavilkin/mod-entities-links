@@ -1,7 +1,7 @@
 package org.folio.entlinks.exception;
 
 import lombok.Getter;
-import org.folio.entlinks.exception.type.ErrorCode;
+import org.folio.entlinks.exception.type.ErrorType;
 
 /**
  * Base exception class that is used for all exceptional situations.
@@ -9,28 +9,28 @@ import org.folio.entlinks.exception.type.ErrorCode;
 @Getter
 public abstract class BaseException extends RuntimeException {
 
-  private final ErrorCode errorCode;
+  private final ErrorType errorType;
 
   /**
    * Initialize exception with provided message and error code.
    *
    * @param message   exception message
-   * @param errorCode exception code {@link ErrorCode}
+   * @param errorType exception code {@link ErrorType}
    */
-  protected BaseException(String message, ErrorCode errorCode) {
+  protected BaseException(String message, ErrorType errorType) {
     super(message);
-    this.errorCode = errorCode;
+    this.errorType = errorType;
   }
 
   /**
    * Initialize exception with provided message and error code.
    *
    * @param message   exception message
-   * @param errorCode exception code {@link ErrorCode}
+   * @param errorType exception code {@link ErrorType}
    * @param cause     cause Exception
    */
-  protected BaseException(String message, ErrorCode errorCode, Throwable cause) {
+  protected BaseException(String message, ErrorType errorType, Throwable cause) {
     super(message, cause);
-    this.errorCode = errorCode;
+    this.errorType = errorType;
   }
 }

@@ -46,7 +46,7 @@ public class InstanceAuthorityLink extends AuditableEntity {
   @ToString.Exclude
   @ManyToOne(optional = false, cascade = {CascadeType.ALL})
   @JoinColumn(name = "authority_id", nullable = false)
-  private AuthorityData authorityData;
+  private Authority authority;
 
   @NotNull
   @Column(name = "instance_id", nullable = false)
@@ -84,7 +84,7 @@ public class InstanceAuthorityLink extends AuditableEntity {
   }
 
   public boolean isSameLink(InstanceAuthorityLink link) {
-    return authorityData.getId().equals(link.getAuthorityData().getId())
+    return authority.getId().equals(link.getAuthority().getId())
       && instanceId.equals(link.instanceId)
       && linkingRule.equals(link.getLinkingRule());
   }

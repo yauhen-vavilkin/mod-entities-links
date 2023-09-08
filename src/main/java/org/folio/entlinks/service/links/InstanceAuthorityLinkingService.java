@@ -27,15 +27,15 @@ import org.folio.entlinks.client.SourceStorageClient;
 import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.dto.StrippedParsedRecord;
-import org.folio.entlinks.domain.entity.AuthorityData;
+import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.domain.entity.projection.LinkCountView;
 import org.folio.entlinks.domain.repository.InstanceLinkRepository;
 import org.folio.entlinks.exception.DeletedLinkingAuthorityException;
-import org.folio.entlinks.integration.internal.SearchService;
 import org.folio.entlinks.integration.kafka.EventProducer;
+import org.folio.entlinks.service.authority.AuthorityService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -54,9 +54,8 @@ public class InstanceAuthorityLinkingService {
   private final InstanceLinkRepository instanceLinkRepository;
   private final InstanceAuthorityLinkingRulesService linkingRulesService;
   private final AuthorityRuleValidationService authorityRuleValidationService;
-  private final AuthorityDataService authorityDataService;
+  private final AuthorityService authorityService;
   private final RenovateLinksService renovateService;
-  private final SearchService searchService;
   private final SourceStorageClient sourceStorageClient;
   private final EventProducer<LinksChangeEvent> eventProducer;
 
@@ -89,16 +88,17 @@ public class InstanceAuthorityLinkingService {
       log.info("Update links for [instanceId: {}, links amount: {}]", instanceId, incomingLinks.size());
     }
 
-    var authorityDataSet = incomingLinks.stream()
-      .map(InstanceAuthorityLink::getAuthorityData)
-      .collect(Collectors.toSet());
+    var authorityIds = incomingLinks.stream()
+        .map(InstanceAuthorityLink::getAuthority)
+        .map(Authority::getId)
+        .collect(Collectors.toSet());
 
-    var existedAuthorityData = authorityDataService.saveAll(authorityDataSet);
+    var existingAuthorities = authorityService.getAllByIds(authorityIds);
 
     for (InstanceAuthorityLink incomingLink : incomingLinks) {
-      var linkAuthorityData = incomingLink.getAuthorityData();
-      var authorityData = existedAuthorityData.get(linkAuthorityData.getId());
-      incomingLink.setAuthorityData(authorityData);
+      var linkAuthorityData = incomingLink.getAuthority();
+      var authorityData = existingAuthorities.get(linkAuthorityData.getId());
+      incomingLink.setAuthority(authorityData);
     }
     var existedLinks = instanceLinkRepository.findByInstanceId(instanceId);
 
@@ -119,23 +119,24 @@ public class InstanceAuthorityLinkingService {
     } else {
       log.info("Update/renovate links for [instanceId: {}, links amount: {}]", instanceId, incomingLinks.size());
     }
-    var authorityData = collectAuthorityDataById(incomingLinks);
-    checkForDeletedAuthorities(authorityData.keySet());
+    var authoritiesById = collectAuthorityDataById(incomingLinks);
+    checkForDeletedAuthorities(authoritiesById.keySet());
     fillLinksWithLinkingRules(incomingLinks);
     var linksByAuthorityId = groupLinksByAuthorityId(incomingLinks);
 
-    var authorityNaturalIds = fetchAuthorityNaturalIds(authorityData.keySet());
+    var authorityNaturalIds = fetchAuthorityNaturalIds(authoritiesById.keySet());
     var authoritySources = fetchAuthoritySources(linksByAuthorityId.keySet());
 
     var validationResult = authorityRuleValidationService
-      .validateAuthorityData(linksByAuthorityId, authorityData, authorityNaturalIds, authoritySources);
+      .validateAuthorityData(linksByAuthorityId, authoritiesById, authorityNaturalIds, authoritySources);
 
-    var savedAuthorityData = authorityDataService.saveAll(validationResult.validAuthorities());
+    var validAuthoritiesById = validationResult.validAuthorities().stream()
+        .collect(Collectors.toMap(Authority::getId, Function.identity()));
     var incomingValidLinks = validationResult.validLinks();
     var existedLinks = instanceLinkRepository.findByInstanceId(instanceId);
     var linksToDelete = subtract(existedLinks, incomingValidLinks);
 
-    updateExistingLinks(incomingValidLinks, existedLinks, savedAuthorityData);
+    updateExistingLinks(incomingValidLinks, existedLinks, validAuthoritiesById);
     instanceLinkRepository.saveAll(incomingValidLinks);
     instanceLinkRepository.deleteAllInBatch(linksToDelete);
 
@@ -166,7 +167,6 @@ public class InstanceAuthorityLinkingService {
       log.info("Delete links for [authority ids amount: {}]", authorityIds.size());
     }
     instanceLinkRepository.deleteByAuthorityIds(authorityIds);
-    authorityDataService.markDeleted(authorityIds);
   }
 
   @Transactional
@@ -204,10 +204,11 @@ public class InstanceAuthorityLinkingService {
 
   private void updateLinksData(List<InstanceAuthorityLink> incomingLinks, List<InstanceAuthorityLink> linksToUpdate) {
     linksToUpdate
-      .forEach(link -> incomingLinks.stream().filter(l -> l.isSameLink(link)).findFirst()
-        .ifPresent(l ->
-          link.getAuthorityData().setNaturalId(l.getAuthorityData().getNaturalId())
-        ));
+        .forEach(link -> incomingLinks.stream()
+            .filter(l -> l.isSameLink(link)).findFirst()
+            .ifPresent(l ->
+                link.getAuthority().setNaturalId(l.getAuthority().getNaturalId())
+            ));
   }
 
   private List<InstanceAuthorityLink> subtract(Collection<InstanceAuthorityLink> source,
@@ -239,11 +240,11 @@ public class InstanceAuthorityLinkingService {
 
   private void updateExistingLinks(List<InstanceAuthorityLink> incomingValidLinks,
                                    List<InstanceAuthorityLink> existedLinks,
-                                   Map<UUID, AuthorityData> savedAuthorityData) {
+                                   Map<UUID, Authority> validAuthoritiesById) {
     for (InstanceAuthorityLink incomingLink : incomingValidLinks) {
-      AuthorityData linkAuthorityData = incomingLink.getAuthorityData();
-      AuthorityData authorityData = savedAuthorityData.get(linkAuthorityData.getId());
-      incomingLink.setAuthorityData(authorityData);
+      var linkAuthority = incomingLink.getAuthority();
+      var validAuthority = validAuthoritiesById.get(linkAuthority.getId());
+      incomingLink.setAuthority(validAuthority);
       existedLinks.stream()
         .filter(existedLink -> existedLink.isSameLink(incomingLink))
         .findFirst()
@@ -251,18 +252,19 @@ public class InstanceAuthorityLinkingService {
     }
   }
 
-  private Map<UUID, AuthorityData> collectAuthorityDataById(List<InstanceAuthorityLink> incomingLinks) {
+  private Map<UUID, Authority> collectAuthorityDataById(List<InstanceAuthorityLink> incomingLinks) {
     return incomingLinks.stream()
-      .map(InstanceAuthorityLink::getAuthorityData)
-      .collect(Collectors.toMap(AuthorityData::getId, Function.identity(), (a1, a2) -> a1));
+      .map(InstanceAuthorityLink::getAuthority)
+      .collect(Collectors.toMap(Authority::getId, Function.identity(), (a1, a2) -> a1));
   }
 
   private Map<UUID, String> fetchAuthorityNaturalIds(Set<UUID> authorityIds) {
     if (authorityIds.isEmpty()) {
       return emptyMap();
     }
-    return searchService.searchAuthoritiesByIds(authorityIds).stream()
-      .collect(Collectors.toMap(AuthorityData::getId, AuthorityData::getNaturalId));
+
+    return authorityService.getAllByIds(authorityIds).entrySet().stream()
+        .collect(Collectors.toMap(Map.Entry::getKey, authorityEntry -> authorityEntry.getValue().getNaturalId()));
   }
 
   private List<StrippedParsedRecord> fetchAuthoritySources(Set<UUID> authorityIds) {
@@ -293,10 +295,11 @@ public class InstanceAuthorityLinkingService {
   }
 
   private void checkForDeletedAuthorities(Set<UUID> authorityIds) {
-    var deletedAuthorityIds = authorityDataService
-      .getByIdAndDeleted(authorityIds, true).stream()
-      .map(authorityData -> authorityData.getId().toString())
-      .collect(Collectors.toSet());
+    Map<UUID, Authority> authoritiesByIds = authorityService.getAllByIds(authorityIds);
+    var deletedAuthorityIds = authorityIds.stream()
+        .filter(id -> !authoritiesByIds.containsKey(id))
+        .map(UUID::toString)
+        .collect(Collectors.toSet());
 
     if (isNotEmpty(deletedAuthorityIds)) {
       throw new DeletedLinkingAuthorityException(deletedAuthorityIds);

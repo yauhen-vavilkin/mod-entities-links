@@ -1,0 +1,24 @@
+description: Error object
+type: object
+properties:
+  message:
+    description: Error message
+    type: string
+  type:
+    description: Error type
+    type: string
+  code:
+    description: Error code
+    type: string
+  parameters:
+    description: Error parameters
+    type: array
+    items:
+      type: object
+      properties:
+        key:
+          description: Parameter key
+          type: string
+        value:
+          description: Parameter value
+          type: string
