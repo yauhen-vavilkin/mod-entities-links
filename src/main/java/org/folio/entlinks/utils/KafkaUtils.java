@@ -1,6 +1,6 @@
 package org.folio.entlinks.utils;
 
-import static org.folio.spring.tools.config.properties.FolioEnvironment.getFolioEnvName;
+import static org.folio.spring.config.properties.FolioEnvironment.getFolioEnvName;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;

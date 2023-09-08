@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.SneakyThrows;
@@ -25,15 +26,16 @@ import org.awaitility.core.ThrowingRunnable;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.test.extension.EnableKafka;
-import org.folio.spring.test.extension.EnableOkapi;
 import org.folio.spring.test.extension.EnablePostgres;
 import org.folio.spring.test.extension.impl.OkapiConfiguration;
+import org.folio.spring.test.extension.impl.OkapiExtension;
 import org.folio.support.DatabaseHelper;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -53,7 +55,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @EnableKafka
-@EnableOkapi
 @EnablePostgres
 @SpringBootTest
 @ActiveProfiles("test")
@@ -66,6 +67,10 @@ public class IntegrationTestBase {
   protected static KafkaTemplate<String, String> kafkaTemplate;
   protected static ObjectMapper objectMapper;
   protected static DatabaseHelper databaseHelper;
+
+  @RegisterExtension
+  static OkapiExtension okapiExtension =
+    new OkapiExtension(new ResponseTemplateTransformer(true));
 
   @BeforeAll
   static void setUp(@Autowired MockMvc mockMvc,
