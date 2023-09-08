@@ -13,9 +13,11 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.folio.entlinks.controller.converter.AuthoritySourceFileMapper;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
+import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
@@ -107,11 +109,14 @@ class AuthoritySourceFileServiceTest {
 
   @Test
   void shouldCreateAuthoritySourceFile() {
+    var code = new AuthoritySourceFileCode();
+    var entity = new AuthoritySourceFile();
+    entity.setAuthoritySourceFileCodes(Set.of(code));
     var expected = new AuthoritySourceFile();
     when(repository.save(any(AuthoritySourceFile.class))).thenReturn(expected);
     var argumentCaptor = ArgumentCaptor.forClass(AuthoritySourceFile.class);
 
-    var created = service.create(new AuthoritySourceFile());
+    var created = service.create(entity);
 
     assertThat(created).isEqualTo(expected);
     verify(repository).save(argumentCaptor.capture());
@@ -125,17 +130,24 @@ class AuthoritySourceFileServiceTest {
     entity.setId(id);
     entity.setName("updated name");
     entity.setSource("updated source");
+    var codeNew = new AuthoritySourceFileCode();
+    codeNew.setCode("codeNew");
+    entity.addCode(codeNew);
+    var codeExisting = new AuthoritySourceFileCode();
+    codeExisting.setCode("codeExisting");
     var expected = new AuthoritySourceFile();
     expected.setId(id);
+    expected.addCode(codeExisting);
 
     when(repository.findById(id)).thenReturn(Optional.of(expected));
     when(repository.save(expected)).thenReturn(expected);
-    when(mapper.toDtoCodes(entity.getAuthoritySourceFileCodes())).thenReturn(List.of());
-    when(mapper.toDtoCodes(expected.getAuthoritySourceFileCodes())).thenReturn(List.of());
+    when(mapper.toDtoCodes(entity.getAuthoritySourceFileCodes())).thenReturn(List.of(codeNew.getCode()));
+    when(mapper.toDtoCodes(expected.getAuthoritySourceFileCodes())).thenReturn(List.of(codeExisting.getCode()));
 
     var updated = service.update(id, entity);
 
     assertThat(updated).isEqualTo(expected);
+    assertThat(updated.getAuthoritySourceFileCodes()).isEqualTo(Set.of(codeNew));
     verify(repository).findById(id);
     verify(repository).save(expected);
   }

@@ -3,12 +3,14 @@ package org.folio.entlinks.service.authority;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.folio.entlinks.domain.entity.Authority;
@@ -72,6 +74,17 @@ class AuthorityServiceTest {
 
     assertThat(result).isEqualTo(expected);
     verify(repository).findByIdAndDeletedFalse(any(UUID.class));
+  }
+
+  @Test
+  void shouldGetAllAuthoritiesByIds() {
+    var authority = new Authority();
+    authority.setId(UUID.randomUUID());
+    when(repository.findAllByIdInAndDeletedFalse(anyList())).thenReturn(List.of(authority));
+
+    var allGroupedByIds = service.getAllByIds(List.of(authority.getId()));
+
+    assertThat(allGroupedByIds).isEqualTo(Map.of(authority.getId(), authority));
   }
 
   @Test
