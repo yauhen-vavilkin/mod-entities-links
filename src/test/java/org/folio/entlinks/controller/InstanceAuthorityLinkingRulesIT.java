@@ -26,6 +26,7 @@ import org.folio.entlinks.domain.dto.SubfieldValidation;
 import org.folio.entlinks.exception.type.ErrorType;
 import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.base.IntegrationTestBase;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -37,6 +38,11 @@ class InstanceAuthorityLinkingRulesIT extends IntegrationTestBase {
   private static final TypeReference<List<LinkingRuleDto>> RULES_TYPE_REFERENCE = new TypeReference<>() { };
 
   private List<LinkingRuleDto> defaultRules;
+
+  @BeforeAll
+  static void prepare() {
+    setUpTenant();
+  }
 
   @BeforeEach
   void setUp() {

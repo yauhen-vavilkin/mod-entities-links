@@ -29,6 +29,7 @@ import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
 import org.folio.support.base.IntegrationTestBase;
 import org.hamcrest.Matcher;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -52,8 +53,12 @@ class AuthorityNoteTypesControllerIT extends IntegrationTestBase {
   private static final String[] NOTE_TYPE_NAMES = new String[] {"name1", "name2", "name3"};
   private static final String[] NOTE_TYPE_SOURCES = new String[] {"source1", "source2", "source3"};
 
-  // Tests for Get Collection
+  @BeforeAll
+  static void prepare() {
+    setUpTenant();
+  }
 
+  // Tests for Get Collection
   @Test
   @DisplayName("Get Collection: find no Authority Note Types")
   void getAuthorityNoteTypes_positive_noEntitiesFound() throws Exception {

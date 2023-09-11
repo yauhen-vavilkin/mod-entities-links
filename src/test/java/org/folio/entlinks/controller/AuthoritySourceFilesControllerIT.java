@@ -32,6 +32,7 @@ import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
 import org.folio.support.base.IntegrationTestBase;
 import org.hamcrest.Matcher;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -56,8 +57,12 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   private static final String[] SOURCE_FILE_TYPES = new String[] {"type1", "type2", "type3"};
   private static final String[] SOURCE_FILE_URLS = new String[] {"baseUrl1", "baseUrl2", "baseUrl3"};
 
-  // Tests for Get Collection
+  @BeforeAll
+  static void prepare() {
+    setUpTenant();
+  }
 
+  // Tests for Get Collection
   @Test
   @DisplayName("Get Collection: find no Authority Source Files")
   void getAuthoritySourceFiles_positive_noEntitiesFound() throws Exception {

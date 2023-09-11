@@ -15,7 +15,6 @@ import org.folio.entlinks.service.authority.AuthorityNoteTypeService;
 import org.folio.entlinks.service.authority.AuthoritySourceFileService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -36,7 +35,6 @@ public class ReferenceDataLoader {
   private final AuthoritySourceFileRepository sourceFileRepository;
   private final ObjectMapper mapper;
 
-  @Async
   public void loadRefData() {
     try {
       log.info("Loading reference data");
@@ -78,8 +76,8 @@ public class ReferenceDataLoader {
 
   private void registerAuthoritySourceFileDeserializer() {
     var module = new SimpleModule(
-        "AuthoritySourceFileDeserializer",
-        new Version(1, 0, 0, null, null, null));
+      "AuthoritySourceFileDeserializer",
+      new Version(1, 0, 0, null, null, null));
     module.addDeserializer(AuthoritySourceFile.class, new SourceFileDeserializer());
     mapper.registerModule(module);
   }
@@ -89,7 +87,7 @@ public class ReferenceDataLoader {
       return mapper.readValue(res.getInputStream(), resourceType);
     } catch (IOException e) {
       var msg = String.format("Failed to deserialize reference data of type %s from file: %s",
-          resourceType, res.getFilename());
+        resourceType, res.getFilename());
       log.warn(msg, e);
       throw new IllegalStateException(msg, e);
     }

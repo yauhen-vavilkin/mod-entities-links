@@ -57,6 +57,7 @@ import org.folio.support.DatabaseHelper;
 import org.folio.support.TestDataUtils;
 import org.folio.support.TestDataUtils.Link;
 import org.folio.support.base.IntegrationTestBase;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -84,6 +85,11 @@ class InstanceAuthorityLinkStatisticsIT extends IntegrationTestBase {
       Link.of(0, 0, NATURAL_IDS[0]),
       Link.of(1, 1, NATURAL_IDS[1])
   };
+
+  @BeforeAll
+  static void prepare() {
+    setUpTenant();
+  }
 
   @BeforeEach
   public void setup() {

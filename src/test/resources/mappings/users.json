@@ -7,7 +7,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\"users\": [], \"totalRecords\": 0, \"resultInfo\": {\"totalRecords\": 0, \"facets\": [],\"diagnostics\": []}}",
+        "body": "{\n \"users\": [\n {\n \"id\": \"38d3a441-c100-5e8d-bd12-71bde492b723\",\n \"username\": \"mod-entities-links\",\n \"personal\": {\n \"firstName\": \"John\",\n \"lastName\": \"Doe\"\n }\n }\n ],\n \"totalRecords\": 1\n}",
         "headers": {
           "Content-Type": "application/json"
         }

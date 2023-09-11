@@ -51,6 +51,7 @@ import org.folio.support.base.IntegrationTestBase;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -65,32 +66,14 @@ import org.springframework.test.web.servlet.ResultMatcher;
   DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class InstanceAuthorityLinksIT extends IntegrationTestBase {
 
-  public static Stream<Arguments> requiredFieldMissingProvider() {
-    return Stream.of(
-      arguments("instanceId",
-        new InstanceLinkDto()
-          .authorityId(randomUUID()).authorityNaturalId("id")
-          .linkingRuleId(1)
-      ),
-      arguments("authorityId",
-        new InstanceLinkDto().instanceId(randomUUID())
-          .authorityNaturalId("id")
-          .linkingRuleId(1)
-      ),
-      arguments("authorityNaturalId",
-        new InstanceLinkDto().instanceId(randomUUID())
-          .authorityId(randomUUID())
-          .linkingRuleId(1)
-      ),
-      arguments("linkingRuleId",
-        new InstanceLinkDto().instanceId(randomUUID())
-          .authorityId(randomUUID()).authorityNaturalId("id")
-      )
-    );
+  @BeforeAll
+  static void prepare() {
+    setUpTenant();
   }
 
   @BeforeEach
   void setup() {
+    setUpTenant();
     var sourceFile = authoritySourceFile(0);
     databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile);
   }
@@ -376,10 +359,34 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
       .andExpect(errorCodeMatch(is(ErrorType.VALIDATION_ERROR.getValue())));
   }
 
+  static Stream<Arguments> requiredFieldMissingProvider() {
+    return Stream.of(
+      arguments("instanceId",
+        new InstanceLinkDto()
+          .authorityId(randomUUID()).authorityNaturalId("id")
+          .linkingRuleId(1)
+      ),
+      arguments("authorityId",
+        new InstanceLinkDto().instanceId(randomUUID())
+          .authorityNaturalId("id")
+          .linkingRuleId(1)
+      ),
+      arguments("authorityNaturalId",
+        new InstanceLinkDto().instanceId(randomUUID())
+          .authorityId(randomUUID())
+          .linkingRuleId(1)
+      ),
+      arguments("linkingRuleId",
+        new InstanceLinkDto().instanceId(randomUUID())
+          .authorityId(randomUUID()).authorityNaturalId("id")
+      )
+    );
+  }
+
   private InstanceLinkDtoCollection createLinkDtoCollection(int num, UUID instanceId) {
     var links = IntStream.range(0, num)
-        .mapToObj(i -> Link.of(i, i, TestDataUtils.NATURAL_IDS[i]))
-        .toArray(Link[]::new);
+      .mapToObj(i -> Link.of(i, i, TestDataUtils.NATURAL_IDS[i]))
+      .toArray(Link[]::new);
     return linksDtoCollection(linksDto(instanceId, links));
   }
 
@@ -416,10 +423,6 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
       this.expectedLink = expectedLink;
     }
 
-    static LinkMatcher linkMatch(InstanceLinkDto expectedLink) {
-      return new LinkMatcher(expectedLink);
-    }
-
     @Override
     @SuppressWarnings("rawtypes")
     public boolean matches(Object actual) {
@@ -439,6 +442,10 @@ class InstanceAuthorityLinksIT extends IntegrationTestBase {
     public void describeTo(Description description) {
       description.appendValue(expectedLink);
     }
-  }
 
+    static LinkMatcher linkMatch(InstanceLinkDto expectedLink) {
+      return new LinkMatcher(expectedLink);
+    }
+
+  }
 }

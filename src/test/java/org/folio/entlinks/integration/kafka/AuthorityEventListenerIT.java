@@ -48,6 +48,7 @@ import org.folio.support.base.IntegrationTestBase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +70,11 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
 
   private KafkaMessageListenerContainer<String, LinksChangeEvent> container;
   private BlockingQueue<ConsumerRecord<String, LinksChangeEvent>> consumerRecords;
+
+  @BeforeAll
+  static void prepare() {
+    setUpTenant();
+  }
 
   @BeforeEach
   void setUp(@Autowired KafkaProperties kafkaProperties) {

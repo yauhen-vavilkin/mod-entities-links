@@ -32,6 +32,31 @@
     },
     {
       "request": {
+        "method": "GET",
+        "url": "/perms/users/38d3a441-c100-5e8d-bd12-71bde492b723/permissions?indexField=userId"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n \"permissions\": [],\n \"totalRecords\": 0\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/perms/users/38d3a441-c100-5e8d-bd12-71bde492b723/permissions?indexField=userId"
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "request": {
         "method": "POST",
         "url": "/authn/credentials"
       },

@@ -7,9 +7,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.service.PrepareSystemUserService;
 import org.folio.spring.test.type.UnitTest;
 import org.folio.spring.tools.kafka.KafkaAdminService;
-import org.folio.spring.tools.systemuser.PrepareSystemUserService;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,4 +1,4 @@
-package org.folio.entlinks.service;
+package org.folio.entlinks.service.dataloader;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,7 +17,6 @@ import org.folio.entlinks.domain.repository.AuthorityNoteTypeRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.service.authority.AuthorityNoteTypeService;
 import org.folio.entlinks.service.authority.AuthoritySourceFileService;
-import org.folio.entlinks.service.dataloader.ReferenceDataLoader;
 import org.folio.spring.test.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

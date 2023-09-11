@@ -33,7 +33,7 @@ public class MetadataEntity {
   private Timestamp createdDate;
 
   @LastModifiedDate
-  @Column(name = "updated_date")
+  @Column(name = "updated_date", nullable = false)
   private Timestamp updatedDate;
 
   @CreatedBy
@@ -41,7 +41,7 @@ public class MetadataEntity {
   private UUID createdByUserId;
 
   @LastModifiedBy
-  @Column(name = "updated_by_user_id")
+  @Column(name = "updated_by_user_id", nullable = false)
   private UUID updatedByUserId;
 
   public MetadataEntity(MetadataEntity other) {

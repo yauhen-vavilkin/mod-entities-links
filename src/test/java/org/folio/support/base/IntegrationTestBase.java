@@ -42,6 +42,7 @@ import org.folio.spring.test.extension.EnablePostgres;
 import org.folio.spring.test.extension.impl.OkapiConfiguration;
 import org.folio.spring.test.extension.impl.OkapiExtension;
 import org.folio.support.DatabaseHelper;
+import org.folio.tenant.domain.dto.Parameter;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.hamcrest.MatcherAssert;
 import org.jetbrains.annotations.NotNull;
@@ -97,7 +98,6 @@ public class IntegrationTestBase {
     IntegrationTestBase.objectMapper = objectMapper;
     IntegrationTestBase.kafkaTemplate = kafkaTemplate;
     IntegrationTestBase.databaseHelper = databaseHelper;
-    setUpTenant();
   }
 
   @AfterAll
@@ -107,7 +107,13 @@ public class IntegrationTestBase {
 
   @SneakyThrows
   protected static void setUpTenant() {
-    doPost("/_/tenant", new TenantAttributes().moduleTo("mod-entities-links"));
+    setUpTenant(false);
+  }
+
+  @SneakyThrows
+  protected static void setUpTenant(boolean loadReference) {
+    doPost("/_/tenant", new TenantAttributes().moduleTo("mod-entities-links")
+      .addParametersItem(new Parameter("loadReference").value(String.valueOf(loadReference))));
   }
 
   protected static HttpHeaders defaultHeaders() {

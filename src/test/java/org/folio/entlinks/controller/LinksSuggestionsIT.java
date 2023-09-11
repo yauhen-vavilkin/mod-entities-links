@@ -27,6 +27,7 @@ import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
 import org.folio.support.TestDataUtils;
 import org.folio.support.base.IntegrationTestBase;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +42,11 @@ class LinksSuggestionsIT extends IntegrationTestBase {
   private static final String BASE_URL = "id.loc.gov/authorities/names/";
   private static final String LINKABLE_AUTHORITY_ID = "417f3355-081c-4aae-9209-ccb305f25f7e";
   private static final String NATURAL_ID = "oneAuthority";
+
+  @BeforeAll
+  static void prepare() {
+    setUpTenant();
+  }
 
   @BeforeEach
   public void setup() {

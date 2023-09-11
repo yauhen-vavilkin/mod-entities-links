@@ -46,6 +46,7 @@ import org.folio.support.DatabaseHelper;
 import org.folio.support.TestDataUtils;
 import org.folio.support.base.IntegrationTestBase;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -70,6 +71,11 @@ class AuthorityReindexControllerIT extends IntegrationTestBase {
 
   private KafkaMessageListenerContainer<String, DomainEvent> container;
   private BlockingQueue<ConsumerRecord<String, DomainEvent>> consumerRecords;
+
+  @BeforeAll
+  static void prepare() {
+    setUpTenant();
+  }
 
   @BeforeEach
   void setUp(@Autowired KafkaProperties kafkaProperties) {
