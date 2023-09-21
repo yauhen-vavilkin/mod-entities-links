@@ -18,7 +18,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -331,7 +330,7 @@ public class TestDataUtils {
       entity.setCreatedByUserId(UUID.fromString(USER_ID));
       entity.setUpdatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
       entity.setUpdatedByUserId(UUID.fromString(USER_ID));
-      entity.setAuthoritySourceFileCodes(Set.of(code));
+      entity.addCode(code);
 
       return entity;
     }

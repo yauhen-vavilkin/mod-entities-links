@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.util.Objects;
@@ -27,7 +28,11 @@ import org.hibernate.Hibernate;
 })
 public class AuthoritySourceFileCode {
   @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "authority_source_file_code_id_seq")
+  @SequenceGenerator(
+      name = "authority_source_file_code_generator",
+      sequenceName = "authority_source_file_code_id_seq",
+      allocationSize = 1)
+  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "authority_source_file_code_generator")
   @Column(name = "id", nullable = false)
   private Integer id;
 

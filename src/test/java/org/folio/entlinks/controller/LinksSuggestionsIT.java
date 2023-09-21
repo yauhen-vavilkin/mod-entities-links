@@ -22,6 +22,7 @@ import org.folio.entlinks.domain.dto.LinkDetails;
 import org.folio.entlinks.domain.dto.LinkStatus;
 import org.folio.entlinks.domain.dto.ParsedRecordContent;
 import org.folio.entlinks.domain.dto.ParsedRecordContentCollection;
+import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
@@ -52,10 +53,15 @@ class LinksSuggestionsIT extends IntegrationTestBase {
   public void setup() {
     var sourceFile = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
     sourceFile.setBaseUrl(BASE_URL);
-    var sourceFileCode = sourceFile.getAuthoritySourceFileCodes().iterator().next();
-    sourceFileCode.setCode(NATURAL_ID);
+    var sourceFileCode1 = sourceFile.getAuthoritySourceFileCodes().iterator().next();
+    var sourceFileCode2 = new AuthoritySourceFileCode();
+    sourceFileCode1.setCode(NATURAL_ID.substring(0, 3));
+    sourceFileCode2.setAuthoritySourceFile(sourceFile);
+    sourceFileCode2.setCode(NATURAL_ID.substring(0, 2));
+    sourceFile.addCode(sourceFileCode2);
     databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile);
-    databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, sourceFile.getId(), sourceFileCode);
+    databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, sourceFile.getId(), sourceFileCode1);
+    databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, sourceFile.getId(), sourceFileCode2);
     var authority = TestDataUtils.AuthorityTestData.authority(0, 0);
     authority.setId(UUID.fromString(LINKABLE_AUTHORITY_ID));
     authority.setNaturalId(NATURAL_ID);

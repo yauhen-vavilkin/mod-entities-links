@@ -72,7 +72,7 @@ class LinksSuggestionsServiceTest {
     var rules = getMapRule("100", "100");
     var bib = getBibParsedRecordContent("100", null);
     var authority = getAuthorityParsedRecordContent("100");
-    when(sourceFileCodeRepository.findFirstByCodeStartsWith(anyString())).thenReturn(Optional.of(sourceFileCode));
+    when(sourceFileCodeRepository.findByCodeAsPrefixFor(anyString())).thenReturn(Optional.of(sourceFileCode));
 
     linksSuggestionService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
@@ -100,7 +100,7 @@ class LinksSuggestionsServiceTest {
     initialBibSubfields.put("c", List.of("c value"));
     var bib = getBibParsedRecordContent("100", initialBibSubfields, null);
     var authority = getAuthorityParsedRecordContent("100");
-    when(sourceFileCodeRepository.findFirstByCodeStartsWith(anyString())).thenReturn(Optional.of(sourceFileCode));
+    when(sourceFileCodeRepository.findByCodeAsPrefixFor(anyString())).thenReturn(Optional.of(sourceFileCode));
 
     linksSuggestionService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
@@ -126,7 +126,7 @@ class LinksSuggestionsServiceTest {
     var rules = getMapRule("100", "100");
     var bib = getBibParsedRecordContent("100", getActualLinksDetails());
     var authority = getAuthorityParsedRecordContent("100");
-    when(sourceFileCodeRepository.findFirstByCodeStartsWith(anyString())).thenReturn(Optional.of(sourceFileCode));
+    when(sourceFileCodeRepository.findByCodeAsPrefixFor(anyString())).thenReturn(Optional.of(sourceFileCode));
 
     linksSuggestionService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, false);
@@ -225,7 +225,7 @@ class LinksSuggestionsServiceTest {
     disableAutoLinkingFeature(rules.get("100"));
     var bib = getBibParsedRecordContent("100", getActualLinksDetails());
     var authority = getAuthorityParsedRecordContent("100");
-    when(sourceFileCodeRepository.findFirstByCodeStartsWith(anyString())).thenReturn(Optional.of(sourceFileCode));
+    when(sourceFileCodeRepository.findByCodeAsPrefixFor(anyString())).thenReturn(Optional.of(sourceFileCode));
 
     linksSuggestionService
       .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority), rules, linkingMatchSubfield, true);

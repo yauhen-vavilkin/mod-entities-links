@@ -109,7 +109,7 @@ public class RenovateLinksService {
   }
 
   private SubfieldChange getSubfield0Change(String naturalId) {
-    var subfield0Value = sourceFileCodeRepository.findFirstByCodeStartsWith(naturalId)
+    var subfield0Value = sourceFileCodeRepository.findByCodeAsPrefixFor(naturalId)
         .map(AuthoritySourceFileCode::getAuthoritySourceFile)
         .map(sourceFile -> getSubfield0Value(naturalId, sourceFile))
         .orElse(naturalId);

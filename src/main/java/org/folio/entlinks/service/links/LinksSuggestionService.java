@@ -173,7 +173,7 @@ public class LinksSuggestionService {
       return;
     }
 
-    var zeroValue = sourceFileCodeRepository.findFirstByCodeStartsWith(authority.getNaturalId())
+    var zeroValue = sourceFileCodeRepository.findByCodeAsPrefixFor(authority.getNaturalId())
         .map(AuthoritySourceFileCode::getAuthoritySourceFile)
         .map(sourceFile -> getSubfield0Value(authority.getNaturalId(), sourceFile))
         .orElse(authority.getNaturalId());
