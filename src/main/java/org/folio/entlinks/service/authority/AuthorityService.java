@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
@@ -58,7 +57,7 @@ public class AuthorityService {
 
   public Map<UUID, Authority> getAllByIds(Collection<UUID> ids) {
     return repository.findAllByIdInAndDeletedFalse(ids).stream()
-        .collect(Collectors.toMap(Authority::getId, Function.identity()));
+      .collect(Collectors.toMap(Authority::getId, Function.identity()));
   }
 
   @Transactional
@@ -74,7 +73,7 @@ public class AuthorityService {
     retryFor = ObjectOptimisticLockingFailureException.class,
     maxAttempts = 2,
     backoff = @Backoff(delay = 500))
-  public Authority update(@Nonnull UUID id, Authority modified) {
+  public Authority update(UUID id, Authority modified) {
     log.debug("update:: Attempting to update Authority [authority: {}]", modified);
 
     if (!Objects.equals(id, modified.getId())) {
@@ -95,7 +94,7 @@ public class AuthorityService {
     log.debug("deleteById:: Attempt to delete Authority by [id: {}]", id);
 
     var authority = repository.findByIdAndDeletedFalse(id)
-        .orElseThrow(() -> new AuthorityNotFoundException(id));
+      .orElseThrow(() -> new AuthorityNotFoundException(id));
     authority.setDeleted(true);
 
     repository.save(authority);

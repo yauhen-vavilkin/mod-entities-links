@@ -8,12 +8,12 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.collections4.MapUtils;
-import org.folio.entlinks.domain.dto.AuthorityEvent;
-import org.folio.entlinks.domain.dto.AuthorityEventType;
-import org.folio.entlinks.domain.dto.AuthorityRecord;
+import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
+import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
+import org.folio.entlinks.service.reindex.event.DomainEventType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 public class AuthorityChangeHolder {
 
   @Getter
-  private final @NotNull AuthorityEvent event;
+  private final @NotNull AuthorityDomainEvent event;
   private final @NotNull Map<AuthorityChangeField, AuthorityChange> changes;
   private final @NotNull Map<AuthorityChangeField, String> fieldTagRelation;
   @Getter
@@ -36,19 +36,19 @@ public class AuthorityChangeHolder {
   }
 
   public String getNewNaturalId() {
-    return getNaturalId(event.getNew());
+    return getNaturalId(event.getNewEntity());
   }
 
   public String getOldNaturalId() {
-    return getNaturalId(event.getOld());
+    return getNaturalId(event.getOldEntity());
   }
 
   public UUID getNewSourceFileId() {
-    return getSourceFileId(event.getNew());
+    return getSourceFileId(event.getNewEntity());
   }
 
   public UUID getOldSourceFileId() {
-    return getSourceFileId(event.getOld());
+    return getSourceFileId(event.getOldEntity());
   }
 
   public boolean isNaturalIdChanged() {
@@ -60,9 +60,10 @@ public class AuthorityChangeHolder {
   }
 
   public AuthorityChangeType getChangeType() {
-    return switch (getInventoryEventType()) {
+    return switch (event.getType()) {
       case UPDATE -> isHeadingTypeChanged() ? AuthorityChangeType.DELETE : AuthorityChangeType.UPDATE;
       case DELETE -> AuthorityChangeType.DELETE;
+      case CREATE, REINDEX -> null;
     };
   }
 
@@ -112,7 +113,7 @@ public class AuthorityChangeHolder {
     var authority = new Authority();
     authority.setId(getAuthorityId());
     authority.setNaturalId(getNewNaturalId() == null ? getOldNaturalId() : getNewNaturalId());
-    authority.setDeleted(this.getInventoryEventType().equals(AuthorityEventType.DELETE));
+    authority.setDeleted(event.getType().equals(DomainEventType.DELETE));
     AuthorityDataStat authorityDataStat = AuthorityDataStat.builder()
         .authority(authority)
         .authorityNaturalIdOld(getOldNaturalId())
@@ -126,24 +127,20 @@ public class AuthorityChangeHolder {
         .action(getAuthorityDataStatAction())
         .lbTotal(numberOfLinks)
         .build();
-    if (this.event.getNew() != null && this.event.getNew().getMetadata() != null) {
-      authorityDataStat.setStartedByUserId(this.event.getNew().getMetadata().getUpdatedByUserId());
+    if (this.event.getNewEntity() != null && this.event.getNewEntity().getMetadata() != null) {
+      authorityDataStat.setStartedByUserId(this.event.getNewEntity().getMetadata().getUpdatedByUserId());
     }
 
     return authorityDataStat;
   }
 
-  @NotNull
-  private AuthorityEventType getInventoryEventType() {
-    return AuthorityEventType.fromValue(event.getType());
-  }
-
   private AuthorityDataStatAction getAuthorityDataStatAction() {
-    return switch (getInventoryEventType()) {
+    return switch (event.getType()) {
       case UPDATE -> isOnlyNaturalIdChanged()
                      ? AuthorityDataStatAction.UPDATE_NATURAL_ID
                      : AuthorityDataStatAction.UPDATE_HEADING;
       case DELETE -> AuthorityDataStatAction.DELETE;
+      case CREATE, REINDEX -> null;
     };
   }
 
@@ -152,12 +149,12 @@ public class AuthorityChangeHolder {
   }
 
   @Nullable
-  private String getNaturalId(AuthorityRecord inventoryRecord) {
+  private String getNaturalId(AuthorityDto inventoryRecord) {
     return inventoryRecord != null ? inventoryRecord.getNaturalId() : null;
   }
 
   @Nullable
-  private UUID getSourceFileId(AuthorityRecord inventoryRecord) {
+  private UUID getSourceFileId(AuthorityDto inventoryRecord) {
     return inventoryRecord != null ? inventoryRecord.getSourceFileId() : null;
   }
 

@@ -29,8 +29,6 @@ import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
 import org.folio.entlinks.domain.dto.AuthorityDtoNote;
-import org.folio.entlinks.domain.dto.AuthorityEvent;
-import org.folio.entlinks.domain.dto.AuthorityRecord;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthorityStatsDto;
 import org.folio.entlinks.domain.dto.BibStatsDto;
@@ -58,6 +56,8 @@ import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.domain.entity.ReindexJob;
 import org.folio.entlinks.domain.entity.ReindexJobResource;
 import org.folio.entlinks.domain.entity.ReindexJobStatus;
+import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
+import org.folio.entlinks.service.reindex.event.DomainEventType;
 import org.folio.spring.tools.client.UsersClient;
 import org.folio.spring.tools.model.ResultList;
 
@@ -67,11 +67,11 @@ public class TestDataUtils {
   public static final UUID[] AUTHORITY_IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID(), randomUUID()};
   public static final String[] NATURAL_IDS = new String[] {"naturalId1", "naturalId2", "naturalId3", "naturalId4"};
 
-  public static AuthorityEvent inventoryEvent(String resource, String type, AuthorityRecord n, AuthorityRecord o) {
-    return new AuthorityEvent().type(type).resourceName(resource).tenant(TENANT_ID)._new(n).old(o);
+  public static AuthorityDomainEvent inventoryEvent(String resource, String type, AuthorityDto n, AuthorityDto o) {
+    return new AuthorityDomainEvent(randomUUID(), o, n, DomainEventType.valueOf(type), TENANT_ID);
   }
 
-  public static AuthorityEvent authorityEvent(String type, AuthorityRecord n, AuthorityRecord o) {
+  public static AuthorityDomainEvent authorityEvent(String type, AuthorityDto n, AuthorityDto o) {
     return inventoryEvent("authority", type, n, o);
   }
 

@@ -3,6 +3,7 @@ package org.folio.entlinks.service.links;
 import static org.folio.entlinks.domain.dto.LinkUpdateReport.StatusEnum.FAIL;
 import static org.folio.entlinks.domain.dto.LinkUpdateReport.StatusEnum.SUCCESS;
 import static org.folio.entlinks.utils.DateUtils.currentTs;
+import static org.folio.entlinks.utils.ServiceUtils.initId;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -37,7 +38,7 @@ public class AuthorityDataStatService {
 
   public List<AuthorityDataStat> createInBatch(List<AuthorityDataStat> stats) {
     for (AuthorityDataStat stat : stats) {
-      stat.setId(UUID.randomUUID());
+      initId(stat);
       stat.setStatus(AuthorityDataStatStatus.IN_PROGRESS);
     }
 

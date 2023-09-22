@@ -10,8 +10,10 @@ import static org.folio.support.TestDataUtils.links;
 import static org.folio.support.TestDataUtils.linksDto;
 import static org.folio.support.TestDataUtils.linksDtoCollection;
 import static org.folio.support.TestDataUtils.stats;
+import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,10 +35,14 @@ import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumLinksPropagationService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.test.type.UnitTest;
 import org.folio.support.TestDataUtils;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -53,8 +59,15 @@ class LinkingServiceDelegateTest {
   private @Mock InstanceAuthorityLinkMapper mapper;
   private @Mock InstanceStorageService instanceService;
   private @Mock DataStatsMapper statsMapper;
+  private @Mock ConsortiumLinksPropagationService propagationService;
+  private @Mock FolioExecutionContext context;
 
   private @InjectMocks LinkingServiceDelegate delegate;
+
+  @BeforeEach
+  void setUp() {
+    lenient().when(context.getTenantId()).thenReturn(TENANT_ID);
+  }
 
   @Test
   void getLinks_positive() {
@@ -167,6 +180,8 @@ class LinkingServiceDelegateTest {
     delegate.updateLinks(INSTANCE_ID, dtoCollection);
 
     verify(linkingService).updateLinks(INSTANCE_ID, links);
+    verify(propagationService).propagate(links, ConsortiumAuthorityPropagationService.PropagationType.UPDATE,
+      TENANT_ID);
   }
 
   @Test

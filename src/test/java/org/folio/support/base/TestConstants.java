@@ -35,7 +35,11 @@ public class TestConstants {
   private static final String AUTHORITY_STORAGE_REINDEX_ENDPOINT = "/authority-storage/reindex";
 
   public static String authorityTopic() {
-    return fullTopicName(AUTHORITY_TOPIC, TENANT_ID);
+    return authorityTopic(TENANT_ID);
+  }
+
+  public static String authorityTopic(String tenantId) {
+    return fullTopicName(AUTHORITY_TOPIC, tenantId);
   }
 
   public static String linksInstanceAuthorityTopic() {

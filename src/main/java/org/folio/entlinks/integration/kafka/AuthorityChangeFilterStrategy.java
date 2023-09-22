@@ -2,26 +2,18 @@ package org.folio.entlinks.integration.kafka;
 
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.folio.entlinks.domain.dto.AuthorityEvent;
-import org.folio.entlinks.domain.dto.AuthorityEventType;
+import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.kafka.listener.adapter.RecordFilterStrategy;
 
 @Log4j2
-public class AuthorityChangeFilterStrategy implements RecordFilterStrategy<String, AuthorityEvent> {
+public class AuthorityChangeFilterStrategy implements RecordFilterStrategy<String, AuthorityDomainEvent> {
 
   @Override
-  public boolean filter(@NotNull ConsumerRecord<String, AuthorityEvent> consumerRecord) {
+  public boolean filter(@NotNull ConsumerRecord<String, AuthorityDomainEvent> consumerRecord) {
     var authorityEvent = consumerRecord.value();
-    AuthorityEventType eventType;
-    try {
-      eventType = AuthorityEventType.valueOf(authorityEvent.getType());
-    } catch (IllegalArgumentException e) {
-      log.debug("Skip message. Unsupported parameter [type: {}]", authorityEvent.getType());
-      return true;
-    }
 
-    return switch (eventType) {
+    return switch (authorityEvent.getType()) {
       case UPDATE -> {
         if (authorityHasChanges(authorityEvent)) {
           yield false;
@@ -30,13 +22,14 @@ public class AuthorityChangeFilterStrategy implements RecordFilterStrategy<Strin
           yield true;
         }
       }
+      case CREATE, REINDEX -> true;
       case DELETE -> false;
     };
   }
 
-  private boolean authorityHasChanges(AuthorityEvent authorityEvent) {
-    return authorityEvent.getOld() != null && authorityEvent.getNew() != null
-        && !authorityEvent.getOld().equals(authorityEvent.getNew());
+  private boolean authorityHasChanges(AuthorityDomainEvent authorityEvent) {
+    return authorityEvent.getOldEntity() != null && authorityEvent.getNewEntity() != null
+      && !authorityEvent.getOldEntity().equals(authorityEvent.getNewEntity());
   }
 
 }

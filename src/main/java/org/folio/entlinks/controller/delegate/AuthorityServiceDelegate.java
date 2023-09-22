@@ -1,5 +1,9 @@
 package org.folio.entlinks.controller.delegate;
 
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService.PropagationType.CREATE;
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService.PropagationType.DELETE;
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService.PropagationType.UPDATE;
+
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -8,6 +12,8 @@ import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.entlinks.service.authority.AuthorityService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -17,7 +23,9 @@ public class AuthorityServiceDelegate {
 
   private final AuthorityService service;
   private final AuthorityMapper mapper;
+  private final FolioExecutionContext context;
   private final AuthorityDomainEventPublisher eventPublisher;
+  private final ConsortiumAuthorityPropagationService propagationService;
 
   public AuthorityDtoCollection retrieveAuthorityCollection(Integer offset, Integer limit, String cqlQuery) {
     var entities = service.getAll(offset, limit, cqlQuery);
@@ -30,9 +38,11 @@ public class AuthorityServiceDelegate {
   }
 
   public AuthorityDto createAuthority(AuthorityDto authorityDto) {
-    var created = service.create(mapper.toEntity(authorityDto));
+    var entity = mapper.toEntity(authorityDto);
+    var created = service.create(entity);
     var dto = mapper.toDto(created);
     eventPublisher.publishCreateEvent(dto);
+    propagationService.propagate(entity, CREATE, context.getTenantId());
     return dto;
   }
 
@@ -42,6 +52,7 @@ public class AuthorityServiceDelegate {
     var updatedEntity = service.update(id, modifiedEntity);
     var newDto = mapper.toDto(updatedEntity);
     eventPublisher.publishUpdateEvent(oldDto, newDto);
+    propagationService.propagate(updatedEntity, UPDATE, context.getTenantId());
   }
 
   public void deleteAuthorityById(UUID id) {
@@ -49,5 +60,6 @@ public class AuthorityServiceDelegate {
     var dto = mapper.toDto(entity);
     service.deleteById(id);
     eventPublisher.publishDeleteEvent(dto);
+    propagationService.propagate(entity, DELETE, context.getTenantId());
   }
 }

@@ -484,15 +484,6 @@ components:
                   - key: moduleTo
                     value: null
 
-    authorityEvent:
-      $ref: schemas/authorityEvent.json
-
-    authorityEventType:
-      $ref: schemas/authorityEventType.json
-
-    authorityRecord:
-      $ref: schemas/authorityRecord.json
-
     sourceRecord:
       $ref: schemas/mod-source-record-storage/sourceRecord.json
 

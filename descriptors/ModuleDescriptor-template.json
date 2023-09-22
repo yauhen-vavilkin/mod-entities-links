@@ -27,6 +27,16 @@
       "version": "2.0"
     }
   ],
+  "optional": [
+    {
+      "id": "user-tenants",
+      "version": "1.0"
+    },
+    {
+      "id": "consortia",
+      "version": "1.0"
+    }
+  ],
   "provides": [
     {
       "id": "instance-authority-links",

@@ -1,6 +1,7 @@
 package org.folio.entlinks.service.messaging.authority;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
@@ -13,14 +14,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.folio.entlinks.domain.dto.AuthorityEvent;
-import org.folio.entlinks.domain.dto.AuthorityRecord;
+import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
+import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.handler.AuthorityChangeHandler;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
+import org.folio.entlinks.service.reindex.event.DomainEventType;
 import org.folio.spring.test.type.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,7 +61,7 @@ class InstanceAuthorityLinkUpdateServiceTest {
   void handleAuthoritiesChanges_positive_updateEvent() {
     final var id = UUID.randomUUID();
     final var authorityEvents = List.of(
-        new AuthorityEvent().id(id).type("UPDATE")._new(new AuthorityRecord().naturalId("new")));
+      new AuthorityDomainEvent(id, null, new AuthorityDto().naturalId("new"), DomainEventType.UPDATE, TENANT_ID));
 
     var expected = new LinksChangeEvent().type(LinksChangeEvent.TypeEnum.UPDATE);
     when(linkingService.countLinksByAuthorityIds(Set.of(id))).thenReturn(Map.of(id, 1));
@@ -80,7 +82,7 @@ class InstanceAuthorityLinkUpdateServiceTest {
   void handleAuthoritiesChanges_positive_updateEventWhenNoLinksExist() {
     final var id = UUID.randomUUID();
     final var authorityEvents = List.of(
-        new AuthorityEvent().id(id).type("UPDATE")._new(new AuthorityRecord().naturalId("new")));
+      new AuthorityDomainEvent(id, null, new AuthorityDto().naturalId("new"), DomainEventType.UPDATE, TENANT_ID));
 
     when(linkingService.countLinksByAuthorityIds(Set.of(id))).thenReturn(Collections.emptyMap());
 
@@ -95,7 +97,7 @@ class InstanceAuthorityLinkUpdateServiceTest {
   void handleAuthoritiesChanges_positive_deleteEvent() {
     final var id = UUID.randomUUID();
     final var authorityEvents = List.of(
-        new AuthorityEvent().id(id).type("DELETE").old(new AuthorityRecord().naturalId("old")));
+      new AuthorityDomainEvent(id, new AuthorityDto().naturalId("old"), null, DomainEventType.DELETE, TENANT_ID));
 
     var changeEvent = new LinksChangeEvent().type(LinksChangeEvent.TypeEnum.DELETE);
 

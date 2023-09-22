@@ -23,7 +23,10 @@ import org.folio.entlinks.domain.dto.LinksCountDtoCollection;
 import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumLinksPropagationService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.tenant.domain.dto.Parameter;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -33,9 +36,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class LinkingServiceDelegate {
 
+  private final ConsortiumLinksPropagationService propagationService;
   private final InstanceAuthorityLinkingService linkingService;
   private final InstanceStorageService instanceService;
   private final InstanceAuthorityLinkMapper mapper;
+  private final FolioExecutionContext context;
   private final DataStatsMapper statsMapper;
 
   public InstanceLinkDtoCollection getLinks(UUID instanceId) {
@@ -68,6 +73,8 @@ public class LinkingServiceDelegate {
     validateLinks(instanceId, links);
     var incomingLinks = mapper.convertDto(links);
     linkingService.updateLinks(instanceId, incomingLinks);
+    propagationService.propagate(incomingLinks, ConsortiumAuthorityPropagationService.PropagationType.UPDATE,
+      context.getTenantId());
   }
 
   public LinksCountDtoCollection countLinksByAuthorityIds(UuidCollection authorityIdCollection) {
@@ -93,7 +100,7 @@ public class LinkingServiceDelegate {
     var invalidParams = links.stream()
       .map(InstanceLinkDto::getInstanceId)
       .filter(targetId -> !targetId.equals(instanceId))
-      .map(targetId -> new Parameter().key("instanceId").value(targetId.toString()))
+      .map(targetId -> new Parameter("instanceId").value(targetId.toString()))
       .toList();
     if (!invalidParams.isEmpty()) {
       throw new RequestBodyValidationException("Link should have instanceId = " + instanceId, invalidParams);
@@ -107,8 +114,8 @@ public class LinkingServiceDelegate {
     }
     if (fromDate.isAfter(toDate)) {
       var params = List.of(
-        new Parameter().key("fromDate").value(fromDate.toString()),
-        new Parameter().key("toDate").value(toDate.toString())
+        new Parameter("fromDate").value(fromDate.toString()),
+        new Parameter("toDate").value(toDate.toString())
       );
       throw new RequestBodyValidationException("'to' date should be not less than 'from' date.", params);
     }

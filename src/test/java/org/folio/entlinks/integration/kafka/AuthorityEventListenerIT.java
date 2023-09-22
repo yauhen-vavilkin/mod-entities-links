@@ -31,7 +31,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import org.assertj.core.api.BDDSoftAssertions;
 import org.folio.entlinks.domain.dto.AuthorityDto;
-import org.folio.entlinks.domain.dto.AuthorityRecord;
 import org.folio.entlinks.domain.dto.ChangeTarget;
 import org.folio.entlinks.domain.dto.ChangeTargetLink;
 import org.folio.entlinks.domain.dto.FieldChange;
@@ -116,7 +115,7 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId3, link3)), instanceId3);
 
     var event = TestDataUtils.authorityEvent(DELETE_TYPE, null,
-      new AuthorityRecord().id(link1.authorityId()).naturalId("oldNaturalId"));
+      new AuthorityDto().id(link1.authorityId()).naturalId("oldNaturalId"));
     sendKafkaMessage(authorityTopic(), link1.authorityId().toString(), event);
 
     var received = getReceivedEvent();
@@ -167,8 +166,8 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
 
     // prepare and send inventory update authority event
     var event = TestDataUtils.authorityEvent(UPDATE_TYPE,
-      new AuthorityRecord().id(authorityId).personalName("new personal name").naturalId(naturalId),
-      new AuthorityRecord().id(authorityId).personalNameTitle("old").naturalId(naturalId));
+      new AuthorityDto().id(authorityId).personalName("new personal name").naturalId(naturalId),
+      new AuthorityDto().id(authorityId).personalNameTitle("old").naturalId(naturalId));
     sendKafkaMessage(authorityTopic(), authorityId.toString(), event);
 
     var received = getReceivedEvent();
@@ -216,7 +215,7 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
     doPut(linksInstanceEndpoint(), linksDtoCollection(linksDto(instanceId3, link3)), instanceId3);
 
     var existingAuthorityContent = doGet(authorityEndpoint(link1.authorityId()))
-        .andReturn().getResponse().getContentAsString();
+      .andReturn().getResponse().getContentAsString();
     var authorityDto = objectMapper.readValue(existingAuthorityContent, AuthorityDto.class);
     var updatedNaturalId = "newNaturalId";
     authorityDto.setSourceFileId(SOURCE_FILE_ID);
@@ -246,12 +245,12 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
       ));
     assertions.then(value.getSubfieldsChanges()).as("Subfield changes")
       .isEqualTo(List.of(
-          new FieldChange()
-              .field(link1.tag())
-              .subfields(List.of(expectedSubfieldChange)),
-          new FieldChange()
-              .field(link2.tag())
-              .subfields(List.of(expectedSubfieldChange))));
+        new FieldChange()
+          .field(link1.tag())
+          .subfields(List.of(expectedSubfieldChange)),
+        new FieldChange()
+          .field(link2.tag())
+          .subfields(List.of(expectedSubfieldChange))));
     assertions.then(value.getJobId()).as("Job ID").isNotNull();
     assertions.then(value.getTs()).as("Timestamp").isNotNull();
 
@@ -277,9 +276,9 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
 
     // prepare and send inventory update authority event
     var event = TestDataUtils.authorityEvent(UPDATE_TYPE,
-      new AuthorityRecord().id(AUTHORITY_ID).personalName("new personal name").naturalId(naturalId)
-          .sourceFileId(SOURCE_FILE_ID),
-      new AuthorityRecord().id(AUTHORITY_ID).personalName("old").naturalId(naturalId));
+      new AuthorityDto().id(AUTHORITY_ID).personalName("new personal name").naturalId(naturalId)
+        .sourceFileId(SOURCE_FILE_ID),
+      new AuthorityDto().id(AUTHORITY_ID).personalName("old").naturalId(naturalId));
     sendKafkaMessage(authorityTopic(), AUTHORITY_ID.toString(), event);
 
     var received = getReceivedEvent();

@@ -63,6 +63,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 @DatabaseCleanup(tables = {
   DatabaseHelper.INSTANCE_AUTHORITY_LINK_TABLE,
   DatabaseHelper.AUTHORITY_TABLE,
+  DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE,
   DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class InstanceAuthorityLinksIT extends IntegrationTestBase {
 

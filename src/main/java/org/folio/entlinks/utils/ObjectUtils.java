@@ -36,5 +36,14 @@ public class ObjectUtils {
     return values;
   }
 
+  public static boolean isOneOfEquals(Object target, Object... values) {
+    for (Object value : values) {
+      if (value != null && value.equals(target)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public record Difference(String fieldName, Object val1, Object val2) { }
 }

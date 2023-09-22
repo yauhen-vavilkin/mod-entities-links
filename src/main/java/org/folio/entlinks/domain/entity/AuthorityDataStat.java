@@ -18,6 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.folio.entlinks.domain.entity.base.Identifiable;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Type;
 import org.springframework.data.annotation.CreatedDate;
@@ -30,7 +31,7 @@ import org.springframework.data.annotation.CreatedDate;
 @Setter
 @ToString
 @Table(name = "authority_data_stat")
-public class AuthorityDataStat extends AuditableEntity {
+public class AuthorityDataStat extends AuditableEntity implements Identifiable<UUID> {
 
   @Id
   @Column(name = "id", nullable = false)

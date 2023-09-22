@@ -1,8 +1,13 @@
 package org.folio.entlinks.controller.delegate;
 
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService.PropagationType.CREATE;
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService.PropagationType.DELETE;
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService.PropagationType.UPDATE;
+import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -14,7 +19,10 @@ import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.entlinks.service.authority.AuthorityService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.test.type.UnitTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -26,19 +34,24 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class AuthorityServiceDelegateTest {
 
+  private final ArgumentCaptor<AuthorityDto> captor = ArgumentCaptor.forClass(AuthorityDto.class);
   @Mock
   private AuthorityService service;
-
   @Mock
   private AuthorityMapper mapper;
-
   @Mock
   private AuthorityDomainEventPublisher eventPublisher;
-
+  @Mock
+  private FolioExecutionContext context;
+  @Mock
+  private ConsortiumAuthorityPropagationService propagationService;
   @InjectMocks
   private AuthorityServiceDelegate delegate;
 
-  private final ArgumentCaptor<AuthorityDto> captor = ArgumentCaptor.forClass(AuthorityDto.class);
+  @BeforeEach
+  void setUp() {
+    lenient().when(context.getTenantId()).thenReturn(TENANT_ID);
+  }
 
   @Test
   void shouldCreateAuthority() {
@@ -50,6 +63,7 @@ class AuthorityServiceDelegateTest {
     var dto = new AuthorityDto().id(id);
     when(mapper.toEntity(any(AuthorityDto.class))).thenReturn(entity);
     when(service.create(entity)).thenReturn(entity);
+    doNothing().when(propagationService).propagate(entity, CREATE, TENANT_ID);
     when(mapper.toDto(any(Authority.class))).thenReturn(expectedDto);
 
     // when
@@ -59,6 +73,7 @@ class AuthorityServiceDelegateTest {
     verify(eventPublisher).publishCreateEvent(captor.capture());
     assertEquals(expectedDto, created);
     assertEquals(expectedDto, captor.getValue());
+    verify(propagationService).propagate(entity, CREATE, TENANT_ID);
   }
 
   @Test
@@ -77,6 +92,7 @@ class AuthorityServiceDelegateTest {
     when(service.getById(id)).thenReturn(existingEntity);
     when(mapper.toDto(any(Authority.class))).thenReturn(oldDto).thenReturn(newDto);
     when(service.update(id, modifiedEntity)).thenReturn(modifiedEntity);
+    doNothing().when(propagationService).propagate(modifiedEntity, UPDATE, TENANT_ID);
     var captor2 = ArgumentCaptor.forClass(AuthorityDto.class);
 
     // when
@@ -92,6 +108,7 @@ class AuthorityServiceDelegateTest {
     verify(mapper, times(2)).toDto(any(Authority.class));
     verify(mapper).toEntity(any(AuthorityDto.class));
     verifyNoMoreInteractions(mapper);
+    verify(propagationService).propagate(modifiedEntity, UPDATE, TENANT_ID);
   }
 
   @Test
@@ -104,6 +121,7 @@ class AuthorityServiceDelegateTest {
     when(service.getById(id)).thenReturn(entity);
     when(mapper.toDto(entity)).thenReturn(dto);
     doNothing().when(service).deleteById(id);
+    doNothing().when(propagationService).propagate(entity, DELETE, TENANT_ID);
 
     // when
     delegate.deleteAuthorityById(id);
@@ -115,5 +133,6 @@ class AuthorityServiceDelegateTest {
     verify(service).deleteById(id);
     verifyNoMoreInteractions(service);
     verify(mapper).toDto(any(Authority.class));
+    verify(propagationService).propagate(entity, DELETE, TENANT_ID);
   }
 }

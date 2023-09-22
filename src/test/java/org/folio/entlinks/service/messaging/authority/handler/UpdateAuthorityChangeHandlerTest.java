@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.folio.entlinks.config.properties.InstanceAuthorityChangeProperties;
-import org.folio.entlinks.domain.dto.AuthorityEvent;
 import org.folio.entlinks.domain.dto.LinkUpdateReport;
+import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
 import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
 import org.folio.entlinks.integration.internal.AuthoritySourceRecordService;
 import org.folio.entlinks.integration.kafka.EventProducer;
@@ -82,7 +82,7 @@ class UpdateAuthorityChangeHandlerTest {
     var changes = Map.of(
       AuthorityChangeField.PERSONAL_NAME, new AuthorityChange(AuthorityChangeField.PERSONAL_NAME, "new", "old")
     );
-    var event = new AuthorityChangeHolder(new AuthorityEvent().id(id), changes, emptyMap(), 0);
+    var event = new AuthorityChangeHolder(new AuthorityDomainEvent(id), changes, emptyMap(), 0);
     handler.handle(List.of(event));
 
     verify(linksUpdateKafkaTemplate).sendMessages(producerRecord.capture());

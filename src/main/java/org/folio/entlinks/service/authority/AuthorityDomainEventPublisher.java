@@ -30,9 +30,9 @@ public class AuthorityDomainEventPublisher {
 
     log.debug("publishCreated::process authority id={}", id);
 
-    var domainEvent = DomainEvent.createEvent(created, folioExecutionContext.getTenantId());
+    var domainEvent = DomainEvent.createEvent(id, created, folioExecutionContext.getTenantId());
     eventProducer.sendMessage(id.toString(), domainEvent,
-        DOMAIN_EVENT_TYPE_HEADER, DomainEventType.CREATE);
+      DOMAIN_EVENT_TYPE_HEADER, DomainEventType.CREATE);
   }
 
   public void publishUpdateEvent(AuthorityDto oldAuthority, AuthorityDto updatedAuthority) {
@@ -44,9 +44,10 @@ public class AuthorityDomainEventPublisher {
 
     log.debug("publishUpdated::process authority id={}", id);
 
-    var domainEvent = DomainEvent.updateEvent(oldAuthority, updatedAuthority, folioExecutionContext.getTenantId());
+    var domainEvent = DomainEvent.updateEvent(id, oldAuthority, updatedAuthority,
+      folioExecutionContext.getTenantId());
     eventProducer.sendMessage(id.toString(), domainEvent,
-        DOMAIN_EVENT_TYPE_HEADER, DomainEventType.UPDATE);
+      DOMAIN_EVENT_TYPE_HEADER, DomainEventType.UPDATE);
   }
 
   public void publishDeleteEvent(AuthorityDto authorityDto) {
@@ -58,9 +59,9 @@ public class AuthorityDomainEventPublisher {
 
     log.debug("publishRemoved::process authority id={}", id);
 
-    var domainEvent = DomainEvent.deleteEvent(authorityDto, folioExecutionContext.getTenantId());
+    var domainEvent = DomainEvent.deleteEvent(id, authorityDto, folioExecutionContext.getTenantId());
     eventProducer.sendMessage(id.toString(), domainEvent,
-        DOMAIN_EVENT_TYPE_HEADER, DomainEventType.DELETE);
+      DOMAIN_EVENT_TYPE_HEADER, DomainEventType.DELETE);
   }
 
   public void publishReindexEvent(AuthorityDto authority, ReindexContext context) {
@@ -71,8 +72,8 @@ public class AuthorityDomainEventPublisher {
     }
 
     log.debug("reindex::process authority id={}", id);
-    var domainEvent = DomainEvent.reindexEvent(context.getTenantId(), authority);
+    var domainEvent = DomainEvent.reindexEvent(id, authority, context.getTenantId());
     eventProducer.sendMessage(id.toString(), domainEvent,
-        REINDEX_JOB_ID_HEADER, context.getJobId(), DOMAIN_EVENT_TYPE_HEADER, DomainEventType.REINDEX);
+      REINDEX_JOB_ID_HEADER, context.getJobId(), DOMAIN_EVENT_TYPE_HEADER, DomainEventType.REINDEX);
   }
 }

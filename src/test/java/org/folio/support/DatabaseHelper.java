@@ -38,6 +38,10 @@ public class DatabaseHelper {
     return JdbcTestUtils.countRowsInTable(jdbcTemplate, getTable(tenant, tableName));
   }
 
+  public int countRowsWhere(String tableName, String tenant, String whereClause) {
+    return JdbcTestUtils.countRowsInTableWhere(jdbcTemplate, getTable(tenant, tableName), whereClause);
+  }
+
   public void deleteFromTable(String tableName, String tenant) {
     JdbcTestUtils.deleteFromTables(jdbcTemplate, getTable(tenant, tableName));
   }

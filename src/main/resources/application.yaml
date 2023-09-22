@@ -50,9 +50,9 @@ spring:
         retries: 5
   cache:
     cache-names:
-      - authority-source-files-cache
       - authority-mapping-rules-cache
       - authority-linking-rules-cache
+      - consortium-tenants-cache
     caffeine:
       spec: maximumSize=500,expireAfterWrite=3600s
   sql:

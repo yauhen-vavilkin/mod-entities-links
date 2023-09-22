@@ -18,10 +18,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.folio.entlinks.config.properties.InstanceAuthorityChangeProperties;
-import org.folio.entlinks.domain.dto.AuthorityEvent;
 import org.folio.entlinks.domain.dto.ChangeTarget;
 import org.folio.entlinks.domain.dto.ChangeTargetLink;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
+import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolder;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
@@ -61,7 +61,7 @@ class DeleteAuthorityChangeHandlerTest {
   void handle_positive() {
     var eventIds = Set.of(UUID.randomUUID(), UUID.randomUUID());
     var events = eventIds.stream()
-      .map(uuid -> new AuthorityChangeHolder(new AuthorityEvent().id(uuid), emptyMap(), emptyMap(), 0))
+      .map(uuid -> new AuthorityChangeHolder(new AuthorityDomainEvent(uuid), emptyMap(), emptyMap(), 0))
       .toList();
     var instanceId1 = UUID.randomUUID();
     var instanceId2 = UUID.randomUUID();

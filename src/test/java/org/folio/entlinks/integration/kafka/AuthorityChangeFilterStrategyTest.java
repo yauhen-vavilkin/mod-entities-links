@@ -1,14 +1,15 @@
 package org.folio.entlinks.integration.kafka;
 
-import static org.folio.entlinks.domain.dto.AuthorityEventType.DELETE;
-import static org.folio.entlinks.domain.dto.AuthorityEventType.UPDATE;
+import static org.folio.entlinks.service.reindex.event.DomainEventType.DELETE;
+import static org.folio.entlinks.service.reindex.event.DomainEventType.UPDATE;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.folio.entlinks.domain.dto.AuthorityEvent;
-import org.folio.entlinks.domain.dto.AuthorityRecord;
+import org.folio.entlinks.domain.dto.AuthorityDto;
+import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
+import org.folio.entlinks.service.reindex.event.DomainEventType;
 import org.folio.spring.test.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,11 +25,11 @@ class AuthorityChangeFilterStrategyTest {
   private final AuthorityChangeFilterStrategy filterStrategy = new AuthorityChangeFilterStrategy();
 
   @Mock
-  private ConsumerRecord<String, AuthorityEvent> consumerRecord;
+  private ConsumerRecord<String, AuthorityDomainEvent> consumerRecord;
 
   @Test
   void shouldNotFilterDeleteEvent() {
-    var event = new AuthorityEvent().type(DELETE.getValue());
+    var event = new AuthorityDomainEvent(null, null, null, DELETE, null);
     mockConsumerRecord(event);
 
     var actual = filterStrategy.filter(consumerRecord);
@@ -38,9 +39,9 @@ class AuthorityChangeFilterStrategyTest {
 
   @Test
   void shouldNotFilterUpdateEvent_whenNewAndOldAreNotEqual() {
-    var newRecord = new AuthorityRecord().naturalId("1");
-    var oldRecord = new AuthorityRecord().naturalId("2");
-    var event = new AuthorityEvent().type(UPDATE.getValue())._new(newRecord).old(oldRecord);
+    var newRecord = new AuthorityDto().naturalId("1");
+    var oldRecord = new AuthorityDto().naturalId("2");
+    var event = new AuthorityDomainEvent(null, oldRecord, newRecord, UPDATE, null);
     mockConsumerRecord(event);
 
     var actual = filterStrategy.filter(consumerRecord);
@@ -50,9 +51,9 @@ class AuthorityChangeFilterStrategyTest {
 
   @Test
   void shouldFilterUpdateEvent_whenNewAndOldAreEqual() {
-    var newRecord = new AuthorityRecord().naturalId("1");
-    var oldRecord = new AuthorityRecord().naturalId("1");
-    var event = new AuthorityEvent().type(UPDATE.getValue())._new(newRecord).old(oldRecord);
+    var newRecord = new AuthorityDto().naturalId("1");
+    var oldRecord = new AuthorityDto().naturalId("1");
+    var event = new AuthorityDomainEvent(null, oldRecord, newRecord, UPDATE, null);
     mockConsumerRecord(event);
 
     var actual = filterStrategy.filter(consumerRecord);
@@ -60,10 +61,10 @@ class AuthorityChangeFilterStrategyTest {
     assertTrue(actual);
   }
 
-  @ValueSource(strings = {"REINDEX", "ITERATE", "NEW"})
+  @ValueSource(strings = {"REINDEX", "CREATE"})
   @ParameterizedTest
   void shouldFilterEvent_whenTypeIsNotSupported(String type) {
-    var event = new AuthorityEvent().type(type);
+    var event = new AuthorityDomainEvent(null, null, null, DomainEventType.valueOf(type), null);
     mockConsumerRecord(event);
 
     var actual = filterStrategy.filter(consumerRecord);
@@ -71,7 +72,7 @@ class AuthorityChangeFilterStrategyTest {
     assertTrue(actual);
   }
 
-  private void mockConsumerRecord(AuthorityEvent event) {
+  private void mockConsumerRecord(AuthorityDomainEvent event) {
     when(consumerRecord.value()).thenReturn(event);
   }
 }
