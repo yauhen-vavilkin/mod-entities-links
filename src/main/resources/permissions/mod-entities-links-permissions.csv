@@ -36,3 +36,4 @@ mapping-metadata.get
 mapping-rules.get
 source-storage.sourceRecords.get
 users.collection.get
+user-tenants.collection.get

@@ -163,3 +163,6 @@ properties:
     description: Authority Natural ID
   metadata:
     $ref: '../common/metadata.yaml'
+required:
+  - source
+  - naturalId

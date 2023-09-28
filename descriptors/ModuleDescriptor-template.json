@@ -64,7 +64,8 @@
             "search.authorities.collection.get",
             "mapping-metadata.get",
             "inventory-storage.instances.item.get",
-            "inventory-storage.instances.item.put"
+            "inventory-storage.instances.item.put",
+            "user-tenants.collection.get"
           ]
         },
         {
@@ -165,25 +166,58 @@
       "version": "2.0",
       "handlers": [
         {
-          "methods": ["GET"],
+          "methods": [
+            "GET"
+          ],
           "pathPattern": "/authority-storage/authorities",
-          "permissionsRequired": ["inventory-storage.authorities.collection.get"]
-        }, {
-          "methods": ["GET"],
+          "permissionsRequired": [
+            "inventory-storage.authorities.collection.get"
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
           "pathPattern": "/authority-storage/authorities/{id}",
-          "permissionsRequired": ["inventory-storage.authorities.item.get"]
-        }, {
-          "methods": ["POST"],
+          "permissionsRequired": [
+            "inventory-storage.authorities.item.get"
+          ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
           "pathPattern": "/authority-storage/authorities",
-          "permissionsRequired": ["inventory-storage.authorities.item.post"]
-        }, {
-          "methods": ["PUT"],
+          "permissionsRequired": [
+            "inventory-storage.authorities.item.post"
+          ],
+          "modulePermissions": [
+            "user-tenants.collection.get"
+          ]
+        },
+        {
+          "methods": [
+            "PUT"
+          ],
           "pathPattern": "/authority-storage/authorities/{id}",
-          "permissionsRequired": ["inventory-storage.authorities.item.put"]
-        }, {
-          "methods": ["DELETE"],
+          "permissionsRequired": [
+            "inventory-storage.authorities.item.put"
+          ],
+          "modulePermissions": [
+            "user-tenants.collection.get"
+          ]
+        },
+        {
+          "methods": [
+            "DELETE"
+          ],
           "pathPattern": "/authority-storage/authorities/{id}",
-          "permissionsRequired": ["inventory-storage.authorities.item.delete"]
+          "permissionsRequired": [
+            "inventory-storage.authorities.item.delete"
+          ],
+          "modulePermissions": [
+            "user-tenants.collection.get"
+          ]
         }
       ]
     },
@@ -192,25 +226,49 @@
       "version": "1.0",
       "handlers": [
         {
-          "methods": ["GET"],
+          "methods": [
+            "GET"
+          ],
           "pathPattern": "/authority-note-types",
-          "permissionsRequired": ["inventory-storage.authority-note-types.collection.get"]
-        }, {
-          "methods": ["GET"],
+          "permissionsRequired": [
+            "inventory-storage.authority-note-types.collection.get"
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
           "pathPattern": "/authority-note-types/{id}",
-          "permissionsRequired": ["inventory-storage.authority-note-types.item.get"]
-        }, {
-          "methods": ["POST"],
+          "permissionsRequired": [
+            "inventory-storage.authority-note-types.item.get"
+          ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
           "pathPattern": "/authority-note-types",
-          "permissionsRequired": ["inventory-storage.authority-note-types.item.post"]
-        }, {
-          "methods": ["PUT"],
+          "permissionsRequired": [
+            "inventory-storage.authority-note-types.item.post"
+          ]
+        },
+        {
+          "methods": [
+            "PUT"
+          ],
           "pathPattern": "/authority-note-types/{id}",
-          "permissionsRequired": ["inventory-storage.authority-note-types.item.put"]
-        }, {
-          "methods": ["DELETE"],
+          "permissionsRequired": [
+            "inventory-storage.authority-note-types.item.put"
+          ]
+        },
+        {
+          "methods": [
+            "DELETE"
+          ],
           "pathPattern": "/authority-note-types/{id}",
-          "permissionsRequired": ["inventory-storage.authority-note-types.item.delete"]
+          "permissionsRequired": [
+            "inventory-storage.authority-note-types.item.delete"
+          ]
         }
       ]
     },
@@ -219,34 +277,58 @@
       "version": "1.0",
       "handlers": [
         {
-          "methods": ["GET"],
+          "methods": [
+            "GET"
+          ],
           "pathPattern": "/authority-source-files",
-          "permissionsRequired": ["inventory-storage.authority-source-files.collection.get"]
+          "permissionsRequired": [
+            "inventory-storage.authority-source-files.collection.get"
+          ]
         },
         {
-          "methods": ["GET"],
+          "methods": [
+            "GET"
+          ],
           "pathPattern": "/authority-source-files/{id}",
-          "permissionsRequired": ["inventory-storage.authority-source-files.item.get"]
+          "permissionsRequired": [
+            "inventory-storage.authority-source-files.item.get"
+          ]
         },
         {
-          "methods": ["POST"],
+          "methods": [
+            "POST"
+          ],
           "pathPattern": "/authority-source-files",
-          "permissionsRequired": ["inventory-storage.authority-source-files.item.post"]
+          "permissionsRequired": [
+            "inventory-storage.authority-source-files.item.post"
+          ]
         },
         {
-          "methods": ["PUT"],
+          "methods": [
+            "PUT"
+          ],
           "pathPattern": "/authority-source-files/{id}",
-          "permissionsRequired": ["inventory-storage.authority-source-files.item.put"]
+          "permissionsRequired": [
+            "inventory-storage.authority-source-files.item.put"
+          ]
         },
         {
-          "methods": ["PATCH"],
+          "methods": [
+            "PATCH"
+          ],
           "pathPattern": "/authority-source-files/{id}",
-          "permissionsRequired": ["inventory-storage.authority-source-files.item.patch"]
+          "permissionsRequired": [
+            "inventory-storage.authority-source-files.item.patch"
+          ]
         },
         {
-          "methods": ["DELETE"],
+          "methods": [
+            "DELETE"
+          ],
           "pathPattern": "/authority-source-files/{id}",
-          "permissionsRequired": ["inventory-storage.authority-source-files.item.delete"]
+          "permissionsRequired": [
+            "inventory-storage.authority-source-files.item.delete"
+          ]
         }
       ]
     },
@@ -286,24 +368,40 @@
       "version": "0.1",
       "handlers": [
         {
-          "methods": ["POST"],
+          "methods": [
+            "POST"
+          ],
           "pathPattern": "/authority-storage/reindex",
-          "permissionsRequired": ["authority-storage.authority.reindex.post"]
+          "permissionsRequired": [
+            "authority-storage.authority.reindex.post"
+          ]
         },
         {
-          "methods": ["GET"],
+          "methods": [
+            "GET"
+          ],
           "pathPattern": "/authority-storage/reindex",
-          "permissionsRequired": ["authority-storage.authority.reindex.collection.get"]
+          "permissionsRequired": [
+            "authority-storage.authority.reindex.collection.get"
+          ]
         },
         {
-          "methods": ["GET"],
+          "methods": [
+            "GET"
+          ],
           "pathPattern": "/authority-storage/reindex/{id}",
-          "permissionsRequired": ["authority-storage.authority.reindex.item.get"]
+          "permissionsRequired": [
+            "authority-storage.authority.reindex.item.get"
+          ]
         },
         {
-          "methods": ["DELETE"],
+          "methods": [
+            "DELETE"
+          ],
           "pathPattern": "/authority-storage/reindex/{id}",
-          "permissionsRequired": ["authority-storage.authority.reindex.item.delete"]
+          "permissionsRequired": [
+            "authority-storage.authority.reindex.item.delete"
+          ]
         }
       ]
     }

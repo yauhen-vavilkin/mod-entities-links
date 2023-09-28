@@ -400,7 +400,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @DisplayName("PUT: return 404 for non-existing authority")
   void updateAuthority_negative_entityNotFound() throws Exception {
     var id = UUID.randomUUID();
-    var dto = new AuthorityDto().id(id);
+    var dto = new AuthorityDto().id(id).naturalId(id.toString()).source("source");
 
     tryPut(authorityEndpoint(id), dto).andExpect(status().isNotFound())
       .andExpect(exceptionMatch(AuthorityNotFoundException.class))
