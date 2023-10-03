@@ -51,7 +51,7 @@ class UserTenantsServiceTest {
   }
 
   @Test
-  void testGetConsortiumIdWithNoMatchingUserTenants() {
+  void testGetConsortiumIdWithNoUserTenants() {
     String tenantId = "tenant1";
 
     when(userTenantsClient.getUserTenants(tenantId)).thenReturn(new UserTenantsClient.UserTenants(emptyList()));
@@ -77,6 +77,57 @@ class UserTenantsServiceTest {
 
     assertTrue(consortiumId.isPresent());
     assertEquals(consortiumIdValue, consortiumId.get());
+    verify(userTenantsClient).getUserTenants(tenantId);
+  }
+
+  @Test
+  void testGetCentralTenantWithBlankTenantId() {
+    String tenantId = "";
+
+    Optional<String> centralTenant = userTenantsService.getCentralTenant(tenantId);
+
+    assertTrue(centralTenant.isEmpty());
+    verifyNoInteractions(userTenantsClient);
+  }
+
+  @Test
+  void testGetCentralTenantWithNullResponse() {
+    String tenantId = "tenant1";
+
+    when(userTenantsClient.getUserTenants(tenantId)).thenReturn(null);
+
+    Optional<String> centralTenant = userTenantsService.getCentralTenant(tenantId);
+
+    assertTrue(centralTenant.isEmpty());
+    verify(userTenantsClient).getUserTenants(tenantId);
+  }
+
+  @Test
+  void testGetCentralTenantWithNoUserTenants() {
+    String tenantId = "tenant1";
+
+    when(userTenantsClient.getUserTenants(tenantId)).thenReturn(new UserTenantsClient.UserTenants(emptyList()));
+
+    Optional<String> centralTenant = userTenantsService.getCentralTenant(tenantId);
+
+    assertTrue(centralTenant.isEmpty());
+    verify(userTenantsClient).getUserTenants(tenantId);
+  }
+
+  @Test
+  void testGetCentralTenantForMemverTenant() {
+    String tenantId = "centralTenant";
+    String consortiumIdValue = "consortium123";
+
+    UserTenantsClient.UserTenant centralTenant = new UserTenantsClient.UserTenant(tenantId, consortiumIdValue);
+
+    when(userTenantsClient.getUserTenants(tenantId)).thenReturn(
+        new UserTenantsClient.UserTenants(singletonList(centralTenant)));
+
+    Optional<String> consortiumCentralTenant = userTenantsService.getCentralTenant(tenantId);
+
+    assertTrue(consortiumCentralTenant.isPresent());
+    assertEquals(tenantId, consortiumCentralTenant.get());
     verify(userTenantsClient).getUserTenants(tenantId);
   }
 }

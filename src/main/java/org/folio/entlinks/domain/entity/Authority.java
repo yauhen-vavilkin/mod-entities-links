@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.With;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.domain.entity.base.Identifiable;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -50,6 +51,8 @@ public class Authority extends MetadataEntity implements Persistable<UUID>, Iden
   public static final String IDENTIFIERS_COLUMN = "identifiers";
   public static final String NOTES_COLUMN = "notes";
   public static final String DELETED_COLUMN = "deleted";
+
+  private static final String CONSORTIUM_SOURCE_PREFIX = "CONSORTIUM-";
 
   @Id
   @Column(name = ID_COLUMN, nullable = false)
@@ -149,5 +152,13 @@ public class Authority extends MetadataEntity implements Persistable<UUID>, Iden
   @PrePersist
   void markNotNew() {
     this.isNew = false;
+  }
+
+  public void makeAsConsortiumShadowCopy() {
+    this.source = StringUtils.prependIfMissing(this.source, CONSORTIUM_SOURCE_PREFIX);
+  }
+
+  public boolean isConsortiumShadowCopy() {
+    return this.source.startsWith(CONSORTIUM_SOURCE_PREFIX);
   }
 }

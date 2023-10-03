@@ -1,7 +1,6 @@
 package org.folio.entlinks.service.consortium.propagation;
 
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
@@ -22,7 +21,7 @@ public class ConsortiumAuthorityPropagationService extends ConsortiumPropagation
   }
 
   protected void doPropagation(Authority authority, PropagationType propagationType) {
-    authority.setSource(StringUtils.prependIfMissing(authority.getSource(), "CONSORTIUM-"));
+    authority.makeAsConsortiumShadowCopy();
     switch (propagationType) {
       case CREATE -> authorityService.create(authority);
       case UPDATE -> authorityService.update(authority.getId(), authority);

@@ -53,6 +53,7 @@ spring:
       - authority-mapping-rules-cache
       - authority-linking-rules-cache
       - consortium-tenants-cache
+      - consortium-central-tenant-cache
     caffeine:
       spec: maximumSize=500,expireAfterWrite=3600s
   sql:

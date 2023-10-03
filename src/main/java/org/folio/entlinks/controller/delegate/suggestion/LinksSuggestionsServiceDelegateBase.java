@@ -2,6 +2,7 @@ package org.folio.entlinks.controller.delegate.suggestion;
 
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.groupingBy;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 import java.util.Collections;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
@@ -18,8 +20,10 @@ import org.folio.entlinks.domain.dto.ParsedRecordContentCollection;
 import org.folio.entlinks.domain.dto.StrippedParsedRecordCollection;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
+import org.folio.entlinks.integration.dto.AuthorityParsedContent;
 import org.folio.entlinks.integration.dto.FieldParsedContent;
 import org.folio.entlinks.integration.dto.SourceParsedContent;
+import org.folio.entlinks.service.consortium.ConsortiumTenantExecutor;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.LinksSuggestionService;
 import org.springframework.stereotype.Service;
@@ -39,6 +43,7 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
   private final LinksSuggestionService suggestionService;
   private final SourceStorageClient sourceStorageClient;
   private final SourceContentMapper contentMapper;
+  private final ConsortiumTenantExecutor executor;
 
   public ParsedRecordContentCollection suggestLinksForMarcRecords(
       ParsedRecordContentCollection contentCollection, Boolean ignoreAutoLinkingEnabled) {
@@ -54,8 +59,7 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
     log.info("{} authorities to suggest found", authorities.size());
 
     if (isNotEmpty(authorities)) {
-      var marcAuthorities = fetchAuthorityParsedRecords(authorities);
-      var marcAuthoritiesContent = contentMapper.convertToAuthorityParsedContent(marcAuthorities, authorities);
+      var marcAuthoritiesContent = getAuthoritiesParsedContent(authorities);
       suggestionService.fillLinkDetailsWithSuggestedAuthorities(marcBibsContent, marcAuthoritiesContent, rules,
         getSearchSubfield(), ignoreAutoLinkingEnabled);
     } else {
@@ -71,16 +75,35 @@ public abstract class LinksSuggestionsServiceDelegateBase<T> implements LinksSug
 
   protected abstract T extractId(Authority authorityData);
 
+  private List<AuthorityParsedContent> getAuthoritiesParsedContent(List<Authority> authorities) {
+    var authoritiesBySource = authorities.stream()
+        .collect(groupingBy(Authority::isConsortiumShadowCopy));
+
+    var shadowCopyAuthorities = authoritiesBySource.get(Boolean.TRUE);
+    var localCopyAuthorities = authoritiesBySource.get(Boolean.FALSE);
+    var marcRecordsForShadowCopyAuthorities = isEmpty(shadowCopyAuthorities) ? new StrippedParsedRecordCollection() :
+        executor.executeAsCentralTenant(() -> fetchAuthorityParsedRecords(shadowCopyAuthorities));
+    var marcRecordsForLocalCopyAuthorities = fetchAuthorityParsedRecords(localCopyAuthorities);
+
+    return Stream.of(
+        contentMapper.convertToAuthorityParsedContent(marcRecordsForShadowCopyAuthorities, shadowCopyAuthorities),
+        contentMapper.convertToAuthorityParsedContent(marcRecordsForLocalCopyAuthorities, localCopyAuthorities)
+    )
+        .flatMap(List::stream)
+        .toList();
+  }
+
   private StrippedParsedRecordCollection fetchAuthorityParsedRecords(List<Authority> authorities) {
-    if (isNotEmpty(authorities)) {
-      var ids = authorities.stream().map(Authority::getId).collect(Collectors.toSet());
-      var authorityFetchRequest = sourceStorageClient.buildBatchFetchRequestForAuthority(ids,
+    if (isEmpty(authorities)) {
+      return new StrippedParsedRecordCollection(Collections.emptyList(), 0);
+    }
+
+    var ids = authorities.stream().map(Authority::getId).collect(Collectors.toSet());
+    var authorityFetchRequest = sourceStorageClient.buildBatchFetchRequestForAuthority(ids,
         linkingRulesService.getMinAuthorityField(),
         linkingRulesService.getMaxAuthorityField());
 
-      return sourceStorageClient.fetchParsedRecordsInBatch(authorityFetchRequest);
-    }
-    return new StrippedParsedRecordCollection(Collections.emptyList(), 0);
+    return sourceStorageClient.fetchParsedRecordsInBatch(authorityFetchRequest);
   }
 
   private Set<T> extractIdsOfLinkableFields(List<SourceParsedContent> contentCollection,

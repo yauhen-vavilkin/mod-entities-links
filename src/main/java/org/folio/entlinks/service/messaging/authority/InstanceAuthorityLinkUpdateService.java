@@ -1,9 +1,6 @@
 package org.folio.entlinks.service.messaging.authority;
 
-import static org.folio.entlinks.service.reindex.event.DomainEventType.DELETE;
-import static org.folio.entlinks.service.reindex.event.DomainEventType.UPDATE;
 import static org.folio.entlinks.utils.ObjectUtils.getDifference;
-import static org.folio.entlinks.utils.ObjectUtils.isOneOfEquals;
 
 import java.util.List;
 import java.util.Map;
@@ -57,7 +54,6 @@ public class InstanceAuthorityLinkUpdateService {
 
     var fieldTagRelation = mappingRulesProcessingService.getFieldTagRelations();
     var changeHolders = events.stream()
-      .filter(authorityDomainEvent -> isOneOfEquals(authorityDomainEvent.getType(), UPDATE, DELETE))
       .map(event -> toAuthorityChangeHolder(event, fieldTagRelation, linksNumberByAuthorityId))
       .filter(AuthorityChangeHolder::changesExist)
       .toList();

@@ -110,17 +110,25 @@ public class AuthorityReindexJobRunner implements ReindexJobRunner {
       authority.setSubjectHeadingCode(subjectHeadingCode != null ? subjectHeadingCode.charAt(0) : null);
 
       var array = rs.getArray(Authority.SFT_HEADINGS_COLUMN);
-      var sftHeadings = objectMapper.readValue(array.toString(), headingRefType);
-      authority.setSftHeadings(Arrays.asList(sftHeadings));
+      if (array != null) {
+        var sftHeadings = objectMapper.readValue(array.toString(), headingRefType);
+        authority.setSftHeadings(Arrays.asList(sftHeadings));
+      }
       array = rs.getArray(Authority.SAFT_HEADINGS_COLUMN);
-      var saftHeadings = objectMapper.readValue(array.toString(), headingRefType);
-      authority.setSaftHeadings(Arrays.asList(saftHeadings));
+      if (array != null) {
+        var saftHeadings = objectMapper.readValue(array.toString(), headingRefType);
+        authority.setSaftHeadings(Arrays.asList(saftHeadings));
+      }
       array = rs.getArray(Authority.IDENTIFIERS_COLUMN);
-      var identifiers = objectMapper.readValue(array.toString(), identifierTypeRef);
-      authority.setIdentifiers(Arrays.asList(identifiers));
+      if (array != null) {
+        var identifiers = objectMapper.readValue(array.toString(), identifierTypeRef);
+        authority.setIdentifiers(Arrays.asList(identifiers));
+      }
       array = rs.getArray(Authority.NOTES_COLUMN);
-      var notes = objectMapper.readValue(array.toString(), noteTypeRef);
-      authority.setNotes(Arrays.asList(notes));
+      if (array != null) {
+        var notes = objectMapper.readValue(array.toString(), noteTypeRef);
+        authority.setNotes(Arrays.asList(notes));
+      }
 
       var createdDate = rs.getTimestamp(MetadataEntity.CREATED_DATE_COLUMN);
       authority.setCreatedDate(createdDate);

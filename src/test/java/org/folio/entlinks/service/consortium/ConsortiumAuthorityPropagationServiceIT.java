@@ -39,6 +39,8 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
   public static final String COLLEGE_TENANT_ID = "college";
   public static final String UNIVERSITY_TENANT_ID = "university";
 
+  private static final String CONSORTIUM_SOURCE_PREFIX = "CONSORTIUM-";
+
   @BeforeAll
   static void beforeAll() {
     setUpConsortium(CENTRAL_TENANT_ID, List.of(COLLEGE_TENANT_ID, UNIVERSITY_TENANT_ID), true);
@@ -67,7 +69,8 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
     assertThat(collegeAuthority)
       .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
         AuthorityDto::getPersonalName)
-      .containsExactly(dto.getId(), "CONSORTIUM-" + dto.getSource(), dto.getNaturalId(), dto.getPersonalName());
+      .containsExactly(dto.getId(), CONSORTIUM_SOURCE_PREFIX + dto.getSource(), dto.getNaturalId(),
+          dto.getPersonalName());
 
     awaitUntilAsserted(() ->
       assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, UNIVERSITY_TENANT_ID)));
@@ -75,7 +78,8 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
     assertThat(universityAuthority)
       .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
         AuthorityDto::getPersonalName)
-      .containsExactly(dto.getId(), "CONSORTIUM-" + dto.getSource(), dto.getNaturalId(), dto.getPersonalName());
+      .containsExactly(dto.getId(), CONSORTIUM_SOURCE_PREFIX + dto.getSource(), dto.getNaturalId(),
+          dto.getPersonalName());
 
   }
 
@@ -128,7 +132,8 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
     assertThat(collegeAuthority)
       .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
         AuthorityDto::getPersonalName)
-      .containsExactly(dto.getId(), "CONSORTIUM-" + dto.getSource(), dto.getNaturalId(), dto.getPersonalName());
+      .containsExactly(dto.getId(), CONSORTIUM_SOURCE_PREFIX + dto.getSource(), dto.getNaturalId(),
+          dto.getPersonalName());
 
     awaitUntilAsserted(() ->
       assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_TABLE, UNIVERSITY_TENANT_ID, "heading = 'updated'")));
@@ -136,7 +141,8 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
     assertThat(universityAuthority)
       .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
         AuthorityDto::getPersonalName)
-      .containsExactly(dto.getId(), "CONSORTIUM-" + dto.getSource(), dto.getNaturalId(), dto.getPersonalName());
+      .containsExactly(dto.getId(), CONSORTIUM_SOURCE_PREFIX + dto.getSource(), dto.getNaturalId(),
+          dto.getPersonalName());
 
   }
 

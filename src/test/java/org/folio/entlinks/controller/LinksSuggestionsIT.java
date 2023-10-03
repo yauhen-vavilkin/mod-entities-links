@@ -36,8 +36,7 @@ import org.junit.jupiter.api.Test;
 @DatabaseCleanup(tables = {
   DatabaseHelper.AUTHORITY_TABLE,
   DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE,
-  DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE
-})
+  DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class LinksSuggestionsIT extends IntegrationTestBase {
 
   private static final String BASE_URL = "id.loc.gov/authorities/names/";
