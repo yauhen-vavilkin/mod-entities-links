@@ -26,7 +26,7 @@
       src/main/java/org/folio/entlinks/model/**
     </sonar.exclusions>
 
-    <folio-spring-base.version>7.2.0-SNAPSHOT</folio-spring-base.version>
+    <folio-spring-base.version>7.2.0</folio-spring-base.version>
     <hypersistence-utils-hibernate.version>3.5.1</hypersistence-utils-hibernate.version>
     <folio-service-tools.version>3.1.0-SNAPSHOT</folio-service-tools.version>
     <mapstruct.version>1.5.5.Final</mapstruct.version>
