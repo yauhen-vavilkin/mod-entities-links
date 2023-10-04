@@ -41,7 +41,9 @@ class LinksSuggestionsIT extends IntegrationTestBase {
 
   private static final String BASE_URL = "id.loc.gov/authorities/names/";
   private static final String LINKABLE_AUTHORITY_ID = "417f3355-081c-4aae-9209-ccb305f25f7e";
+  private static final String LINKABLE_AUTHORITY_WITH_T_SUBFIELD_ID = "cb398c08-736e-4d6b-aa94-5fa1bfcf9b10";
   private static final String NATURAL_ID = "oneAuthority";
+  private static final String NATURAL_ID_FOR_T_SUBFIELD = "tSubfieldAuthority";
 
   @BeforeAll
   static void prepare() {
@@ -57,14 +59,23 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     sourceFileCode1.setCode(NATURAL_ID.substring(0, 3));
     sourceFileCode2.setAuthoritySourceFile(sourceFile);
     sourceFileCode2.setCode(NATURAL_ID.substring(0, 2));
+    var sourceFileCode3 = new AuthoritySourceFileCode();
+    sourceFileCode3.setAuthoritySourceFile(sourceFile);
+    sourceFileCode3.setCode(NATURAL_ID_FOR_T_SUBFIELD.substring(0, 2));
     sourceFile.addCode(sourceFileCode2);
+    sourceFile.addCode(sourceFileCode3);
     databaseHelper.saveAuthoritySourceFile(TENANT_ID, sourceFile);
     databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, sourceFile.getId(), sourceFileCode1);
     databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, sourceFile.getId(), sourceFileCode2);
+    databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, sourceFile.getId(), sourceFileCode3);
     var authority = TestDataUtils.AuthorityTestData.authority(0, 0);
     authority.setId(UUID.fromString(LINKABLE_AUTHORITY_ID));
     authority.setNaturalId(NATURAL_ID);
     databaseHelper.saveAuthority(TENANT_ID, authority);
+    var authorityWithSubfieldT = TestDataUtils.AuthorityTestData.authority(0, 0);
+    authorityWithSubfieldT.setId(UUID.fromString(LINKABLE_AUTHORITY_WITH_T_SUBFIELD_ID));
+    authorityWithSubfieldT.setNaturalId(NATURAL_ID_FOR_T_SUBFIELD);
+    databaseHelper.saveAuthority(TENANT_ID, authorityWithSubfieldT);
   }
 
   @Test
@@ -94,6 +105,24 @@ class LinksSuggestionsIT extends IntegrationTestBase {
     var expectedLinkDetails = getLinkDetails(NEW, NATURAL_ID);
     var expectedSubfields = Map.of("a", "new $a value", "0", BASE_URL + NATURAL_ID, "9", LINKABLE_AUTHORITY_ID);
     var expectedRecord = getRecord("100", expectedLinkDetails, expectedSubfields);
+
+    var requestBody = new ParsedRecordContentCollection().records(List.of(givenRecord));
+    doPost(linksSuggestionsEndpoint(), requestBody)
+      .andExpect(status().isOk())
+      .andExpect(content().json(asJson(new ParsedRecordContentCollection()
+        .records(List.of(expectedRecord)), objectMapper)));
+  }
+
+  @Test
+  @SneakyThrows
+  void getAuthDataStat_shouldSuggestNewLink_whenMultipleRulesForFieldAndFirstNotSuitable() {
+    var givenSubfields = Map.of("0", NATURAL_ID_FOR_T_SUBFIELD);
+    var givenRecord = getRecord("240", null, givenSubfields);
+
+    var expectedLinkDetails = getLinkDetails(LINKABLE_AUTHORITY_WITH_T_SUBFIELD_ID, NEW, NATURAL_ID_FOR_T_SUBFIELD, 6);
+    var expectedSubfields = Map.of("a", "new $a value from $t", "0", BASE_URL + NATURAL_ID_FOR_T_SUBFIELD,
+        "9", LINKABLE_AUTHORITY_WITH_T_SUBFIELD_ID);
+    var expectedRecord = getRecord("240", expectedLinkDetails, expectedSubfields);
 
     var requestBody = new ParsedRecordContentCollection().records(List.of(givenRecord));
     doPost(linksSuggestionsEndpoint(), requestBody)
@@ -248,8 +277,13 @@ class LinksSuggestionsIT extends IntegrationTestBase {
   }
 
   private LinkDetails getLinkDetails(LinkStatus linkStatus, String naturalId, Integer linkingRuleId) {
+    return getLinkDetails(LINKABLE_AUTHORITY_ID, linkStatus, naturalId, linkingRuleId);
+  }
+
+  private LinkDetails getLinkDetails(String authorityId, LinkStatus linkStatus, String naturalId,
+                                     Integer linkingRuleId) {
     return new LinkDetails().linkingRuleId(linkingRuleId)
-        .authorityId(UUID.fromString(LINKABLE_AUTHORITY_ID))
+        .authorityId(UUID.fromString(authorityId))
         .authorityNaturalId(naturalId)
         .status(linkStatus);
   }

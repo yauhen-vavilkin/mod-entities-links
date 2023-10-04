@@ -34,6 +34,22 @@
         "method": "POST",
         "url": "/source-storage/batch/parsed-records/fetch",
         "bodyPatterns": [
+          { "contains": "cb398c08-736e-4d6b-aa94-5fa1bfcf9b10" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"records\": [{\"id\": \"f480b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"externalIdsHolder\": {\n  \"authorityId\": \"cb398c08-736e-4d6b-aa94-5fa1bfcf9b10\"\n  },\n  \"recordType\": \"MARC_AUTHORITY\",\n  \"recordState\": \"ACTUAL\",\n  \"parsedRecord\": {\n  \"id\": \"f480b531-7703-4c6f-b06c-bdbb00479a81\",\n  \"content\": {\n\"fields\": [\n{\n\"110\": {\n    \"ind1\": \"2\",\n    \"ind2\": \" \",\n    \"subfields\": [\n  {\n  \"a\": \"new $a value\"\n  },\n  {\n  \"t\": \"new $a value from $t\"\n  }   ]\n}\n}\n],\n\"leader\": \"01172cz  a2200181n  4500\"\n  }\n  }\n  }\n    ],\n    \"totalRecords\": 1\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/source-storage/batch/parsed-records/fetch",
+        "bodyPatterns": [
           { "contains": "517f3355-081c-4aae-9209-ccb305f25f7e" },
           { "contains": "617f3355-081c-4aae-9209-ccb305f25f7e" }
         ]

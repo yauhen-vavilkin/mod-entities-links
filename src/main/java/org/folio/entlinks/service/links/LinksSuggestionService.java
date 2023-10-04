@@ -2,7 +2,6 @@ package org.folio.entlinks.service.links;
 
 import static java.util.Objects.isNull;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
-import static org.apache.commons.lang3.BooleanUtils.isFalse;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.entlinks.config.constants.ErrorCode.DISABLED_AUTO_LINKING;
 import static org.folio.entlinks.config.constants.ErrorCode.MORE_THAN_ONE_SUGGESTIONS;
@@ -95,11 +94,9 @@ public class LinksSuggestionService {
                                             String linkingMatchSubfield,
                                             Boolean ignoreAutoLinkingEnabled) {
     if (isNotEmpty(rules) && isNotEmpty(bibFields)) {
-      for (InstanceAuthorityLinkingRule rule : rules) {
-        for (FieldParsedContent bibField : bibFields) {
-          if (isBibFieldLinkable(bibField, linkingMatchSubfield)) {
-            suggestAuthorityForBibField(bibField, marcAuthoritiesContent, rule, ignoreAutoLinkingEnabled);
-          }
+      for (FieldParsedContent bibField : bibFields) {
+        if (isBibFieldLinkable(bibField, linkingMatchSubfield)) {
+          suggestAuthorityForBibField(bibField, marcAuthoritiesContent, rules, ignoreAutoLinkingEnabled);
         }
       }
     }
@@ -117,31 +114,38 @@ public class LinksSuggestionService {
 
   private void suggestAuthorityForBibField(FieldParsedContent bibField,
                                            List<AuthorityParsedContent> marcAuthoritiesContent,
-                                           InstanceAuthorityLinkingRule rule,
+                                           List<InstanceAuthorityLinkingRule> rules,
                                            Boolean ignoreAutoLinkingEnabled) {
-    if (isFalse(ignoreAutoLinkingEnabled) && isFalse(rule.getAutoLinkingEnabled())) {
+    var suitableRules = rules.stream()
+        .filter(rule -> rule.getAutoLinkingEnabled() || ignoreAutoLinkingEnabled)
+        .toList();
+    if (suitableRules.isEmpty()) {
       var errorDetails = getErrorDetails(DISABLED_AUTO_LINKING);
       bibField.setLinkDetails(errorDetails);
-      log.info("Field {}: auto linking feature is disabled", rule.getBibField());
+      log.info("Field {}: auto linking feature is disabled", bibField.getTag());
       return;
     }
 
-    var suitableAuthorities = filterSuitableAuthorities(bibField, marcAuthoritiesContent, rule);
-    if (suitableAuthorities.isEmpty()) {
-      var errorDetails = getErrorDetails(NO_SUGGESTIONS);
-      bibField.setLinkDetails(errorDetails);
-      log.info("Field {}: No authorities to suggest", rule.getBibField());
-    } else if (suitableAuthorities.size() > 1) {
-      var errorDetails = getErrorDetails(MORE_THAN_ONE_SUGGESTIONS);
-      bibField.setLinkDetails(errorDetails);
-      log.info("Field {}: More than one authority to suggest", rule.getBibField());
-    } else {
-      var authority = suitableAuthorities.get(0);
-      var linkDetails = getLinkDetails(bibField, authority, rule);
-      actualizeBibSubfields(bibField, authority, rule);
-      bibField.setLinkDetails(linkDetails);
-      log.info("Field {}: Authority {} was suggested", rule.getBibField(), authority.getId());
+    LinkDetails errorDetails = null;
+    for (var rule : suitableRules) {
+      var suitableAuthorities = filterSuitableAuthorities(bibField, marcAuthoritiesContent, rule);
+      if (suitableAuthorities.size() == 1) {
+        var authority = suitableAuthorities.get(0);
+        var linkDetails = getLinkDetails(bibField, authority, rule);
+        actualizeBibSubfields(bibField, authority, rule);
+        bibField.setLinkDetails(linkDetails);
+        log.info("Field {}: Authority {} was suggested", bibField.getTag(), authority.getId());
+        return;
+      } else if (suitableAuthorities.isEmpty()) {
+        errorDetails = getErrorDetails(NO_SUGGESTIONS);
+        log.info("Field {}: No authorities to suggest", bibField.getTag());
+      } else {
+        errorDetails = getErrorDetails(MORE_THAN_ONE_SUGGESTIONS);
+        log.info("Field {}: More than one authority to suggest", bibField.getTag());
+      }
     }
+
+    bibField.setLinkDetails(errorDetails);
   }
 
   private LinkDetails getLinkDetails(FieldParsedContent bibField,
