@@ -1,6 +1,8 @@
 package org.folio.entlinks.controller.delegate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.support.base.TestConstants.INPUT_BASE_URL;
+import static org.folio.support.base.TestConstants.TEST_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -64,16 +66,16 @@ class InstanceAuthorityStatServiceDelegateTest {
   void setUp() {
     delegate = new InstanceAuthorityStatServiceDelegate(statService, mapper, usersClient, sourceFileRepository);
     sourceFile = new AuthoritySourceFile();
-    sourceFile.setId(SOURCE_FILE_ID);
-    sourceFile.setBaseUrl(BASE_URL);
+    sourceFile.setId(TEST_ID);
+    sourceFile.setBaseUrl(INPUT_BASE_URL);
     sourceFile.setName(SOURCE_FILE_NAME);
     var sourceFileCode = new AuthoritySourceFileCode();
     sourceFileCode.setCode("e1");
     sourceFile.addCode(sourceFileCode);
 
     var statData = List.of(
-      TestDataUtils.authorityDataStat(USER_ID_1, SOURCE_FILE_ID, AuthorityDataStatAction.UPDATE_HEADING),
-      TestDataUtils.authorityDataStat(USER_ID_2, SOURCE_FILE_ID, AuthorityDataStatAction.UPDATE_HEADING)
+      TestDataUtils.authorityDataStat(USER_ID_1, TEST_ID, AuthorityDataStatAction.UPDATE_HEADING),
+      TestDataUtils.authorityDataStat(USER_ID_2, TEST_ID, AuthorityDataStatAction.UPDATE_HEADING)
     );
     var users = TestDataUtils.usersList(List.of(USER_ID_1, USER_ID_2));
 

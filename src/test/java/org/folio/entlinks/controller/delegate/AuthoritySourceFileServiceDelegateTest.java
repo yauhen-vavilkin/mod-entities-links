@@ -1,5 +1,6 @@
 package org.folio.entlinks.controller.delegate;
 
+import static org.folio.support.base.TestConstants.INPUT_BASE_URL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -29,7 +30,6 @@ import org.springframework.data.domain.PageImpl;
 @ExtendWith(MockitoExtension.class)
 class AuthoritySourceFileServiceDelegateTest {
 
-  private static final String INPUT_BASE_URL = "https://www.id.loc.gov/authorities/test-source";
 
   private static final String SANITIZED_BASE_URL = "id.loc.gov/authorities/test-source/";
 

@@ -1,8 +1,8 @@
 package org.folio.entlinks.service.dataloader;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -18,6 +18,7 @@ import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.service.authority.AuthorityNoteTypeService;
 import org.folio.entlinks.service.authority.AuthoritySourceFileService;
 import org.folio.spring.test.type.UnitTest;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -75,4 +76,12 @@ class ReferenceDataLoaderTest {
     assertEquals("folio", loadedSourceFile.getSource());
   }
 
+  @Test
+  void shouldHandleExceptionInLoadRefData() {
+    when(noteTypeRepository.findById(any(UUID.class))).thenThrow(new RuntimeException("Unable to load reference data"));
+
+    var exception = Assertions.assertThrows(IllegalStateException.class, referenceDataLoader::loadRefData);
+
+    assertEquals("Unable to load reference data", exception.getMessage());
+  }
 }
