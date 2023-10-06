@@ -37,3 +37,4 @@ mapping-rules.get
 source-storage.sourceRecords.get
 users.collection.get
 user-tenants.collection.get
+source-storage.records.fetch
