@@ -19,11 +19,11 @@ import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
+import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.spring.data.OffsetRequest;
 import org.folio.tenant.domain.dto.Parameter;
 import org.springframework.data.domain.Page;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -70,7 +70,7 @@ public class AuthorityService {
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @Retryable(
-    retryFor = ObjectOptimisticLockingFailureException.class,
+    retryFor = OptimisticLockingException.class,
     maxAttempts = 2,
     backoff = @Backoff(delay = 500))
   public Authority update(UUID id, Authority modified) {
@@ -80,10 +80,13 @@ public class AuthorityService {
       throw new RequestBodyValidationException("Request should have id = " + id,
         List.of(new Parameter("id").value(String.valueOf(modified.getId()))));
     }
-    validateSourceFile(modified);
 
     var existing = repository.findByIdAndDeletedFalse(id).orElseThrow(() -> new AuthorityNotFoundException(id));
+    if (modified.getVersion() < existing.getVersion()) {
+      throw OptimisticLockingException.optimisticLockingOnUpdate(id, existing.getVersion(), modified.getVersion());
+    }
 
+    validateSourceFile(modified);
     copyModifiableFields(existing, modified);
 
     return repository.save(existing);
@@ -110,6 +113,7 @@ public class AuthorityService {
     existing.setSaftHeadings(modified.getSaftHeadings());
     existing.setIdentifiers(modified.getIdentifiers());
     existing.setNotes(modified.getNotes());
+    existing.setVersion(existing.getVersion() + 1);
 
     Optional.ofNullable(modified.getAuthoritySourceFile())
       .map(AuthoritySourceFile::getId)

@@ -15,12 +15,9 @@ import static org.folio.support.base.TestConstants.USER_ID;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.authoritySourceFilesEndpoint;
 import static org.folio.support.base.TestConstants.authorityTopic;
-import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -30,8 +27,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
@@ -42,6 +37,7 @@ import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
+import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.service.reindex.event.DomainEvent;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.test.extension.DatabaseCleanup;
@@ -52,7 +48,6 @@ import org.hamcrest.Matcher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -341,39 +336,30 @@ class AuthorityControllerIT extends IntegrationTestBase {
   }
 
   @Test
-  @Disabled("behaves un-deterministically and thus disable for now")
-  @DisplayName("PUT: repeated update of Authority without modification")
-  void updateConcurrently_positive_notAllShouldSucceedAndAtLeastOneShouldFail() throws Exception {
+  @DisplayName("PUT: update Authority without any changes")
+  void updateAuthorityWithoutModification_positive_entityUpdatedAndVersionIncreased() throws Exception {
+    getReceivedEvent();
     var dto = authorityDto(0, 0);
     createSourceFile(0);
 
     doPost(authorityEndpoint(), dto);
     getReceivedEvent();
-    var existingAsString = doGet(authorityEndpoint()).andReturn().getResponse().getContentAsString();
+    var existingAsString = doGet(authorityEndpoint())
+        .andExpect(jsonPath("authorities[0]._version", is(0)))
+        .andReturn().getResponse().getContentAsString();
     var collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
-    var expected = collection.getAuthorities().get(0);
-    var sources = List.of("source a", "source b", "source c", "source d");
+    var putDto = collection.getAuthorities().get(0);
 
-    int concurrency = 4;
-    ExecutorService executor = Executors.newFixedThreadPool(concurrency);
-    for (var source : sources) {
-      executor.execute(() -> {
-        expected.setSource(source);
-        doPut(authorityEndpoint(expected.getId()), expected);
-      });
-    }
-    executor.shutdown();
-    assertTrue(executor.awaitTermination(2, TimeUnit.MINUTES));
+    tryPut(authorityEndpoint(putDto.getId()), putDto).andExpect(status().isNoContent());
 
-    doGet(authorityEndpoint(expected.getId()))
-      .andExpect(jsonPath("_version", lessThan(concurrency)))
-      .andExpect(jsonPath("source",
-        anyOf(equalTo("source a"), equalTo("source b"),
-          equalTo("source c"), equalTo("source d"))))
-      .andExpect(jsonPath("metadata.createdDate", notNullValue()))
-      .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
-      .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
-      .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
+    var content = doGet(authorityEndpoint(putDto.getId()))
+        .andExpect(jsonPath("_version", is(1)))
+        .andExpect(jsonPath("metadata.createdDate", notNullValue()))
+        .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
+        .andReturn().getResponse().getContentAsString();
+    var resultDto = objectMapper.readValue(content, AuthorityDto.class);
+
+    assertTrue(resultDto.getMetadata().getUpdatedDate().isAfter(putDto.getMetadata().getUpdatedDate()));
   }
 
   @Test
@@ -394,6 +380,30 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andExpect(status().isNotFound())
       .andExpect(errorMessageMatch(is("Authority Source File with ID [" + sourceFileId + "] was not found")))
       .andExpect(exceptionMatch(AuthoritySourceFileNotFoundException.class));
+  }
+
+  @Test
+  @DisplayName("PUT: repeated update of Authority with old version")
+  void repeatedUpdateWithOldVersion_negative_shouldReturnOptimisticLockingError() throws Exception {
+    getReceivedEvent();
+    var dto = authorityDto(0, 0);
+    createSourceFile(0);
+
+    doPost(authorityEndpoint(), dto);
+    getReceivedEvent();
+    var existingAsString = doGet(authorityEndpoint())
+        .andExpect(jsonPath("authorities[0]._version", is(0)))
+        .andReturn().getResponse().getContentAsString();
+    var collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
+    var putDto = collection.getAuthorities().get(0);
+    var expectedError = String.format("Cannot update record %s because it has been changed (optimistic locking): "
+            + "Stored _version is %d, _version of request is %d", putDto.getId().toString(), 1, 0);
+
+    tryPut(authorityEndpoint(putDto.getId()), putDto).andExpect(status().isNoContent());
+    tryPut(authorityEndpoint(putDto.getId()), putDto)
+        .andExpect(status().isConflict())
+        .andExpect(errorMessageMatch(is(expectedError)))
+        .andExpect(exceptionMatch(OptimisticLockingException.class));
   }
 
   @Test

@@ -22,6 +22,7 @@ import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Level;
 import org.folio.entlinks.config.constants.ErrorCode;
+import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.exception.ResourceNotFoundException;
 import org.folio.entlinks.exception.type.ErrorType;
@@ -61,6 +62,11 @@ public class ApiErrorHandler {
   @ExceptionHandler(ResourceNotFoundException.class)
   public ResponseEntity<Errors> handleNotFoundException(ResourceNotFoundException e) {
     return buildResponseEntity(e, NOT_FOUND, ErrorType.NOT_FOUND_ERROR);
+  }
+
+  @ExceptionHandler(OptimisticLockingException.class)
+  public ResponseEntity<Errors> handleOptimisticLockingException(OptimisticLockingException e) {
+    return buildResponseEntity(e, HttpStatus.CONFLICT, ErrorType.OPTIMISTIC_LOCKING_ERROR);
   }
 
   @ExceptionHandler(RequestBodyValidationException.class)

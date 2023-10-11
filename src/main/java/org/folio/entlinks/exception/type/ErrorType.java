@@ -10,6 +10,7 @@ public enum ErrorType {
   VALIDATION_ERROR("validation"),
   NOT_FOUND_ERROR("not-found"),
   INTEGRATION_ERROR("intregration-error"),
+  OPTIMISTIC_LOCKING_ERROR("optimistic locking"),
   UNKNOWN_ERROR("unknown");
 
   private final String value;
