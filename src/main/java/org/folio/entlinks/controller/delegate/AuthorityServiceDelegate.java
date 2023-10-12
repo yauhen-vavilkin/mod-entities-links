@@ -1,8 +1,8 @@
 package org.folio.entlinks.controller.delegate;
 
-import static org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService.PropagationType.CREATE;
-import static org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService.PropagationType.DELETE;
-import static org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService.PropagationType.UPDATE;
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.CREATE;
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.DELETE;
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.UPDATE;
 
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;

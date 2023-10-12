@@ -23,8 +23,8 @@ import org.folio.entlinks.domain.dto.LinksCountDtoCollection;
 import org.folio.entlinks.domain.dto.UuidCollection;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.internal.InstanceStorageService;
-import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumLinksPropagationService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.tenant.domain.dto.Parameter;
@@ -73,7 +73,7 @@ public class LinkingServiceDelegate {
     validateLinks(instanceId, links);
     var incomingLinks = mapper.convertDto(links);
     linkingService.updateLinks(instanceId, incomingLinks);
-    propagationService.propagate(incomingLinks, ConsortiumAuthorityPropagationService.PropagationType.UPDATE,
+    propagationService.propagate(incomingLinks, ConsortiumPropagationService.PropagationType.UPDATE,
       context.getTenantId());
   }
 
