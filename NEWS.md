@@ -20,6 +20,8 @@
 * Add `LIB_NAME` `2.7.4`
 * Remove `LIB_NAME`
 
+---
+
 ## v2.0.0 2023-10-12
 ### Breaking changes
 * Change '/links/authority/stats' endpoint path to '/links/stats/authority' ([MODELINKS-77](https://issues.folio.org/browse/MODELINKS-77))
