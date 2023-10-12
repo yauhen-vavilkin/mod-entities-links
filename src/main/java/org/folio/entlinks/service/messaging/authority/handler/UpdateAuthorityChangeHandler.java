@@ -19,7 +19,6 @@ import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthorityBatchProcessingException;
 import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
-import org.folio.entlinks.integration.internal.AuthoritySourceRecordService;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
@@ -35,21 +34,18 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
 
   private final AuthoritySourceFileRepository sourceFileRepository;
   private final AuthorityMappingRulesProcessingService mappingRulesProcessingService;
-  private final AuthoritySourceRecordService sourceRecordService;
   private final InstanceAuthorityLinkingRulesService linkingRulesService;
   private final EventProducer<LinkUpdateReport> eventProducer;
 
   public UpdateAuthorityChangeHandler(InstanceAuthorityChangeProperties instanceAuthorityChangeProperties,
                                       AuthoritySourceFileRepository sourceFileRepository,
                                       AuthorityMappingRulesProcessingService mappingRulesProcessingService,
-                                      AuthoritySourceRecordService sourceRecordService,
                                       InstanceAuthorityLinkingRulesService linkingRulesService,
                                       InstanceAuthorityLinkingService linkingService,
                                       EventProducer<LinkUpdateReport> eventProducer) {
     super(instanceAuthorityChangeProperties, linkingService);
     this.sourceFileRepository = sourceFileRepository;
     this.mappingRulesProcessingService = mappingRulesProcessingService;
-    this.sourceRecordService = sourceRecordService;
     this.linkingRulesService = linkingRulesService;
     this.eventProducer = eventProducer;
   }
@@ -122,9 +118,9 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
     throws AuthorityBatchProcessingException {
     var authorityId = changeHolder.getAuthorityId();
 
-    var sourceRecord = sourceRecordService.getAuthoritySourceRecordById(authorityId);
     var changedTag = mappingRulesProcessingService.getTagByAuthorityChangeField(changeHolder.getFieldChange());
     var linkingRules = linkingRulesService.getLinkingRulesByAuthorityField(changedTag);
+    var sourceRecord = changeHolder.getSourceRecord();
 
     var fieldChangeHolders = getFieldChangeHolders(authorityId, sourceRecord, changedTag, linkingRules);
     getSubfield0Change(changeHolder)
@@ -145,7 +141,10 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
                                                         String changedTag,
                                                         List<InstanceAuthorityLinkingRule> linkingRuleForField)
     throws AuthorityBatchProcessingException {
-    var dataField = authoritySourceRecord.content().getDataFields().stream()
+    var sourceRecord = Optional.ofNullable(authoritySourceRecord)
+        .orElseThrow(() -> new AuthorityBatchProcessingException(authorityId,
+            "Source record not found for [authorityId: " + authorityId + "]"));
+    var dataField = sourceRecord.content().getDataFields().stream()
       .filter(field -> field.getTag().equals(changedTag))
       .findFirst()
       .orElseThrow(() -> new AuthorityBatchProcessingException(authorityId,

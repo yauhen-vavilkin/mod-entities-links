@@ -1,7 +1,7 @@
 package org.folio.entlinks.service.consortium.propagation;
 
-import static org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService.PropagationType.CREATE;
-import static org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService.PropagationType.UPDATE;
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.CREATE;
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.UPDATE;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

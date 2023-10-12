@@ -30,7 +30,4 @@ public class ConsortiumAuthorityPropagationService extends ConsortiumPropagation
     }
   }
 
-  public enum PropagationType {
-    CREATE, UPDATE, DELETE
-  }
 }

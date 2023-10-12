@@ -19,7 +19,7 @@ public abstract class ConsortiumPropagationService<T> {
   }
 
   @Async
-  public void propagate(T entity, ConsortiumAuthorityPropagationService.PropagationType propagationType,
+  public void propagate(T entity, PropagationType propagationType,
                         String tenantId) {
     log.info("Try to propagate [entity: {}, propagationType: {}, context: {}]", entity.getClass().getSimpleName(),
       propagationType, tenantId);
@@ -38,5 +38,9 @@ public abstract class ConsortiumPropagationService<T> {
   }
 
   protected abstract void doPropagation(T entity,
-                                        ConsortiumAuthorityPropagationService.PropagationType propagationType);
+                                        PropagationType propagationType);
+
+  public enum PropagationType {
+    CREATE, UPDATE, DELETE
+  }
 }
