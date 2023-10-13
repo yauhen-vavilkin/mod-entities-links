@@ -1,13 +1,40 @@
-## v2.0.0 In progress
+## v2.1.0 In progress
+### Breaking changes
+* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+
+### New APIs versions
+* Provides `API_NAME vX.Y`
+* Requires `API_NAME vX.Y`
+
+### Features
+* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+
+### Bug fixes
+* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+
+### Tech Dept
+* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+
+### Dependencies
+* Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
+* Add `LIB_NAME` `2.7.4`
+* Remove `LIB_NAME`
+
+---
+
+## v2.0.0 2023-10-12
+### Breaking changes
+* Change '/links/authority/stats' endpoint path to '/links/stats/authority' ([MODELINKS-77](https://issues.folio.org/browse/MODELINKS-77))
+
 ### APIs versions
 * Provides `instance-authority-links-statistics v2.0`
 * Provides `instance-authority-links-suggestions v1.2`
 * Provides `instance-authority-links v2.1`
 * Provides `instance-authority-linking-rules v1.1`
-* Removes `linked-bib-update-statistics v1.0`
 * Provides `authority-storage 2.0`
 * Provides `authority-source-files 1.0`
 * Provides `authority-note-types 1.0`
+* Removes `linked-bib-update-statistics v1.0`
 
 ### Features
 * Remove field and subfields from links endpoint, use linking rule ([MODELINKS-47](https://issues.folio.org/browse/MODELINKS-47))
@@ -17,15 +44,37 @@
 * Add possibility of matching by Authority id for links suggestions ([MODELINKS-113](https://issues.folio.org/browse/MODELINKS-113))
 * Relocate Authority API and associated reference APIs ([MODELINKS-106](https://issues.folio.org/browse/MODELINKS-106))
 * Add possibility of ignoring autoLinkingEnabled flag for links suggestions ([MODELINKS-113](https://issues.folio.org/browse/MODELINKS-114))
+* Set not specified source file name in stats endpoint ([MODELINKS-65](https://issues.folio.org/browse/MODELINKS-65))
+* Add PATCH and GET linking rule endpoints ([MODELINKS-80](https://issues.folio.org/browse/MODELINKS-80))
+* Extend GET /links/instances/{id} with link status, errorCause ([MODELINKS-68](https://issues.folio.org/browse/MODELINKS-68))
+* Add endpoint to suggest links for MARC-bibliographic record ([MODELINKS-82](https://issues.folio.org/browse/MODELINKS-82))
+* Add flag to "/links-suggestions" endpoint to indicate which fields to use for suggestions ([MODELINKS-114](https://issues.folio.org/browse/MODELINKS-114))
+* Implement authority propagation for member tenants ([MODELINKS-116](https://issues.folio.org/browse/MODELINKS-116))
+
+## Bug fixes
+* Return only authority stats that are related to actual authority ([MODELINKS-57](https://issues.folio.org/browse/MODELINKS-57), [MODELINKS-72](https://issues.folio.org/browse/MODELINKS-72))
+* Updating authorSourceFile name from UUID to fileName CSV ([MODELINKS-59](https://issues.folio.org/browse/MODELINKS-59))
+* Metadata generation is provided when startedByUser is deleted ([MODELINKS-64](https://issues.folio.org/browse/MODELINKS-64))
+* Add users get permission to system-user ([MODELINKS-52](https://issues.folio.org/browse/MODELINKS-52))
+* Decrease default instance batch size to fix 414 Request-URI Too Long ([MODELINKS-78](https://issues.folio.org/browse/MODELINKS-78))
 
 ### Tech Dept
 * Upgrade folio-spring-base to v7.1.0 ([MODELINKS-99](https://issues.folio.org/browse/MODELINKS-99))
 * Expose database parameters to environment variables ([MODELINKS-102](https://issues.folio.org/browse/MODELINKS-102))
+* Change system-user lastname to "Automated linking update" ([MODELINKS-52](https://issues.folio.org/browse/MODELINKS-52))
+* Refactor handling subfields in links ([MODELINKS-47](https://issues.folio.org/browse/MODELINKS-47))
+* Delete Kafka topics on disabling module for tenant ([MODELINKS-87](https://issues.folio.org/browse/MODELINKS-87))
+* Increase unit test code coverage for the module ([MODELINKS-130](https://issues.folio.org/browse/MODELINKS-130))
+* Expose database parameters to environment variables
 
 ### Dependencies
-Bump `folio-spring-base` from `6.0.1` to `7.1.0`
-Bump `spring-boot` from `3.0.2` to `3.1.1`
-Bump `hypersistence-utils` from `3.2.0` to `3.5.0`
+Bump `folio-spring-base` from `6.0.1` to `7.2.0`
+Bump `folio-service-tools` from `3.0.2` to `3.1.0`
+Bump `spring-boot` from `3.0.2` to `3.1.4`
+Bump `hypersistence-utils` from `3.2.0` to `3.5.3`
+Bump `mapstruct` from `1.5.3.Final` to `1.5.5.Final`
+Bump `marc4j` from `2.9.2` to `2.9.5`
+Bump `maven-openapi-generator` from `6.2.1` to `7.0.1`
 
 ---
 

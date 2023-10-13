@@ -29,7 +29,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -98,8 +97,7 @@ public class IntegrationTestBase {
   protected static DatabaseHelper databaseHelper;
 
   @RegisterExtension
-  static OkapiExtension okapiExtension =
-    new OkapiExtension(new ResponseTemplateTransformer(true));
+  static OkapiExtension okapiExtension = new OkapiExtension();
 
   @SneakyThrows
   protected static void setUpTenant() {
