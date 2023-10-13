@@ -13,6 +13,7 @@ import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
+import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
 import org.folio.entlinks.service.reindex.event.DomainEventType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,12 +25,25 @@ public class AuthorityChangeHolder {
   private final @NotNull AuthorityDomainEvent event;
   private final @NotNull Map<AuthorityChangeField, AuthorityChange> changes;
   private final @NotNull Map<AuthorityChangeField, String> fieldTagRelation;
-  @Getter
-  private final int numberOfLinks;
 
   @Getter
   @Setter
+  private int numberOfLinks;
+  @Getter
+  @Setter
   private UUID authorityDataStatId;
+  @Getter
+  @Setter
+  private AuthoritySourceRecord sourceRecord;
+
+  public AuthorityChangeHolder(@NotNull AuthorityDomainEvent event,
+                               @NotNull Map<AuthorityChangeField, AuthorityChange> changes,
+                               @NotNull Map<AuthorityChangeField, String> fieldTagRelation, int numberOfLinks) {
+    this.event = event;
+    this.changes = changes;
+    this.fieldTagRelation = fieldTagRelation;
+    this.numberOfLinks = numberOfLinks;
+  }
 
   public UUID getAuthorityId() {
     return event.getId();
@@ -160,6 +174,12 @@ public class AuthorityChangeHolder {
 
   private boolean isHeadingTypeChanged() {
     return changes.size() > 2 || changes.size() == 2 && !changes.containsKey(AuthorityChangeField.NATURAL_ID);
+  }
+
+  public AuthorityChangeHolder copy() {
+    var copy = new AuthorityChangeHolder(event, changes, fieldTagRelation);
+    copy.setSourceRecord(sourceRecord);
+    return copy;
   }
 
 }

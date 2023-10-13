@@ -76,13 +76,12 @@ class UpdateAuthorityChangeHandlerTest {
     expected.setStatus(LinkUpdateReport.StatusEnum.FAIL);
 
     when(mappingRulesProcessingService.getTagByAuthorityChangeField(any())).thenReturn("notExistingTag");
-    when(sourceRecordService.getAuthoritySourceRecordById(any()))
-      .thenReturn(new AuthoritySourceRecord(id, UUID.randomUUID(), new RecordImpl()));
 
     var changes = Map.of(
       AuthorityChangeField.PERSONAL_NAME, new AuthorityChange(AuthorityChangeField.PERSONAL_NAME, "new", "old")
     );
     var event = new AuthorityChangeHolder(new AuthorityDomainEvent(id), changes, emptyMap(), 0);
+    event.setSourceRecord(new AuthoritySourceRecord(id, UUID.randomUUID(), new RecordImpl()));
     handler.handle(List.of(event));
 
     verify(linksUpdateKafkaTemplate).sendMessages(producerRecord.capture());

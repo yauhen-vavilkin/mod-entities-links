@@ -1,10 +1,12 @@
 package org.folio.entlinks.service.messaging.authority;
 
+import static org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType.UPDATE;
 import static org.folio.entlinks.utils.ObjectUtils.getDifference;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -13,7 +15,9 @@ import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
+import org.folio.entlinks.integration.internal.AuthoritySourceRecordService;
 import org.folio.entlinks.integration.kafka.EventProducer;
+import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.handler.AuthorityChangeHandler;
@@ -21,6 +25,8 @@ import org.folio.entlinks.service.messaging.authority.model.AuthorityChange;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeField;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolder;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -32,18 +38,30 @@ public class InstanceAuthorityLinkUpdateService {
   private final AuthorityMappingRulesProcessingService mappingRulesProcessingService;
   private final InstanceAuthorityLinkingService linkingService;
   private final EventProducer<LinksChangeEvent> eventProducer;
+  private final AuthoritySourceRecordService sourceRecordService;
+  private final ConsortiumTenantsService consortiumTenantsService;
+  private final FolioExecutionContext folioExecutionContext;
+  private final SystemUserScopedExecutionService executionService;
 
   public InstanceAuthorityLinkUpdateService(AuthorityDataStatService authorityDataStatService,
                                             AuthorityMappingRulesProcessingService mappingRulesProcessingService,
                                             InstanceAuthorityLinkingService linkingService,
                                             EventProducer<LinksChangeEvent> eventProducer,
-                                            List<AuthorityChangeHandler> changeHandlers) {
+                                            List<AuthorityChangeHandler> changeHandlers,
+                                            AuthoritySourceRecordService sourceRecordService,
+                                            ConsortiumTenantsService consortiumTenantsService,
+                                            FolioExecutionContext folioExecutionContext,
+                                            SystemUserScopedExecutionService executionService) {
     this.authorityDataStatService = authorityDataStatService;
     this.mappingRulesProcessingService = mappingRulesProcessingService;
     this.linkingService = linkingService;
     this.eventProducer = eventProducer;
     this.changeHandlers = changeHandlers.stream()
       .collect(Collectors.toMap(AuthorityChangeHandler::supportedAuthorityChangeType, handler -> handler));
+    this.sourceRecordService = sourceRecordService;
+    this.consortiumTenantsService = consortiumTenantsService;
+    this.folioExecutionContext = folioExecutionContext;
+    this.executionService = executionService;
   }
 
   public void handleAuthoritiesChanges(List<AuthorityDomainEvent> events) {
@@ -57,10 +75,23 @@ public class InstanceAuthorityLinkUpdateService {
       .map(event -> toAuthorityChangeHolder(event, fieldTagRelation, linksNumberByAuthorityId))
       .filter(AuthorityChangeHolder::changesExist)
       .toList();
+    fillChangeHoldersWithSourceRecord(changeHolders);
 
     prepareAndSaveAuthorityDataStats(changeHolders);
-
     processEventsByChangeType(changeHolders);
+    processChangesForShadowAuthorities(incomingAuthorityIds, changeHolders);
+  }
+
+  private void fillChangeHoldersWithSourceRecord(List<AuthorityChangeHolder> changeHolders) {
+    var changeHoldersForSourceRecord = changeHolders.stream()
+        .filter(holder -> holder.getChangeType().equals(UPDATE) && !holder.isOnlyNaturalIdChanged())
+        .collect(Collectors.groupingBy(AuthorityChangeHolder::getAuthorityId));
+    if (!changeHoldersForSourceRecord.isEmpty()) {
+      changeHoldersForSourceRecord.forEach((authorityId, authorityChangeHolders) -> {
+        var sourceRecord = sourceRecordService.getAuthoritySourceRecordById(authorityId);
+        authorityChangeHolders.forEach(changeHolder -> changeHolder.setSourceRecord(sourceRecord));
+      });
+    }
   }
 
   private void processEventsByChangeType(List<AuthorityChangeHolder> changeHolders) {
@@ -69,7 +100,8 @@ public class InstanceAuthorityLinkUpdateService {
         if (changeHolder.getNumberOfLinks() > 0) {
           return true;
         } else {
-          log.info("Skip message. Authority record [id: {}] doesn't have links", changeHolder.getAuthorityId());
+          log.info("Skip message. Authority record [tenantId: {}, id: {}] doesn't have links",
+              folioExecutionContext.getTenantId(), changeHolder.getAuthorityId());
           return false;
         }
       })
@@ -79,7 +111,8 @@ public class InstanceAuthorityLinkUpdateService {
       var type = eventsByTypeEntry.getKey();
       var handler = changeHandlers.get(type);
       if (handler == null) {
-        log.warn("No suitable handler found [event type: {}]", type);
+        log.warn("No suitable handler found [tenantId: {}, event type: {}]",
+            folioExecutionContext.getTenantId(), type);
         return;
       } else {
         var linksEvents = handler.handle(eventsByTypeEntry.getValue());
@@ -102,6 +135,27 @@ public class InstanceAuthorityLinkUpdateService {
         }
       }
     }
+  }
+
+  private void processChangesForShadowAuthorities(Set<UUID> authorityIds, List<AuthorityChangeHolder> changeHolders) {
+    var consortiumTenants = consortiumTenantsService.getConsortiumTenants(folioExecutionContext.getTenantId());
+    if (consortiumTenants.isEmpty()) {
+      return;
+    }
+
+    log.debug("Processing authority changes for shadow copies of authorities: [{}]", authorityIds);
+    consortiumTenants.forEach(memberTenant -> {
+      var changeHolderCopies = changeHolders.stream().map(AuthorityChangeHolder::copy).toList();
+      executionService.executeSystemUserScoped(memberTenant, () -> {
+        var linksNumberByAuthorityId = linkingService.countLinksByAuthorityIds(authorityIds);
+        changeHolderCopies.forEach(changeHolder ->
+            changeHolder.setNumberOfLinks(linksNumberByAuthorityId.getOrDefault(changeHolder.getAuthorityId(), 0)));
+        prepareAndSaveAuthorityDataStats(changeHolderCopies);
+        processEventsByChangeType(changeHolderCopies);
+        return null;
+      });
+    });
+    log.debug("Finished processing authority changes for shadow copies of authorities: [{}]", authorityIds);
   }
 
   private AuthorityChangeHolder toAuthorityChangeHolder(AuthorityDomainEvent event,
@@ -129,7 +183,8 @@ public class InstanceAuthorityLinkUpdateService {
   }
 
   private void sendEvents(List<LinksChangeEvent> events, AuthorityChangeType type) {
-    log.info("Sending {} {} events to Kafka", events.size(), type);
+    log.info("Sending {} {} events to Kafka for tenant {}", events.size(), type,
+        folioExecutionContext.getTenantId());
     eventProducer.sendMessages(events);
   }
 

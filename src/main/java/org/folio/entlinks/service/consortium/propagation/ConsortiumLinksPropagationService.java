@@ -23,7 +23,7 @@ public class ConsortiumLinksPropagationService extends ConsortiumPropagationServ
 
   @Override
   protected void doPropagation(List<InstanceAuthorityLink> links,
-                               ConsortiumAuthorityPropagationService.PropagationType propagationType) {
+                               PropagationType propagationType) {
     switch (propagationType) {
       case CREATE, DELETE -> throw new IllegalArgumentException(ILLEGAL_PROPAGATION_MSG.formatted(propagationType));
       case UPDATE -> instanceAuthorityLinkingService.updateLinks(links.get(0).getInstanceId(), links);
