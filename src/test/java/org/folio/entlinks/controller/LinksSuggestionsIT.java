@@ -115,24 +115,6 @@ class LinksSuggestionsIT extends IntegrationTestBase {
 
   @Test
   @SneakyThrows
-  void getAuthDataStat_shouldSuggestNewLink_whenMultipleRulesForFieldAndFirstNotSuitable() {
-    var givenSubfields = Map.of("0", NATURAL_ID_FOR_T_SUBFIELD);
-    var givenRecord = getRecord("240", null, givenSubfields);
-
-    var expectedLinkDetails = getLinkDetails(LINKABLE_AUTHORITY_WITH_T_SUBFIELD_ID, NEW, NATURAL_ID_FOR_T_SUBFIELD, 6);
-    var expectedSubfields = Map.of("a", "new $a value from $t", "0", BASE_URL + NATURAL_ID_FOR_T_SUBFIELD,
-        "9", LINKABLE_AUTHORITY_WITH_T_SUBFIELD_ID);
-    var expectedRecord = getRecord("240", expectedLinkDetails, expectedSubfields);
-
-    var requestBody = new ParsedRecordContentCollection().records(List.of(givenRecord));
-    doPost(linksSuggestionsEndpoint(), requestBody)
-      .andExpect(status().isOk())
-      .andExpect(content().json(asJson(new ParsedRecordContentCollection()
-        .records(List.of(expectedRecord)), objectMapper)));
-  }
-
-  @Test
-  @SneakyThrows
   void getAuthDataStat_shouldSuggestNewLinkByAuthorityId() {
     var givenSubfields = Map.of("9", LINKABLE_AUTHORITY_ID);
     var givenRecord = getRecord("100", null, givenSubfields);

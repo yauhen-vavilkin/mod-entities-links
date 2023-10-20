@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +88,37 @@ class LinksSuggestionsServiceTest {
 
     var bibSubfields = bibField.getSubfields();
     assertEquals(AUTHORITY_ID.toString(), bibSubfields.get("9").get(0));
+    assertEquals(BASE_URL + NATURAL_ID, bibSubfields.get("0").get(0));
+    assertFalse(bibSubfields.containsKey("a"));
+    assertTrue(bibSubfields.containsKey("b"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {NATURAL_ID_SUBFIELD, ID_SUBFIELD})
+  void fillLinkDetailsWithSuggestedAuthorities_shouldFillLinkDetails_withMultipleRulesForFieldAndOnlyOneSuitable(
+      String linkingMatchSubfield) {
+    var rules = getMapRule("240", List.of("100", "110", "111"));
+    var bib = getBibParsedRecordContent("240", getActualLinksDetails());
+    var authorityId = UUID.randomUUID();
+    var authority = getAuthorityParsedRecordContent(UUID.randomUUID(), "130", Map.of("a", List.of("test")));
+    var secondAuthority = getAuthorityParsedRecordContent(authorityId, "110", Map.of("a", List.of("test")));
+    var thirdAuthority = getAuthorityParsedRecordContent(UUID.randomUUID(), "111", Map.of("a", List.of("test")));
+    when(sourceFileCodeRepository.findByCodeAsPrefixFor(anyString())).thenReturn(Optional.of(sourceFileCode));
+
+    linksSuggestionService
+        .fillLinkDetailsWithSuggestedAuthorities(List.of(bib), List.of(authority, secondAuthority, thirdAuthority),
+            rules, linkingMatchSubfield, false);
+
+    var bibField = bib.getFields().get(0);
+    var linkDetails = bibField.getLinkDetails();
+    assertEquals(LinkStatus.ACTUAL, linkDetails.getStatus());
+    assertEquals(authorityId, linkDetails.getAuthorityId());
+    assertEquals(NATURAL_ID, linkDetails.getAuthorityNaturalId());
+    assertEquals(1, linkDetails.getLinkingRuleId());
+    assertNull(linkDetails.getErrorCause());
+
+    var bibSubfields = bibField.getSubfields();
+    assertEquals(authorityId.toString(), bibSubfields.get("9").get(0));
     assertEquals(BASE_URL + NATURAL_ID, bibSubfields.get("0").get(0));
     assertFalse(bibSubfields.containsKey("a"));
     assertTrue(bibSubfields.containsKey("b"));
@@ -281,8 +313,13 @@ class LinksSuggestionsServiceTest {
 
   private AuthorityParsedContent getAuthorityParsedRecordContent(String authorityField,
                                                                  Map<String, List<String>> subfields) {
+    return getAuthorityParsedRecordContent(AUTHORITY_ID, authorityField, subfields);
+  }
+
+  private AuthorityParsedContent getAuthorityParsedRecordContent(UUID authorityId, String authorityField,
+                                                                 Map<String, List<String>> subfields) {
     var field = new FieldParsedContent(authorityField, "//", "//", subfields, null);
-    return new AuthorityParsedContent(AUTHORITY_ID, NATURAL_ID, "", List.of(field));
+    return new AuthorityParsedContent(authorityId, NATURAL_ID, "", List.of(field));
   }
 
   private SourceParsedContent getBibParsedRecordContent(String bibField, LinkDetails linkDetails) {
@@ -319,6 +356,27 @@ class LinksSuggestionsServiceTest {
 
     return Map.of(bibField, List.of(rule));
   }
+
+  private Map<String, List<InstanceAuthorityLinkingRule>> getMapRule(String bibField, List<String> authorityFields) {
+    var modification = new SubfieldModification().source("a").target("b");
+    var existence = Map.of("a", true);
+
+    var rules = new ArrayList<InstanceAuthorityLinkingRule>();
+    for (String authorityField : authorityFields) {
+      var rule = new InstanceAuthorityLinkingRule();
+      rule.setId(1);
+      rule.setBibField(bibField);
+      rule.setAuthorityField(authorityField);
+      rule.setAutoLinkingEnabled(true);
+      rule.setAuthoritySubfields(new char[]{'a', 'c'});
+      rule.setSubfieldModifications(List.of(modification));
+      rule.setSubfieldsExistenceValidations(existence);
+      rules.add(rule);
+    }
+
+    return Map.of(bibField, rules);
+  }
+
 
   private void disableAutoLinkingFeature(List<InstanceAuthorityLinkingRule> rules) {
     rules.forEach(rule -> rule.setAutoLinkingEnabled(false));
