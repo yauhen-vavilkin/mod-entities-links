@@ -14,7 +14,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.entity.AuthorityIdentifier;
+import org.folio.entlinks.domain.entity.AuthorityNote;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
+import org.folio.entlinks.domain.entity.HeadingRef;
 import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
@@ -79,13 +82,14 @@ class AuthorityServiceTest {
 
   @Test
   void shouldGetAllAuthoritiesByIds() {
+    var id = UUID.randomUUID();
     var authority = new Authority();
-    authority.setId(UUID.randomUUID());
+    authority.setId(id);
     when(repository.findAllByIdInAndDeletedFalse(anyList())).thenReturn(List.of(authority));
 
-    var allGroupedByIds = service.getAllByIds(List.of(authority.getId()));
+    var allGroupedByIds = service.getAllByIds(List.of(id));
 
-    assertThat(allGroupedByIds).isEqualTo(Map.of(authority.getId(), authority));
+    assertThat(allGroupedByIds).isEqualTo(Map.of(id, authority));
   }
 
   @Test
@@ -133,29 +137,81 @@ class AuthorityServiceTest {
   }
 
   @Test
-  void shouldUpdateAuthorityStorage() {
-    var entity = new Authority();
+  void shouldUpdateAuthority() {
     UUID id = UUID.randomUUID();
-    entity.setId(id);
-    entity.setHeading("updated heading");
-    entity.setSource("updated source");
-    var expected = new Authority();
-    expected.setId(id);
-    var sourceFile = new AuthoritySourceFile();
-    sourceFile.setId(UUID.randomUUID());
-    entity.setAuthoritySourceFile(sourceFile);
 
-    when(repository.findByIdAndDeletedFalse(id)).thenReturn(Optional.of(expected));
+    var existed = new Authority();
+    existed.setId(id);
+    existed.setHeading("heading");
+    existed.setHeadingType("personalName");
+    existed.setSource("MARC");
+    existed.setNaturalId("natural");
+    existed.setVersion(0);
+    existed.setSaftHeadings(List.of(new HeadingRef("personalName", "saft")));
+    existed.setSftHeadings(List.of(new HeadingRef("personalName", "sft")));
+    existed.setNotes(List.of(new AuthorityNote(UUID.randomUUID(), "note", true)));
+    existed.setIdentifiers(List.of(new AuthorityIdentifier("identifier", UUID.randomUUID())));
+    var sourceFileOld = new AuthoritySourceFile();
+    sourceFileOld.setId(UUID.randomUUID());
+    existed.setAuthoritySourceFile(sourceFileOld);
+
+    var modified = new Authority();
+    modified.setId(id);
+    modified.setHeading("new heading");
+    modified.setHeadingType("personalNameNew");
+    modified.setSource("MARCNEW");
+    modified.setNaturalId("naturalNew");
+    modified.setVersion(0);
+    modified.setSaftHeadings(List.of(new HeadingRef("personalNameNew", "saftNew")));
+    modified.setSftHeadings(List.of(new HeadingRef("personalNameNew", "sftNew")));
+    modified.setNotes(List.of(new AuthorityNote(UUID.randomUUID(), "noteNew", true)));
+    modified.setIdentifiers(List.of(new AuthorityIdentifier("identifierNew", UUID.randomUUID())));
+    var sourceFileNew = new AuthoritySourceFile();
+    sourceFileNew.setId(UUID.randomUUID());
+    modified.setAuthoritySourceFile(sourceFileNew);
+
+    when(repository.findByIdAndDeletedFalse(id)).thenReturn(Optional.of(existed));
     when(sourceFileRepository.existsById(any(UUID.class))).thenReturn(true);
-    when(repository.save(expected)).thenReturn(expected);
+    when(repository.save(any(Authority.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    var updated = service.update(id, entity);
+    var updated = service.update(id, modified);
 
-    assertThat(updated).isEqualTo(expected);
-    assertThat(updated.getAuthoritySourceFile()).isEqualTo(sourceFile);
+    assertThat(updated)
+      .extracting(Authority::getId, Authority::getHeading, Authority::getHeadingType, Authority::getSource,
+        Authority::getNaturalId, Authority::getAuthoritySourceFile, Authority::getVersion, Authority::getSftHeadings,
+        Authority::getSaftHeadings, Authority::getNotes, Authority::getIdentifiers)
+      .containsExactly(modified.getId(), modified.getHeading(), modified.getHeadingType(), modified.getSource(),
+        modified.getNaturalId(), modified.getAuthoritySourceFile(), 1, modified.getSftHeadings(),
+        modified.getSaftHeadings(), modified.getNotes(), modified.getIdentifiers());
     verify(repository).findByIdAndDeletedFalse(id);
     verify(sourceFileRepository).existsById(any(UUID.class));
-    verify(repository).save(expected);
+    verify(repository).save(existed);
+    verifyNoMoreInteractions(repository);
+    verifyNoMoreInteractions(sourceFileRepository);
+  }
+
+  @Test
+  void shouldUpdateAuthority_whenSourceFileIsNull() {
+    UUID id = UUID.randomUUID();
+
+    var existed = new Authority();
+    existed.setId(id);
+    var sourceFileOld = new AuthoritySourceFile();
+    sourceFileOld.setId(UUID.randomUUID());
+    existed.setAuthoritySourceFile(sourceFileOld);
+
+    var modified = new Authority();
+    modified.setId(id);
+    modified.setAuthoritySourceFile(null);
+
+    when(repository.findByIdAndDeletedFalse(id)).thenReturn(Optional.of(existed));
+    when(repository.save(any(Authority.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    var updated = service.update(id, modified);
+
+    assertThat(updated.getAuthoritySourceFile()).isNull();
+    verify(repository).findByIdAndDeletedFalse(id);
+    verify(repository).save(existed);
     verifyNoMoreInteractions(repository);
     verifyNoMoreInteractions(sourceFileRepository);
   }
@@ -174,8 +230,8 @@ class AuthorityServiceTest {
     var thrown = assertThrows(OptimisticLockingException.class, () -> service.update(id, modified));
 
     assertThat(thrown.getMessage())
-        .isEqualTo("Cannot update record " + id + " because it has been changed (optimistic locking): "
-            + "Stored _version is 1, _version of request is 0");
+      .isEqualTo("Cannot update record " + id + " because it has been changed (optimistic locking): "
+        + "Stored _version is 1, _version of request is 0");
     verifyNoMoreInteractions(repository);
   }
 
