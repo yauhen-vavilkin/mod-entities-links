@@ -117,11 +117,11 @@ public class AuthorityService {
 
     Optional.ofNullable(modified.getAuthoritySourceFile())
       .map(AuthoritySourceFile::getId)
-      .ifPresent(sourceFileId -> {
+      .ifPresentOrElse(sourceFileId -> {
         var sourceFile = new AuthoritySourceFile();
         sourceFile.setId(sourceFileId);
         existing.setAuthoritySourceFile(sourceFile);
-      });
+      }, () -> existing.setAuthoritySourceFile(null));
   }
 
   private void validateSourceFile(Authority authority) {
