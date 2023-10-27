@@ -1,3 +1,10 @@
+## v2.0.1 2023-10-27
+## Bug fixes
+* Propagate central tenant authority links update to member tenants ([MODELINKS-119](https://issues.folio.org/browse/MODELINKS-119))
+* Updating authority's source file field to null ([MODELINKS-143](https://issues.folio.org/browse/MODELINKS-143))
+
+---
+
 ## v2.0.0 2023-10-12
 ### Breaking changes
 * Change '/links/authority/stats' endpoint path to '/links/stats/authority' ([MODELINKS-77](https://issues.folio.org/browse/MODELINKS-77))
