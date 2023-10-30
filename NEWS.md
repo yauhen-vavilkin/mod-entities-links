@@ -1,3 +1,12 @@
+## v2.0.2 2023-11-08
+## Bug fixes
+* Updating authority's source file field to null is failed ([MODELINKS-143](https://issues.folio.org/browse/MODELINKS-143))
+
+### Tech Dept
+* Fix secure setup of system users by default ([MODELINKS-135](https://issues.folio.org/browse/MODELINKS-135))
+
+---
+
 ## v2.0.1 2023-10-27
 ## Bug fixes
 * Propagate central tenant authority links update to member tenants ([MODELINKS-119](https://issues.folio.org/browse/MODELINKS-119))
