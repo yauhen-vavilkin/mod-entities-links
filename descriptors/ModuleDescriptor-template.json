@@ -685,11 +685,6 @@
         "description": "Okapi URL"
       },
       {
-        "name": "SYSTEM_USER_PASSWORD",
-        "value": "mod-entities-links",
-        "description": "Password for system user"
-      },
-      {
         "name": "KAFKA_HOST",
         "value": "kafka",
         "description": "Kafka broker hostname"
