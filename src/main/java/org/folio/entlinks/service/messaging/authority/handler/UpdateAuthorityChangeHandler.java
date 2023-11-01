@@ -142,8 +142,8 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
                                                         List<InstanceAuthorityLinkingRule> linkingRuleForField)
     throws AuthorityBatchProcessingException {
     var sourceRecord = Optional.ofNullable(authoritySourceRecord)
-        .orElseThrow(() -> new AuthorityBatchProcessingException(authorityId,
-            "Source record not found for [authorityId: " + authorityId + "]"));
+      .orElseThrow(() -> new AuthorityBatchProcessingException(authorityId,
+        "Source record not found for [authorityId: " + authorityId + "]"));
     var dataField = sourceRecord.content().getDataFields().stream()
       .filter(field -> field.getTag().equals(changedTag))
       .findFirst()
@@ -163,7 +163,7 @@ public class UpdateAuthorityChangeHandler extends AbstractAuthorityChangeHandler
   }
 
   private SubfieldChange getSubfield0Change(String naturalId, UUID sourceFileId) {
-    var sourceFile = sourceFileRepository.findById(sourceFileId).orElse(null);
+    var sourceFile = sourceFileId == null ? null : sourceFileRepository.findById(sourceFileId).orElse(null);
     var subfield0Value = getSubfield0Value(naturalId, sourceFile);
     return new SubfieldChange().code("0").value(subfield0Value);
   }
