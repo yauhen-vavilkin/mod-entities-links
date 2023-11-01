@@ -80,7 +80,7 @@ class InstanceAuthorityLinkUpdateServiceTest {
     final var id = UUID.randomUUID();
     final var authorityEvents = List.of(
       new AuthorityDomainEvent(id, null, new AuthorityDto().naturalId("new").personalName("test"),
-          DomainEventType.UPDATE, TENANT_ID));
+        DomainEventType.UPDATE, TENANT_ID));
     final var sourceRecord = new AuthoritySourceRecord(null, null, null);
 
     var expected = new LinksChangeEvent().type(LinksChangeEvent.TypeEnum.UPDATE);
@@ -97,8 +97,38 @@ class InstanceAuthorityLinkUpdateServiceTest {
     var changeHolders = changeHolderCaptor.getValue();
 
     assertThat(changeHolders)
-        .isNotEmpty()
-        .allMatch(changeHolder -> changeHolder.getSourceRecord() == sourceRecord);
+      .isNotEmpty()
+      .allMatch(changeHolder -> changeHolder.getSourceRecord() == sourceRecord);
+
+    var messages = eventCaptor.getValue();
+    assertThat(messages).hasSize(1);
+    assertThat(messages.get(0).getType()).isEqualTo(LinksChangeEvent.TypeEnum.UPDATE);
+  }
+
+  @Test
+  void handleAuthoritiesChanges_positive_updateEventWhenNaturalIdChanged() {
+    final var id = UUID.randomUUID();
+    final var authorityEvents = List.of(
+      new AuthorityDomainEvent(id, new AuthorityDto().naturalId("n101010").personalName("test")
+        .sourceFileId(UUID.randomUUID()),
+        new AuthorityDto().naturalId("101010").personalName("test"),
+        DomainEventType.UPDATE, TENANT_ID));
+
+    var expected = new LinksChangeEvent().type(LinksChangeEvent.TypeEnum.UPDATE);
+    when(linkingService.countLinksByAuthorityIds(Set.of(id))).thenReturn(Map.of(id, 1));
+    when(updateHandler.handle(changeHolderCaptor.capture())).thenReturn(List.of(expected));
+
+    service.handleAuthoritiesChanges(authorityEvents);
+
+    verify(eventProducer).sendMessages(eventCaptor.capture());
+    verify(authorityDataStatService).createInBatch(anyList());
+    verifyNoMoreInteractions(authorityDataStatService);
+
+    var changeHolders = changeHolderCaptor.getValue();
+
+    assertThat(changeHolders)
+      .isNotEmpty()
+      .allMatch(changeHolder -> changeHolder.getSourceRecord() == null);
 
     var messages = eventCaptor.getValue();
     assertThat(messages).hasSize(1);
@@ -147,16 +177,16 @@ class InstanceAuthorityLinkUpdateServiceTest {
   void handleAuthoritiesChanges_positive_updateEventOnConsortiumCentralTenant() {
     final var id = UUID.randomUUID();
     final var authorityEvents = List.of(
-        new AuthorityDomainEvent(id, null, new AuthorityDto().naturalId("new").personalName("test"),
-            DomainEventType.UPDATE, TENANT_ID));
+      new AuthorityDomainEvent(id, null, new AuthorityDto().naturalId("new").personalName("test"),
+        DomainEventType.UPDATE, TENANT_ID));
     final var sourceRecord = new AuthoritySourceRecord(null, null, null);
     final var memberTenants = List.of("tenant1", "tenant2");
 
     var expected = new LinksChangeEvent().type(LinksChangeEvent.TypeEnum.UPDATE);
     when(linkingService.countLinksByAuthorityIds(Set.of(id)))
-        .thenReturn(Map.of(id, 1))
-        .thenReturn(Map.of(id, 2))
-        .thenReturn(Map.of(id, 3));
+      .thenReturn(Map.of(id, 1))
+      .thenReturn(Map.of(id, 2))
+      .thenReturn(Map.of(id, 3));
     when(sourceRecordService.getAuthoritySourceRecordById(any())).thenReturn(sourceRecord);
     when(updateHandler.handle(changeHolderCaptor.capture())).thenReturn(List.of(expected));
     when(folioExecutionContext.getTenantId()).thenReturn(TENANT_ID);
@@ -175,10 +205,10 @@ class InstanceAuthorityLinkUpdateServiceTest {
 
     var changeHolders = changeHolderCaptor.getAllValues().stream().flatMap(Collection::stream).toList();
     assertThat(changeHolders)
-        .hasSize(3)
-        .allMatch(changeHolder -> changeHolder.getSourceRecord() == sourceRecord)
-        .extracting(AuthorityChangeHolder::getNumberOfLinks)
-        .containsExactlyInAnyOrder(1, 2, 3);
+      .hasSize(3)
+      .allMatch(changeHolder -> changeHolder.getSourceRecord() == sourceRecord)
+      .extracting(AuthorityChangeHolder::getNumberOfLinks)
+      .containsExactlyInAnyOrder(1, 2, 3);
 
     verify(authorityDataStatService, times(3)).createInBatch(anyList());
   }
@@ -186,6 +216,6 @@ class InstanceAuthorityLinkUpdateServiceTest {
   @SuppressWarnings("unchecked")
   private void mockExecutionService() {
     doAnswer(invocationOnMock -> ((Callable<Object>) invocationOnMock.getArgument(1)).call())
-        .when(executionService).executeSystemUserScoped(any(), any());
+      .when(executionService).executeSystemUserScoped(any(), any());
   }
 }
