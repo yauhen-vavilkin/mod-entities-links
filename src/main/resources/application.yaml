@@ -67,6 +67,7 @@ folio:
   environment: ${ENV:folio}
   okapi-url: ${OKAPI_URL:http://localhost:9130}
   system-user:
+    enabled: ${SYSTEM_USER_ENABLED:true}
     username: ${SYSTEM_USER_USERNAME:mod-entities-links}
     password: ${SYSTEM_USER_PASSWORD}
     lastname: Automated linking update
