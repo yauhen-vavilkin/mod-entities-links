@@ -67,6 +67,19 @@
           "Content-Type": "application/json"
         }
       }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/authn/credentials?userId=38d3a441-c100-5e8d-bd12-71bde492b723"
+      },
+      "response": {
+        "status": 204,
+        "body": "",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
     }
   ]
 }
