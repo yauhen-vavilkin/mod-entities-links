@@ -28,7 +28,7 @@
     <!-- bump kafka.version to fix snappy-java vulnerabilities;
          remove <kafka.version> when using spring-boot-starter-parent >= 3.2 -->
     <kafka.version>3.5.1</kafka.version>
-    <folio-spring-base.version>7.2.0</folio-spring-base.version>
+    <folio-spring-base.version>7.2.1</folio-spring-base.version>
     <hypersistence-utils-hibernate.version>3.6.0</hypersistence-utils-hibernate.version>
     <folio-service-tools.version>4.0.0-SNAPSHOT</folio-service-tools.version>
     <mapstruct.version>1.5.5.Final</mapstruct.version>
