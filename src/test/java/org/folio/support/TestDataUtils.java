@@ -58,8 +58,8 @@ import org.folio.entlinks.domain.entity.ReindexJobResource;
 import org.folio.entlinks.domain.entity.ReindexJobStatus;
 import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
 import org.folio.entlinks.service.reindex.event.DomainEventType;
-import org.folio.spring.tools.client.UsersClient;
-import org.folio.spring.tools.model.ResultList;
+import org.folio.spring.client.UsersClient;
+import org.folio.spring.model.ResultList;
 
 @UtilityClass
 public class TestDataUtils {
@@ -207,12 +207,14 @@ public class TestDataUtils {
       new UsersClient.User(
         userIds.get(0).toString(),
         "john_doe",
+        "user1",
         true,
         new UsersClient.User.Personal("John", "Doe")
       ),
       new UsersClient.User(
         userIds.get(1).toString(),
         "quick_fox",
+        "user",
         true,
         new UsersClient.User.Personal("Quick", "Brown")
       )

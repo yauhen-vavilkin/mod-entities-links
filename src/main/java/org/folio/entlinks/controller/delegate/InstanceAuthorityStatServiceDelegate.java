@@ -19,8 +19,8 @@ import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.entlinks.utils.DateUtils;
-import org.folio.spring.tools.client.UsersClient;
-import org.folio.spring.tools.model.ResultList;
+import org.folio.spring.client.UsersClient;
+import org.folio.spring.model.ResultList;
 import org.springframework.stereotype.Component;
 
 @Log4j2
