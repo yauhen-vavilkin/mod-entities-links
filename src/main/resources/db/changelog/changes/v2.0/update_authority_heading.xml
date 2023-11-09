@@ -6,9 +6,7 @@
 
     <changeSet id="MODELINKS-148@@change-authority-heading-length" author="psmahin">
         <preConditions onFail="MARK_RAN">
-            <not>
-                <tableExists tableName="authority"/>
-            </not>
+          <tableExists tableName="authority"/>
         </preConditions>
 
         <comment>Change heading column length to 2500</comment>

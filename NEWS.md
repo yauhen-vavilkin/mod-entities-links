@@ -7,7 +7,7 @@
 * Requires `API_NAME vX.Y`
 
 ### Features
-* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+* Implement Authority Archiving for deleted authoritites ([MODELINKS-138](https://issues.folio.org/browse/MODELINKS-138))
 
 ### Bug fixes
 * Fix secure setup of system users by default ([MODELINKS-135](https://issues.folio.org/browse/MODELINKS-135))

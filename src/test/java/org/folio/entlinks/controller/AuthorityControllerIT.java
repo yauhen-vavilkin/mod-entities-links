@@ -6,6 +6,9 @@ import static org.folio.entlinks.config.constants.ErrorCode.VIOLATION_OF_RELATIO
 import static org.folio.entlinks.service.reindex.event.DomainEventType.CREATE;
 import static org.folio.entlinks.service.reindex.event.DomainEventType.DELETE;
 import static org.folio.entlinks.service.reindex.event.DomainEventType.UPDATE;
+import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
+import static org.folio.support.DatabaseHelper.AUTHORITY_DATA_STAT_TABLE;
+import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
 import static org.folio.support.KafkaTestUtils.createAndStartTestConsumer;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authority;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authorityDto;
@@ -62,8 +65,9 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @IntegrationTest
 @DatabaseCleanup(tables = {
   DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE,
-  DatabaseHelper.AUTHORITY_DATA_STAT_TABLE,
-  DatabaseHelper.AUTHORITY_TABLE,
+  AUTHORITY_DATA_STAT_TABLE,
+  AUTHORITY_TABLE,
+  AUTHORITY_ARCHIVE_TABLE,
   DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class AuthorityControllerIT extends IntegrationTestBase {
 
@@ -163,7 +167,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("POST: create new Authority with defined ID")
   void createAuthority_positive_entityCreatedWithProvidedId() throws Exception {
-    assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
+    assumeTrue(databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID) == 0);
 
     var dto = authorityDto(0, 0);
     var id = randomUUID();
@@ -189,7 +193,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
     verifyReceivedDomainEvent(receivedEvent, CREATE, DOMAIN_EVENT_HEADER_KEYS, created, AuthorityDto.class,
         "metadata.createdDate", "metadata.updatedDate");
-    assertEquals(1, databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID));
+    assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID));
     assertEquals(dto.getNotes(), created.getNotes());
     assertEquals(dto.getIdentifiers(), created.getIdentifiers());
     assertEquals(dto.getSftPersonalName(), created.getSftPersonalName());
@@ -199,7 +203,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("POST: create new Authority without defined ID")
   void createAuthority_positive_entityCreatedWithNewId() throws Exception {
-    assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
+    assumeTrue(databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID) == 0);
 
     var dto = authorityDto(0, 0);
     createSourceFile(0);
@@ -221,7 +225,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var created = objectMapper.readValue(content, AuthorityDto.class);
     getReceivedEvent();
 
-    assertEquals(1, databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID));
+    assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID));
     assertEquals(dto.getNotes(), created.getNotes());
     assertEquals(dto.getIdentifiers(), created.getIdentifiers());
     assertEquals(dto.getSftPersonalName(), created.getSftPersonalName());
@@ -231,7 +235,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("POST: create new Authority without Source File ID")
   void createAuthority_positive_entityWithoutSourceFileRelationShouldBeCreated() throws Exception {
-    assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
+    assumeTrue(databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID) == 0);
 
     var dto = authorityDto(0, 0);
     dto.setSourceFileId(null);
@@ -249,13 +253,13 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
     getReceivedEvent();
 
-    assertEquals(1, databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID));
+    assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID));
   }
 
   @Test
   @DisplayName("POST: create new Authority with non-existing source file")
   void createAuthority_negative_notCreatedWithNonExistingSourceFile() throws Exception {
-    assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
+    assumeTrue(databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID) == 0);
 
     var dto = authorityDto(0, 0);
     var sourceFileId = randomUUID();
@@ -270,7 +274,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("POST: create new Authority with duplicate id")
   void createAuthority_negative_notCreatedWithDuplicatedId() throws Exception {
-    assumeTrue(databaseHelper.countRows(DatabaseHelper.AUTHORITY_TABLE, TENANT_ID) == 0);
+    assumeTrue(databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID) == 0);
 
     var dto = authorityDto(0, 0);
     dto.setId(randomUUID());
@@ -323,7 +327,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var resultDto = objectMapper.readValue(content, AuthorityDto.class);
     var receivedEvent = getReceivedEvent();
     awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
+        assertEquals(1, databaseHelper.countRows(AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
 
     verifyReceivedDomainEvent(receivedEvent, UPDATE, DOMAIN_EVENT_HEADER_KEYS, resultDto, AuthorityDto.class,
         "metadata.createdDate", "metadata.updatedDate");
@@ -430,11 +434,14 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
     doDelete(authorityEndpoint(authority.getId()));
     var receivedEvent = getReceivedEvent();
-    awaitUntilAsserted(() ->
-        assertEquals(1, databaseHelper.countRows(DatabaseHelper.AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
-
     verifyReceivedDomainEvent(receivedEvent, DELETE, DOMAIN_EVENT_HEADER_KEYS, expectedDto, AuthorityDto.class,
         "metadata.createdDate", "metadata.updatedDate");
+
+    awaitUntilAsserted(() ->
+        assertEquals(1, databaseHelper.countRows(AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
+    awaitUntilAsserted(() ->
+        assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID,
+            String.format("id = '%s' AND deleted = true", authority.getId()))));
     tryGet(authorityEndpoint(authority.getId()))
         .andExpect(status().isNotFound())
         .andExpect(exceptionMatch(AuthorityNotFoundException.class));

@@ -15,4 +15,5 @@
   <include file="/changes/v2.0/create-reindex-job.xml" relativeToChangelogFile="true"/>
   <include file="/changes/v2.0/replace_authority_data.xml" relativeToChangelogFile="true"/>
   <include file="/changes/v2.0/update_authority_heading.xml" relativeToChangelogFile="true"/>
+  <include file="/changes/v2.1/create-authority_archive.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
