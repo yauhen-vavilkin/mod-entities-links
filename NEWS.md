@@ -1,3 +1,9 @@
+## v2.0.3 2023-11-10
+## Bug fixes
+* Remove foreign key for authority_data_stat ([MODELINKS-155](https://issues.folio.org/browse/MODELINKS-155))
+
+---
+
 ## v2.0.2 2023-11-08
 ## Bug fixes
 * Updating authority's source file field to null is failed ([MODELINKS-143](https://issues.folio.org/browse/MODELINKS-143))
