@@ -84,26 +84,4 @@
                              onDelete="CASCADE"/>
   </changeSet>
 
-  <changeSet id="MODELINKS-2@@add-authority_data_stat-authority_id-foreign-key" author="Mukhiddin_Yusupov">
-    <preConditions onFail="MARK_RAN">
-      <and>
-        <tableExists tableName="authority"/>
-        <tableExists tableName="authority_data_stat"/>
-        <not>
-          <foreignKeyConstraintExists foreignKeyName="fk_authority_data_stat_authority_id"
-                                      schemaName="${database.defaultSchemaName}"
-                                      foreignKeyTableName="authority_data_stat"/>
-        </not>
-      </and>
-    </preConditions>
-
-    <comment>Add FK for authority_id in authority_data_stat referenced to authority.id</comment>
-
-    <addForeignKeyConstraint baseTableName="authority_data_stat"
-                             baseColumnNames="authority_id"
-                             referencedTableName="authority"
-                             referencedColumnNames="id"
-                             constraintName="fk_authority_data_stat_authority_id"/>
-  </changeSet>
-
 </databaseChangeLog>
