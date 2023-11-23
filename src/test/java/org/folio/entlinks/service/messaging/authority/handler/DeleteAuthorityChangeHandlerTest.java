@@ -7,6 +7,7 @@ import static org.assertj.core.groups.Tuple.tuple;
 import static org.folio.entlinks.domain.dto.LinksChangeEvent.TypeEnum;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -22,6 +23,7 @@ import org.folio.entlinks.domain.dto.ChangeTarget;
 import org.folio.entlinks.domain.dto.ChangeTargetLink;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
+import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolder;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
@@ -41,6 +43,7 @@ class DeleteAuthorityChangeHandlerTest {
 
   private @Mock InstanceAuthorityLinkingService linkingService;
   private @Mock InstanceAuthorityChangeProperties properties;
+  private @Mock AuthorityService authorityService;
   private @InjectMocks DeleteAuthorityChangeHandler handler;
 
   @Test
@@ -61,7 +64,7 @@ class DeleteAuthorityChangeHandlerTest {
   void handle_positive() {
     var eventIds = Set.of(UUID.randomUUID(), UUID.randomUUID());
     var events = eventIds.stream()
-      .map(uuid -> new AuthorityChangeHolder(new AuthorityDomainEvent(uuid), emptyMap(), emptyMap(), 0))
+      .map(uuid -> new AuthorityChangeHolder(new AuthorityDomainEvent(uuid), emptyMap(), emptyMap(), 1))
       .toList();
     var instanceId1 = UUID.randomUUID();
     var instanceId2 = UUID.randomUUID();
@@ -93,6 +96,7 @@ class DeleteAuthorityChangeHandlerTest {
         tuple(events.get(0).getAuthorityId(), TypeEnum.DELETE, List.of(changeTarget(instanceId2, link2))),
         tuple(events.get(1).getAuthorityId(), TypeEnum.DELETE, List.of(changeTarget(instanceId3, link3)))
       );
+    verify(authorityService).batchDeleteByIds(anyCollection());
   }
 
   @Test

@@ -92,6 +92,11 @@ public class AuthorityService {
     return repository.save(existing);
   }
 
+  /**
+   * Performs soft-delete of {@link Authority} records.
+   *
+   * @param id authority record id of {@link UUID} type
+   */
   @Transactional
   public void deleteById(UUID id) {
     log.debug("deleteById:: Attempt to delete Authority by [id: {}]", id);
@@ -101,6 +106,16 @@ public class AuthorityService {
     authority.setDeleted(true);
 
     repository.save(authority);
+  }
+
+  /**
+   * Performs hard-delete of {@link Authority} records.
+   *
+   * @param ids collection of authority record ids of {@link UUID} type
+   */
+  @Transactional
+  public void batchDeleteByIds(Collection<UUID> ids) {
+    repository.deleteAllByIdInBatch(ids);
   }
 
   private void copyModifiableFields(Authority existing, Authority modified) {

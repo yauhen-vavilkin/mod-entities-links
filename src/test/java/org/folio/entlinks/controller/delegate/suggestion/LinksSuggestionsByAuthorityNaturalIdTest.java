@@ -74,7 +74,8 @@ class LinksSuggestionsByAuthorityNaturalIdTest {
 
   @Test
   void extractId_positive() {
-    var authority = new Authority().withNaturalId("test");
+    var authority = new Authority();
+    authority.setNaturalId("test");
     var actual = delegate.extractId(authority);
     assertThat(actual).isEqualTo(authority.getNaturalId());
   }

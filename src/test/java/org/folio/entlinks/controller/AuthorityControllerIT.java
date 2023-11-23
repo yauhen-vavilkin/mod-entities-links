@@ -16,6 +16,7 @@ import static org.folio.support.TestDataUtils.AuthorityTestData.authoritySourceF
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
+import static org.folio.support.base.TestConstants.authorityExpireEndpoint;
 import static org.folio.support.base.TestConstants.authoritySourceFilesEndpoint;
 import static org.folio.support.base.TestConstants.authorityTopic;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -27,6 +28,9 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
@@ -424,7 +428,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
   // Tests for DELETE
 
   @Test
-  @DisplayName("DELETE: Should delete existing authority")
+  @DisplayName("DELETE: Should delete existing authority and put it into archive table")
   void deleteAuthority_positive_deleteExistingEntity() throws Exception {
     createSourceFile(0);
     var authority = createAuthority(0, 0);
@@ -442,9 +446,36 @@ class AuthorityControllerIT extends IntegrationTestBase {
     awaitUntilAsserted(() ->
         assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID,
             String.format("id = '%s' AND deleted = true", authority.getId()))));
+    awaitUntilAsserted(() ->
+        assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID)));
     tryGet(authorityEndpoint(authority.getId()))
         .andExpect(status().isNotFound())
         .andExpect(exceptionMatch(AuthorityNotFoundException.class));
+  }
+
+  @Test
+  @DisplayName("DELETE: Should delete existing authority archives")
+  void expireAuthorityArchives_positive_shouldExpireExistingArchives() {
+    createSourceFile(0);
+    var authority1 = createAuthority(0, 0);
+    var authority2 = createAuthority(1, 0);
+
+    doDelete(authorityEndpoint(authority1.getId()));
+    doDelete(authorityEndpoint(authority2.getId()));
+    getReceivedEvent();
+    getReceivedEvent();
+
+    awaitUntilAsserted(() ->
+        assertEquals(2, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID, "deleted = true")));
+    awaitUntilAsserted(() ->
+        assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID)));
+
+    var dateInPast = Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS));
+    databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority1.getId(), dateInPast);
+    databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority2.getId(), dateInPast);
+    doPost(authorityExpireEndpoint(), null);
+
+    assertEquals(0, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, TENANT_ID));
   }
 
   @Test

@@ -77,7 +77,8 @@ class LinksSuggestionsByAuthorityIdTest {
 
   @Test
   void extractId_positive() {
-    var authority = new Authority().withId(UUID.randomUUID());
+    var authority = new Authority();
+    authority.setId(UUID.randomUUID());
     var actual = delegate.extractId(authority);
     assertThat(actual).isEqualTo(authority.getId());
   }

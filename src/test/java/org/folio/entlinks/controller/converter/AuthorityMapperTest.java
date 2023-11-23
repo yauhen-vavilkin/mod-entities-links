@@ -220,20 +220,20 @@ class AuthorityMapperTest {
   private static Authority createAuthority() {
     var file = new AuthoritySourceFile();
     file.setId(TEST_ID);
-    var authority = new Authority()
-        .withId(TEST_ID)
-        .withVersion(TEST_VERSION)
-        .withSource(TEST_PROPERTY_VALUE)
-        .withNaturalId(TEST_PROPERTY_VALUE)
-        .withAuthoritySourceFile(file)
-        .withIdentifiers(List.of(new AuthorityIdentifier(TEST_PROPERTY_VALUE, TEST_ID)))
-        .withNotes(List.of(new AuthorityNote(TEST_ID, TEST_PROPERTY_VALUE, true)))
-        .withSubjectHeadingCode(TEST_PROPERTY_VALUE.charAt(0));
-    authority.setUpdatedDate(TEST_DATE);
-    authority.setUpdatedByUserId(TEST_ID);
-    authority.setCreatedDate(TEST_DATE);
-    authority.setCreatedByUserId(TEST_ID);
-    return authority;
+    return Authority.builder()
+        .id(TEST_ID)
+        .version(TEST_VERSION)
+        .source(TEST_PROPERTY_VALUE)
+        .naturalId(TEST_PROPERTY_VALUE)
+        .authoritySourceFile(file)
+        .identifiers(List.of(new AuthorityIdentifier(TEST_PROPERTY_VALUE, TEST_ID)))
+        .notes(List.of(new AuthorityNote(TEST_ID, TEST_PROPERTY_VALUE, true)))
+        .subjectHeadingCode(TEST_PROPERTY_VALUE.charAt(0))
+        .updatedDate(TEST_DATE)
+        .createdDate(TEST_DATE)
+        .updatedByUserId(TEST_ID)
+        .createdByUserId(TEST_ID)
+        .build();
   }
 
   @NotNull

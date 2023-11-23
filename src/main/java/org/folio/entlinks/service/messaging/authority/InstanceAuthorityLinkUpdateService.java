@@ -1,5 +1,6 @@
 package org.folio.entlinks.service.messaging.authority;
 
+import static org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType.DELETE;
 import static org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType.UPDATE;
 import static org.folio.entlinks.utils.ObjectUtils.getDifference;
 
@@ -96,15 +97,7 @@ public class InstanceAuthorityLinkUpdateService {
 
   private void processEventsByChangeType(List<AuthorityChangeHolder> changeHolders) {
     var changesByType = changeHolders.stream()
-      .filter(changeHolder -> {
-        if (changeHolder.getNumberOfLinks() > 0) {
-          return true;
-        } else {
-          log.info("Skip message. Authority record [tenantId: {}, id: {}] doesn't have links",
-              folioExecutionContext.getTenantId(), changeHolder.getAuthorityId());
-          return false;
-        }
-      })
+      .filter(this::isProcessableChange)
       .collect(Collectors.groupingBy(AuthorityChangeHolder::getChangeType));
 
     for (var eventsByTypeEntry : changesByType.entrySet()) {
@@ -119,6 +112,21 @@ public class InstanceAuthorityLinkUpdateService {
         sendEvents(linksEvents, type);
       }
     }
+  }
+
+  private boolean isProcessableChange(AuthorityChangeHolder changeHolder) {
+    if (changeHolder.getChangeType() == DELETE) {
+      return true;
+    }
+
+    if (changeHolder.getChangeType() == UPDATE && changeHolder.getNumberOfLinks() > 0) {
+      return true;
+    }
+
+    log.info("Skip message for {} event. Authority record [tenantId: {}, id: {}] doesn't have links",
+        changeHolder.getChangeType(), folioExecutionContext.getTenantId(), changeHolder.getAuthorityId());
+    return false;
+
   }
 
   private void prepareAndSaveAuthorityDataStats(List<AuthorityChangeHolder> changeHolders) {

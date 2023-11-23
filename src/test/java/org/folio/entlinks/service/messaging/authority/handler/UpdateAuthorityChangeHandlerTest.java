@@ -93,9 +93,10 @@ class UpdateAuthorityChangeHandlerTest {
     var changes = Map.of(
       PERSONAL_NAME, new AuthorityChange(PERSONAL_NAME, "new", "old")
     );
-    var event = new AuthorityChangeHolder(new AuthorityDomainEvent(id), changes, emptyMap(), 0);
-    event.setSourceRecord(new AuthoritySourceRecord(id, UUID.randomUUID(), new RecordImpl()));
-    handler.handle(List.of(event));
+    var event = new AuthorityDomainEvent(id, null, null, DomainEventType.UPDATE, null);
+    var changeHolder = new AuthorityChangeHolder(event, changes, emptyMap(), 1);
+    changeHolder.setSourceRecord(new AuthoritySourceRecord(id, UUID.randomUUID(), new RecordImpl()));
+    handler.handle(List.of(changeHolder));
 
     verify(linksUpdateKafkaTemplate).sendMessages(producerRecord.capture());
     assertThat(producerRecord.getValue().get(0))
@@ -107,10 +108,11 @@ class UpdateAuthorityChangeHandlerTest {
   void handle_positive_whenNaturalIdChanged() {
     var authorityId = UUID.randomUUID();
     var instanceId = UUID.randomUUID();
+    var authority = Authority.builder().id(authorityId).build();
 
     when(instanceAuthorityChangeProperties.getNumPartitions()).thenReturn(2);
     when(linkingService.getLinksByAuthorityId(eq(authorityId), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(
-      new InstanceAuthorityLink(1L, new Authority().withId(authorityId), instanceId,
+      new InstanceAuthorityLink(1L, authority, instanceId,
         new InstanceAuthorityLinkingRule(1, "100", "100", new char[] {'a'}, null, null, true),
         InstanceAuthorityLinkStatus.ACTUAL, null)
     )));

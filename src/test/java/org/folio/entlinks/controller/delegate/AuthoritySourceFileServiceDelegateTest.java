@@ -1,5 +1,6 @@
 package org.folio.entlinks.controller.delegate;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.support.base.TestConstants.INPUT_BASE_URL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -16,6 +17,7 @@ import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.service.authority.AuthoritySourceFileService;
 import org.folio.spring.test.type.UnitTest;
+import org.folio.support.TestDataUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -109,21 +111,24 @@ class AuthoritySourceFileServiceDelegateTest {
 
   @Test
   void shouldNormalizeBaseUrlForSourceFilePartialUpdate() {
-    var id = UUID.randomUUID();
-    var existing = new AuthoritySourceFile();
+    var existing = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
     existing.setBaseUrl(INPUT_BASE_URL);
+    var authority = TestDataUtils.AuthorityTestData.authority(0, 0);
+    existing.getAuthorities().add(authority);
+    var expected = new AuthoritySourceFile(existing);
+    expected.setBaseUrl(SANITIZED_BASE_URL);
 
-    when(service.getById(id)).thenReturn(existing);
+    when(service.getById(existing.getId())).thenReturn(existing);
     when(mapper.partialUpdate(any(AuthoritySourceFilePatchDto.class), any(AuthoritySourceFile.class)))
         .thenAnswer(i -> i.getArguments()[1]);
     when(service.update(any(UUID.class), any(AuthoritySourceFile.class))).thenAnswer(i -> i.getArguments()[1]);
-    var dto = new AuthoritySourceFilePatchDto().id(id).baseUrl(INPUT_BASE_URL);
+    var dto = new AuthoritySourceFilePatchDto().id(existing.getId()).baseUrl(INPUT_BASE_URL);
 
-    delegate.patchAuthoritySourceFile(id, dto);
+    delegate.patchAuthoritySourceFile(existing.getId(), dto);
 
     verify(service).update(any(UUID.class), sourceFileArgumentCaptor.capture());
-    var partchedSourceFile = sourceFileArgumentCaptor.getValue();
-    assertEquals(SANITIZED_BASE_URL, partchedSourceFile.getBaseUrl());
+    var patchedSourceFile = sourceFileArgumentCaptor.getValue();
+    assertThat(expected).usingDefaultComparator().isEqualTo(patchedSourceFile);
     verify(mapper).partialUpdate(any(AuthoritySourceFilePatchDto.class), any(AuthoritySourceFile.class));
     verify(service).getById(any(UUID.class));
     verifyNoMoreInteractions(mapper, service);

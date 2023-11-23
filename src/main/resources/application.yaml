@@ -96,6 +96,9 @@ folio:
       numPartitions: ${KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS:100}
   instance-storage:
     batch-size: ${INSTANCE_STORAGE_QUERY_BATCH_SIZE:50}
+  authority-archive:
+    expire:
+      retentionPeriodInDays: ${AUTHORITY_ARCHIVES_EXPIRATION_PERIOD:7}
 
   retry:
     enabled: true

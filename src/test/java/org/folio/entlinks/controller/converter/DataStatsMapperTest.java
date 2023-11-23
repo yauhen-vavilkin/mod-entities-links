@@ -91,7 +91,7 @@ class DataStatsMapperTest {
   @NotNull
   private static AuthorityDataStat createAuthorityDataStat() {
     AuthorityDataStat source = new AuthorityDataStat();
-    source.setAuthority(new Authority().withId(TEST_ID));
+    source.setAuthority(Authority.builder().id(TEST_ID).build());
     source.setAuthorityNaturalIdOld("OldNaturalId");
     source.setAuthorityNaturalIdNew("NewNaturalId");
     source.setAuthoritySourceFileOld(TEST_ID);

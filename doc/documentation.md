@@ -73,42 +73,43 @@ docker run -t -i -p 8081:8081 mod-entities-links
 
 ### Environment variables
 
-| Name                                                    | Default value                         | Description                                                                                                                                                                                          |
-|:--------------------------------------------------------|:--------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ENV                                                     | folio                                 | The logical name of the deployment, must be unique across all environments using the same shared Kafka/Elasticsearch clusters, `a-z (any case)`, `0-9`, `-`, `_` symbols only allowed                |
-| DB_HOST                                                 | localhost                             | Postgres hostname                                                                                                                                                                                    |
-| DB_PORT                                                 | 5432                                  | Postgres port                                                                                                                                                                                        |
-| DB_USERNAME                                             | folio_admin                           | Postgres username                                                                                                                                                                                    |
-| DB_PASSWORD                                             | folio_admin                           | Postgres username password                                                                                                                                                                           |
-| DB_DATABASE                                             | okapi_modules                         | Postgres database name                                                                                                                                                                               |
-| DB_MAXPOOLSIZE                                          | 10                                    | This property controls the maximum size that the pool is allowed to reach, including both idle and in-use connections                                                                                |
-| DB_MINIMUM_IDLE                                         | 10                                    | This property controls the minimum number of idle connections that HikariCP tries to maintain in the pool                                                                                            |
-| DB_CONNECTION_TIMEOUT                                   | 30000                                 | This property controls the maximum number of milliseconds that a client will wait for a connection from the pool                                                                                     |
-| DB_IDLE_TIMEOUT                                         | 600000                                | This property controls the maximum amount of time that a connection is allowed to sit idle in the pool. This setting only applies when `DB_MINIMUM_IDLE` is defined to be less than `DB_MAXPOOLSIZE` |
-| DB_KEEPALIVE_TIME                                       | 0                                     | This property controls how frequently HikariCP will attempt to keep a connection alive, in order to prevent it from being timed out by the database or network infrastructure (0 - disabled)         |
-| DB_MAX_LIFETIME                                         | 1800000                               | This property controls the maximum lifetime of a connection in the pool                                                                                                                              |
-| DB_VALIDATION_TIMEOUT                                   | 5000                                  | This property controls the maximum amount of time that a connection will be tested for aliveness. This value must be less than the `DB_CONNECTION_TIMEOUT`                                           |
-| DB_INITIALIZATION_FAIL_TIMEOUT                          | 30000                                 | This property controls whether the pool will "fail fast" if the pool cannot be seeded with an initial connection successfully                                                                        |
-| DB_LEAK_DETECTION_THRESHOLD                             | 30000                                 | This property controls the amount of time that a connection can be out of the pool before a message is logged indicating a possible connection leak (0 - disabled)                                   |
-| OKAPI_URL                                               | -                                     | Okapi URL                                                                                                                                                                                            |
-| SYSTEM_USER_USERNAME                                    | mod-entities-links                    | Username for system user                                                                                                                                                                             |
-| SYSTEM_USER_PASSWORD                                    | -                                     | Password for system user                                                                                                                                                                             |
-| KAFKA_HOST                                              | kafka                                 | Kafka broker hostname                                                                                                                                                                                |
-| KAFKA_PORT                                              | 9092                                  | Kafka broker port                                                                                                                                                                                    |
-| KAFKA_SECURITY_PROTOCOL                                 | PLAINTEXT                             | Kafka security protocol used to communicate with brokers (SSL or PLAINTEXT)                                                                                                                          |
-| KAFKA_SSL_KEYSTORE_LOCATION                             | -                                     | The location of the Kafka key store file. This is optional for client and can be used for two-way authentication for client.                                                                         |
-| KAFKA_SSL_KEYSTORE_PASSWORD                             | -                                     | The store password for the Kafka key store file. This is optional for client and only needed if 'ssl.keystore.location' is configured.                                                               |
-| KAFKA_SSL_TRUSTSTORE_LOCATION                           | -                                     | The location of the Kafka trust store file.                                                                                                                                                          |
-| KAFKA_SSL_TRUSTSTORE_PASSWORD                           | -                                     | The password for the Kafka trust store file. If a password is not set, trust store file configured will still be used, but integrity checking is disabled.                                           |
-| KAFKA_CONSUMER_MAX_POLL_RECORDS                         | 50                                    | Maximum number of records returned in a single call to poll().                                                                                                                                       |
-| KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS               | 10                                    | Amount of partitions for `links.instance-authority` topic.                                                                                                                                           |
-| KAFKA_INSTANCE_AUTHORITY_TOPIC_REPLICATION_FACTOR       | -                                     | Replication factor for `links.instance-authority` topic.                                                                                                                                             |
-| KAFKA_INSTANCE_AUTHORITY_STATS_TOPIC_PARTITIONS         | 10                                    | Amount of partitions for `links.instance-authority-stats` topic.                                                                                                                                     |
-| KAFKA_INSTANCE_AUTHORITY_STATS_TOPIC_REPLICATION_FACTOR | -                                     | Replication factor for `links.instance-authority-stats` topic.                                                                                                                                       |
-| KAFKA_AUTHORITIES_CONSUMER_CONCURRENCY                  | 1                                     | Number of kafka concurrent threads for `inventory.authority` message consuming                                                                                                                       |
-| KAFKA_INSTANCE_AUTHORITY_STATS_CONSUMER_CONCURRENCY     | 1                                     | Number of kafka concurrent threads for `links.instance-authority-stats` message consuming                                                                                                            |
-| KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS              | 100                                   | Number of instance-authority links `links.instance-authority` event contains while processing authority link source change.                                                                          |
-| INSTANCE_STORAGE_QUERY_BATCH_SIZE                       | 50                                    | Number of instances to retrieve from inventory storage per one request (Max 90 - based on maximum URI length).                                                                                       |
+| Name                                                         | Default value                         | Description                                                                                                                                                                                          |
+|:-------------------------------------------------------------|:--------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ENV                                                          | folio                                 | The logical name of the deployment, must be unique across all environments using the same shared Kafka/Elasticsearch clusters, `a-z (any case)`, `0-9`, `-`, `_` symbols only allowed                |
+| DB_HOST                                                      | localhost                             | Postgres hostname                                                                                                                                                                                    |
+| DB_PORT                                                      | 5432                                  | Postgres port                                                                                                                                                                                        |
+| DB_USERNAME                                                  | folio_admin                           | Postgres username                                                                                                                                                                                    |
+| DB_PASSWORD                                                  | folio_admin                           | Postgres username password                                                                                                                                                                           |
+| DB_DATABASE                                                  | okapi_modules                         | Postgres database name                                                                                                                                                                               |
+| DB_MAXPOOLSIZE                                               | 10                                    | This property controls the maximum size that the pool is allowed to reach, including both idle and in-use connections                                                                                |
+| DB_MINIMUM_IDLE                                              | 10                                    | This property controls the minimum number of idle connections that HikariCP tries to maintain in the pool                                                                                            |
+| DB_CONNECTION_TIMEOUT                                        | 30000                                 | This property controls the maximum number of milliseconds that a client will wait for a connection from the pool                                                                                     |
+| DB_IDLE_TIMEOUT                                              | 600000                                | This property controls the maximum amount of time that a connection is allowed to sit idle in the pool. This setting only applies when `DB_MINIMUM_IDLE` is defined to be less than `DB_MAXPOOLSIZE` |
+| DB_KEEPALIVE_TIME                                            | 0                                     | This property controls how frequently HikariCP will attempt to keep a connection alive, in order to prevent it from being timed out by the database or network infrastructure (0 - disabled)         |
+| DB_MAX_LIFETIME                                              | 1800000                               | This property controls the maximum lifetime of a connection in the pool                                                                                                                              |
+| DB_VALIDATION_TIMEOUT                                        | 5000                                  | This property controls the maximum amount of time that a connection will be tested for aliveness. This value must be less than the `DB_CONNECTION_TIMEOUT`                                           |
+| DB_INITIALIZATION_FAIL_TIMEOUT                               | 30000                                 | This property controls whether the pool will "fail fast" if the pool cannot be seeded with an initial connection successfully                                                                        |
+| DB_LEAK_DETECTION_THRESHOLD                                  | 30000                                 | This property controls the amount of time that a connection can be out of the pool before a message is logged indicating a possible connection leak (0 - disabled)                                   |
+| OKAPI_URL                                                    | -                                     | Okapi URL                                                                                                                                                                                            |
+| SYSTEM_USER_USERNAME                                         | mod-entities-links                    | Username for system user                                                                                                                                                                             |
+| SYSTEM_USER_PASSWORD                                         | -                                     | Password for system user                                                                                                                                                                             |
+| KAFKA_HOST                                                   | kafka                                 | Kafka broker hostname                                                                                                                                                                                |
+| KAFKA_PORT                                                   | 9092                                  | Kafka broker port                                                                                                                                                                                    |
+| KAFKA_SECURITY_PROTOCOL                                      | PLAINTEXT                             | Kafka security protocol used to communicate with brokers (SSL or PLAINTEXT)                                                                                                                          |
+| KAFKA_SSL_KEYSTORE_LOCATION                                  | -                                     | The location of the Kafka key store file. This is optional for client and can be used for two-way authentication for client.                                                                         |
+| KAFKA_SSL_KEYSTORE_PASSWORD                                  | -                                     | The store password for the Kafka key store file. This is optional for client and only needed if 'ssl.keystore.location' is configured.                                                               |
+| KAFKA_SSL_TRUSTSTORE_LOCATION                                | -                                     | The location of the Kafka trust store file.                                                                                                                                                          |
+| KAFKA_SSL_TRUSTSTORE_PASSWORD                                | -                                     | The password for the Kafka trust store file. If a password is not set, trust store file configured will still be used, but integrity checking is disabled.                                           |
+| KAFKA_CONSUMER_MAX_POLL_RECORDS                              | 50                                    | Maximum number of records returned in a single call to poll().                                                                                                                                       |
+| KAFKA_INSTANCE_AUTHORITY_TOPIC_PARTITIONS                    | 10                                    | Amount of partitions for `links.instance-authority` topic.                                                                                                                                           |
+| KAFKA_INSTANCE_AUTHORITY_TOPIC_REPLICATION_FACTOR            | -                                     | Replication factor for `links.instance-authority` topic.                                                                                                                                             |
+| KAFKA_INSTANCE_AUTHORITY_STATS_TOPIC_PARTITIONS              | 10                                    | Amount of partitions for `links.instance-authority-stats` topic.                                                                                                                                     |
+| KAFKA_INSTANCE_AUTHORITY_STATS_TOPIC_REPLICATION_FACTOR      | -                                     | Replication factor for `links.instance-authority-stats` topic.                                                                                                                                       |
+| KAFKA_AUTHORITIES_CONSUMER_CONCURRENCY                       | 1                                     | Number of kafka concurrent threads for `inventory.authority` message consuming                                                                                                                       |
+| KAFKA_INSTANCE_AUTHORITY_STATS_CONSUMER_CONCURRENCY          | 1                                     | Number of kafka concurrent threads for `links.instance-authority-stats` message consuming                                                                                                            |
+| KAFKA_INSTANCE_AUTHORITY_CHANGE_PARTITIONS                   | 100                                   | Number of instance-authority links `links.instance-authority` event contains while processing authority link source change.                                                                          |
+| INSTANCE_STORAGE_QUERY_BATCH_SIZE                            | 50                                    | Number of instances to retrieve from inventory storage per one request (Max 90 - based on maximum URI length).                                                                                       |
+| AUTHORITY_ARCHIVES_DEFAULT_EXPIRATION_DAYS                   | 7                                     | The retention period in days for keeping the deleted authorities in authority_archive DB table                                                                                                       |
 
 ### Configuring spring-boot
 
@@ -125,15 +126,16 @@ documentation [Spring Boot Externalized Configuration](https://docs.spring.io/sp
 
 ### Folio modules communication
 
-| Module name               | Interface                     | Notes                                                     |
-|---------------------------|-------------------------------|-----------------------------------------------------------|
-| mod-login                 | login                         | For system user creation and authentication               |
-| mod-permissions           | permissions                   | For system user creation                                  |
-| mod-users                 | users                         | For system user creation                                  |
-| mod-source-record-manager | mapping-rules-provider        | For fetching MARC bibliographic-to-Instance mapping rules |
-| mod-source-record-storage | source-storage-source-records | For fetching Authority source records in MARC format      |
-| mod-inventory-storage     | authority-source-files        | For fetching Authority source file reference data         |
-| mod-inventory-storage     | instance-storage              | For fetching Instance data for statistic                  |
+| Module name               | Interface                     | Notes                                                                       |
+|---------------------------|-------------------------------|-----------------------------------------------------------                  |
+| mod-login                 | login                         | For system user creation and authentication                                 |
+| mod-permissions           | permissions                   | For system user creation                                                    |
+| mod-users                 | users                         | For system user creation                                                    |
+| mod-source-record-manager | mapping-rules-provider        | For fetching MARC bibliographic-to-Instance mapping rules                   |
+| mod-source-record-storage | source-storage-source-records | For fetching Authority source records in MARC format                        |
+| mod-inventory-storage     | authority-source-files        | For fetching Authority source file reference data                           |
+| mod-inventory-storage     | instance-storage              | For fetching Instance data for statistic                                    |
+| mod-settings              | settings                      | For fetching the tenant-specific retention period for archived authorities  |
 
 ### Consuming Kafka messages
 
@@ -608,3 +610,37 @@ Response:
   ]
 }
 ```
+### Configuration setting for Authority Archive records expiration
+In order to provide an ability for a tenant to have specific retention period of authority archives, we need to add the below configuration in mod-settings.
+If no setting is provided by a tenant the retention period value would be taken from `AUTHORITY_ARCHIVES_EXPIRATION_PERIOD` environment variable
+
+#### Permissions
+To make a post call to mod-settings, user should have below permissions.
+```
+  mod-settings.entries.item.post
+  mod-settings.global.write.mod-entities-links
+```
+
+#### Example request
+```
+POST https://{okapi-location}/settings/entries
+  {
+    "id":"1e01066d-4bee-4cf7-926c-ba2c9c6c0001",
+    "scope": "authority-storage",
+    "key": "authority-archives-expiration",
+    "value":"{\"expirationEnabled\":true, \"retentionInDays\":10}"
+}
+```
+
+| parameter | Type        | Description                                                                                                           |
+|---------  |-------------|-----------------------------------------------------------------------------------------------------------------------|
+| `id`      | UUID        | id of type UUID should be provided.                                                                                   |
+| `scope`   | String      | Scope should be the module name. Here, it will be "authority-storage"                                                 |
+| `key`     | String      | Feature or Identifier name matching the setting we are enabling for. Here, it will be "authority-archives-expiration" |
+| `value`   | Json Object | Value object for this setting.                                                                                        |
+
+
+| Value options       | Type    | Description                                                                                                                                                                           |
+|---------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `expirationEnabled` | boolean | Indicates whether or not to enable expiration of Authority Archives for the tenant.                                                                                                   |
+| `retentionInDays`   | int     | Retention period of Authority Archives provided in days. If not specified, the default value would be taken by the `AUTHORITY_ARCHIVES_DEFAULT_EXPIRATION_DAYS` environment variable. |

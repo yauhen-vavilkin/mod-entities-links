@@ -25,6 +25,10 @@
     {
       "id": "mapping-rules-provider",
       "version": "2.0"
+    },
+    {
+      "id": "settings",
+      "version": "1.0"
     }
   ],
   "optional": [
@@ -405,9 +409,36 @@
           ]
         }
       ]
+    },
+    {
+      "id": "_timer",
+      "version": "1.0",
+      "interfaceType": "system",
+      "handlers": [
+        {
+          "methods": [ "POST" ],
+          "pathPattern": "/authority-storage/expire/authorities",
+          "unit": "day",
+          "delay": "1",
+          "modulePermissions": [
+            "mod-settings.entries.collection.get",
+            "mod-settings.global.read.authority-storage"
+          ]
+        }
+      ]
     }
   ],
   "permissionSets": [
+    {
+      "permissionName": "mod-settings.global.write.authority-storage",
+      "displayName": "Entities links settings - Create configuration",
+      "description": "To create new configuration in mod settings"
+    },
+    {
+      "permissionName": "mod-settings.global.read.authority-storage",
+      "displayName": "Entities links settings - Read configuration",
+      "description": "To read the configuration from mod settings."
+    },
     {
       "permissionName": "instance-authority-links.instances.collection.get",
       "displayName": "Entities Links - get instance-authority links",
@@ -764,6 +795,11 @@
         "name": "INSTANCE_STORAGE_QUERY_BATCH_SIZE",
         "value": "50",
         "description": "Number of instances to retrieve from inventory storage per one request (Max 90 - based on maximum URI length)"
+      },
+      {
+        "name": "AUTHORITY_ARCHIVES_EXPIRATION_PERIOD",
+        "value": "7",
+        "description": "The retention period in days for keeping the deleted authorities in authority_archive DB table"
       }
     ]
   }

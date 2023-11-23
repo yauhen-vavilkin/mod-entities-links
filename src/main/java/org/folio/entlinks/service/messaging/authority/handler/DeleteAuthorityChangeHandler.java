@@ -2,11 +2,11 @@ package org.folio.entlinks.service.messaging.authority.handler;
 
 import static java.util.Collections.emptyList;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.folio.entlinks.config.properties.InstanceAuthorityChangeProperties;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
+import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolder;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType;
@@ -16,11 +16,14 @@ import org.springframework.stereotype.Component;
 public class DeleteAuthorityChangeHandler extends AbstractAuthorityChangeHandler {
 
   private final InstanceAuthorityLinkingService linkingService;
+  private final AuthorityService authorityService;
 
   public DeleteAuthorityChangeHandler(InstanceAuthorityLinkingService linkingService,
-                                      InstanceAuthorityChangeProperties instanceAuthorityChangeProperties) {
+                                      InstanceAuthorityChangeProperties instanceAuthorityChangeProperties,
+                                      AuthorityService authorityService) {
     super(instanceAuthorityChangeProperties, linkingService);
     this.linkingService = linkingService;
+    this.authorityService = authorityService;
   }
 
   @Override
@@ -29,18 +32,21 @@ public class DeleteAuthorityChangeHandler extends AbstractAuthorityChangeHandler
       return emptyList();
     }
 
-    List<LinksChangeEvent> linksEvents = new ArrayList<>();
+    var linksEvents = changes.stream()
+        .filter(change -> change.getNumberOfLinks() > 0)
+        .map(change -> handleLinksByPartitions(
+            change.getAuthorityId(),
+            links -> constructEvent(change.getAuthorityDataStatId(), change.getAuthorityId(), links, emptyList())
+        ))
+        .flatMap(List::stream)
+        .toList();
 
-    for (var change : changes) {
-      var linksChangeEvents = handleLinksByPartitions(change.getAuthorityId(),
-        instanceLinks -> constructEvent(change.getAuthorityDataStatId(), change.getAuthorityId(), instanceLinks,
-          emptyList())
-      );
-      linksEvents.addAll(linksChangeEvents);
-    }
-
-    var authorityIds = changes.stream().map(AuthorityChangeHolder::getAuthorityId).collect(Collectors.toSet());
+    var authorityIds = linksEvents.stream().map(LinksChangeEvent::getAuthorityId).collect(Collectors.toSet());
+    var softDeleteAuthorityIds = changes.stream().map(AuthorityChangeHolder::getAuthorityId).toList();
+    // delete the links
     linkingService.deleteByAuthorityIdIn(authorityIds);
+    // hard delete the authorities
+    authorityService.batchDeleteByIds(softDeleteAuthorityIds);
     return linksEvents;
   }
 

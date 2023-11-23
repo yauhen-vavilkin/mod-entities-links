@@ -49,6 +49,7 @@ class LinksSuggestionsServiceDelegateTest {
   private static final String MIN_AUTHORITY_FIELD = "100";
   private static final String MAX_AUTHORITY_FIELD = "155";
   private static final String NATURAL_ID = "e12345";
+  private static final String AUTHORITY_SOURCE_MARC = "marc";
   private static final String BASE_URL = "https://base/url/";
 
   private @Spy SourceContentMapper contentMapper = Mappers.getMapper(SourceContentMapper.class);
@@ -61,8 +62,10 @@ class LinksSuggestionsServiceDelegateTest {
 
   @Test
   void suggestLinksForMarcRecords_shouldSaveAuthoritiesFromSearch() {
-    var authority1 = new Authority().withId(AUTHORITY_ID).withNaturalId(NATURAL_ID).withSource("marc");
-    var authority2 = new Authority().withId(UUID.randomUUID()).withNaturalId(NATURAL_ID).withSource("marc");
+    var authority1 = Authority.builder()
+        .id(AUTHORITY_ID).naturalId(NATURAL_ID).source(AUTHORITY_SOURCE_MARC).build();
+    var authority2 = Authority.builder()
+        .id(UUID.randomUUID()).naturalId(NATURAL_ID).source(AUTHORITY_SOURCE_MARC).build();
     authority2.makeAsConsortiumShadowCopy();
     var fetchRequest = getBatchFetchRequestForAuthority(AUTHORITY_ID);
     var records = List.of(getRecord("100", Map.of("0", NATURAL_ID)));
@@ -92,21 +95,23 @@ class LinksSuggestionsServiceDelegateTest {
 
   @Test
   void suggestLinksForMarcRecords_shouldRetrieveAuthoritiesFromTable() {
-    var records = List.of(getRecord("100", Map.of("0", NATURAL_ID)));
-    var rules = List.of(getRule("100"));
-    var authority = List.of(new Authority().withId(AUTHORITY_ID).withNaturalId(NATURAL_ID).withSource("marc"));
+    var authority = Authority.builder()
+        .id(AUTHORITY_ID).naturalId(NATURAL_ID).source(AUTHORITY_SOURCE_MARC).build();
+    var authorities = List.of(authority);
     var fetchRequest = getBatchFetchRequestForAuthority(AUTHORITY_ID);
+    var rules = List.of(getRule("100"));
 
     when(linkingRulesService.getLinkingRules()).thenReturn(rules);
     when(linkingRulesService.getMinAuthorityField()).thenReturn(MIN_AUTHORITY_FIELD);
     when(linkingRulesService.getMaxAuthorityField()).thenReturn(MAX_AUTHORITY_FIELD);
 
-    when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID))).thenReturn(authority);
+    when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID))).thenReturn(authorities);
     when(sourceStorageClient
       .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
       .thenReturn(fetchRequest);
     when(sourceStorageClient.fetchParsedRecordsInBatch(fetchRequest)).thenReturn(
       new StrippedParsedRecordCollection(emptyList(), 1));
+    var records = List.of(getRecord("100", Map.of("0", NATURAL_ID)));
     var parsedContentCollection = new ParsedRecordContentCollection().records(records);
 
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
@@ -121,22 +126,24 @@ class LinksSuggestionsServiceDelegateTest {
 
   @Test
   void suggestLinksForMarcRecords_shouldExtractNaturalIdFrom0Subfield() {
-    var records = List.of(getRecord("100", Map.of("0", BASE_URL + NATURAL_ID)));
-    var rules = List.of(getRule("100"));
-    var authority = List.of(new Authority().withId(AUTHORITY_ID).withNaturalId(NATURAL_ID).withSource("marc"));
+    var authority = Authority.builder()
+        .id(AUTHORITY_ID).naturalId(NATURAL_ID).source(AUTHORITY_SOURCE_MARC).build();
+    var authorities = List.of(authority);
     var fetchRequest = getBatchFetchRequestForAuthority(AUTHORITY_ID);
+    var rules = List.of(getRule("100"));
 
     when(linkingRulesService.getLinkingRules()).thenReturn(rules);
     when(linkingRulesService.getMinAuthorityField()).thenReturn(MIN_AUTHORITY_FIELD);
     when(linkingRulesService.getMaxAuthorityField()).thenReturn(MAX_AUTHORITY_FIELD);
 
-    when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID))).thenReturn(authority);
+    when(authorityRepository.findByNaturalIdInAndDeletedFalse(Set.of(NATURAL_ID))).thenReturn(authorities);
     when(sourceStorageClient
       .buildBatchFetchRequestForAuthority(Set.of(AUTHORITY_ID), MIN_AUTHORITY_FIELD, MAX_AUTHORITY_FIELD))
       .thenReturn(fetchRequest);
     when(sourceStorageClient.fetchParsedRecordsInBatch(fetchRequest)).thenReturn(
       new StrippedParsedRecordCollection(emptyList(), 1));
 
+    var records = List.of(getRecord("100", Map.of("0", BASE_URL + NATURAL_ID)));
     var parsedContentCollection = new ParsedRecordContentCollection().records(records);
     serviceDelegate.suggestLinksForMarcRecords(parsedContentCollection, false);
 

@@ -64,11 +64,8 @@ class SourceContentMapperTest {
     StrippedParsedRecord strippedParsedRecord = createStrippedParsedRecord();
     recordCollection.getRecords().add(strippedParsedRecord);
 
-    var authorities = List
-        .of(new Authority()
-            .withSource(TEST_PROPERTY_VALUE)
-            .withNaturalId(String.valueOf(TEST_ID))
-            .withId(TEST_ID));
+    var authority = Authority.builder().id(TEST_ID).source(TEST_PROPERTY_VALUE).naturalId(TEST_ID.toString()).build();
+    var authorities = List.of(authority);
 
     List<AuthorityParsedContent> resultList = mapper.convertToAuthorityParsedContent(recordCollection, authorities);
 
