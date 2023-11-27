@@ -1,6 +1,7 @@
 ## v2.0.3 2023-11-10
 ## Bug fixes
 * Remove foreign key for authority_data_stat ([MODELINKS-155](https://issues.folio.org/browse/MODELINKS-155))
+* Fix empty links list propagation ([MODELINKS-166](https://issues.folio.org/browse/MODELINKS-166))
 
 ---
 
