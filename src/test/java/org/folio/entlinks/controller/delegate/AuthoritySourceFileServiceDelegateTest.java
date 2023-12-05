@@ -92,24 +92,6 @@ class AuthoritySourceFileServiceDelegateTest {
   }
 
   @Test
-  void shouldNormalizeBaseUrlForSourceFileUpdate() {
-    var id = UUID.randomUUID();
-    var dto = new AuthoritySourceFileDto().id(id).baseUrl(INPUT_BASE_URL);
-    var expected = new AuthoritySourceFile();
-    expected.setBaseUrl(INPUT_BASE_URL);
-
-    when(mapper.toEntity(dto)).thenReturn(expected);
-    when(service.update(id, expected)).thenReturn(expected);
-
-    delegate.updateAuthoritySourceFile(id, dto);
-
-    assertEquals(SANITIZED_BASE_URL, expected.getBaseUrl());
-    verify(mapper).toEntity(dto);
-    verify(service).update(id, expected);
-    verifyNoMoreInteractions(mapper, service);
-  }
-
-  @Test
   void shouldNormalizeBaseUrlForSourceFilePartialUpdate() {
     var existing = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
     existing.setBaseUrl(INPUT_BASE_URL);

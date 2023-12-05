@@ -51,10 +51,4 @@ public class AuthoritySourceFilesController implements AuthoritySourceFileApi {
     var authoritySourceFiles = delegate.getAuthoritySourceFiles(offset, limit, query);
     return ResponseEntity.ok(authoritySourceFiles);
   }
-
-  @Override
-  public ResponseEntity<Void> updateAuthoritySourceFile(UUID id, AuthoritySourceFileDto authoritySourceFile) {
-    delegate.updateAuthoritySourceFile(id, authoritySourceFile);
-    return noContent().build();
-  }
 }

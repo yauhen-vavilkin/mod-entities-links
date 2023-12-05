@@ -39,12 +39,6 @@ public class AuthoritySourceFileServiceDelegate {
     return mapper.toDto(created);
   }
 
-  public void updateAuthoritySourceFile(UUID id, AuthoritySourceFileDto authoritySourceFile) {
-    var entity = mapper.toEntity(authoritySourceFile);
-    normalizeBaseUrl(entity);
-    service.update(id, entity);
-  }
-
   public void patchAuthoritySourceFile(UUID id, AuthoritySourceFilePatchDto partiallyModifiedDto) {
     log.debug("patch:: Attempting to patch AuthoritySourceFile [id: {}, patchDto: {}]", id, partiallyModifiedDto);
     var existingEntity = service.getById(id);

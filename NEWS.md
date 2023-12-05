@@ -1,6 +1,6 @@
-## v2.1.0 In progress
+## v3.0.0 in progress
 ### Breaking changes
-* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+* Delete PUT endpoint from authority-source-files api([MODELINKS-161](https://issues.folio.org/browse/MODELINKS-161))
 
 ### New APIs versions
 * Provides `API_NAME vX.Y`
