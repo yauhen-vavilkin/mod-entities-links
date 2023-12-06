@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -169,22 +170,45 @@ class AuthoritySourceFileServiceTest {
 
   @Test
   void shouldDeleteAuthoritySourceFile() {
-    when(repository.existsById(any(UUID.class))).thenReturn(true);
+    var id = UUID.randomUUID();
+    var authoritySourceFile = new AuthoritySourceFile();
+    authoritySourceFile.setId(id);
+    authoritySourceFile.setType("non-folio");
+
+    when(repository.findById(any(UUID.class))).thenReturn(Optional.of(authoritySourceFile));
     doNothing().when(repository).deleteById(any(UUID.class));
 
     service.deleteById(UUID.randomUUID());
 
-    verify(repository).existsById(any(UUID.class));
+    verify(repository).findById(any(UUID.class));
     verify(repository).deleteById(any(UUID.class));
   }
 
   @Test
   void shouldThrowExceptionWhenNoEntityExistsToDelete() {
     var id = UUID.randomUUID();
-    when(repository.existsById(any(UUID.class))).thenReturn(false);
+
+    when(repository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
     var thrown = assertThrows(AuthoritySourceFileNotFoundException.class, () -> service.deleteById(id));
 
     assertThat(thrown.getMessage()).containsOnlyOnce(id.toString());
+    verify(repository, never()).deleteById(any(UUID.class));
+  }
+
+  @Test
+  void shouldNotDeleteWhenFolioType() {
+    UUID id = UUID.randomUUID();
+    var authoritySourceFile = new AuthoritySourceFile();
+    authoritySourceFile.setId(id);
+    authoritySourceFile.setSource("folio");
+
+    when(repository.findById(id)).thenReturn(Optional.of(authoritySourceFile));
+
+    var thrown = assertThrows(RequestBodyValidationException.class, () -> service.deleteById(id));
+
+    assertThat(thrown.getMessage()).isEqualTo("Cannot delete Authority source file with source 'folio'");
+    verify(repository).findById(id);
+    verify(repository, never()).deleteById(any(UUID.class));
   }
 }

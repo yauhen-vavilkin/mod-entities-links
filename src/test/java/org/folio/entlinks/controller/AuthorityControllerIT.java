@@ -2,7 +2,6 @@ package org.folio.entlinks.controller;
 
 import static java.util.UUID.randomUUID;
 import static org.folio.entlinks.config.constants.ErrorCode.DUPLICATE_AUTHORITY_ID;
-import static org.folio.entlinks.config.constants.ErrorCode.VIOLATION_OF_RELATION_BETWEEN_AUTHORITY_AND_SOURCE_FILE;
 import static org.folio.entlinks.service.reindex.event.DomainEventType.CREATE;
 import static org.folio.entlinks.service.reindex.event.DomainEventType.DELETE;
 import static org.folio.entlinks.service.reindex.event.DomainEventType.UPDATE;
@@ -45,6 +44,7 @@ import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.exception.OptimisticLockingException;
+import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.service.reindex.event.DomainEvent;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.test.extension.DatabaseCleanup;
@@ -514,8 +514,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
     tryDelete(authoritySourceFilesEndpoint(expected.getSourceFileId()))
       .andExpect(status().isUnprocessableEntity())
-      .andExpect(errorMessageMatch(is(VIOLATION_OF_RELATION_BETWEEN_AUTHORITY_AND_SOURCE_FILE.getMessage())))
-      .andExpect(exceptionMatch(DataIntegrityViolationException.class));
+      .andExpect(errorMessageMatch(is("Cannot delete Authority source file with source 'folio'")))
+      .andExpect(exceptionMatch(RequestBodyValidationException.class));
   }
 
   private List<Authority> createAuthorities() {

@@ -1,5 +1,6 @@
 package org.folio.entlinks.service.authority;
 
+import static org.folio.entlinks.domain.entity.AuthoritySourceType.FOLIO;
 import static org.folio.entlinks.utils.ServiceUtils.initId;
 
 import java.util.List;
@@ -83,12 +84,14 @@ public class AuthoritySourceFileService {
 
   public void deleteById(UUID id) {
     log.debug("deleteById:: Attempt to delete AuthoritySourceFile by [id: {}]", id);
-
-    if (!repository.existsById(id)) {
-      throw new AuthoritySourceFileNotFoundException(id);
+    var authoritySourceFile = repository.findById(id)
+        .orElseThrow(() -> new AuthoritySourceFileNotFoundException(id));
+    if (!FOLIO.getValue().equals(authoritySourceFile.getSource())) {
+      repository.deleteById(id);
+    } else {
+      throw new RequestBodyValidationException("Cannot delete Authority source file with source 'folio'",
+          List.of(new Parameter("source").value(authoritySourceFile.getSource())));
     }
-
-    repository.deleteById(id);
   }
 
   private void copyModifiableFields(AuthoritySourceFile existingEntity, AuthoritySourceFile modifiedEntity) {

@@ -27,6 +27,7 @@ import org.folio.entlinks.domain.dto.AuthoritySourceFileDtoCollection;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
+import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
@@ -53,7 +54,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   private static final String[] SOURCE_FILE_CODES = new String[] {"code1", "code2", "code3"};
   private static final String[] SOURCE_FILE_NAMES = new String[] {"name1", "name2", "name3"};
   private static final SourceEnum[] SOURCE_FILE_SOURCES =
-    new SourceEnum[] {SourceEnum.FOLIO, SourceEnum.LOCAL, SourceEnum.FOLIO};
+    new SourceEnum[] {SourceEnum.LOCAL, SourceEnum.LOCAL, SourceEnum.FOLIO};
   private static final String[] SOURCE_FILE_TYPES = new String[] {"type1", "type2", "type3"};
   private static final String[] SOURCE_FILE_URLS = new String[] {"baseUrl1", "baseUrl2", "baseUrl3"};
 
@@ -277,6 +278,19 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   }
 
   @Test
+  @DisplayName("DELETE: Folio Authority Source File cannot be deleted")
+  void deleteAuthority_negative_folioType() throws Exception {
+    var entity = prepareFolioSourceFile(0);
+    createAuthoritySourceFile(entity);
+
+    tryDelete(authoritySourceFilesEndpoint(entity.getId()))
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(exceptionMatch(RequestBodyValidationException.class))
+        .andExpect(errorMessageMatch(containsString(
+            "Cannot delete Authority source file with source 'folio'")));
+  }
+
+  @Test
   @DisplayName("DELETE: Return 404 for non-existing entity")
   void deleteAuthoritySourceFile_negative_entityNotFound() throws Exception {
 
@@ -321,6 +335,24 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     entity.setUpdatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
     entity.setUpdatedByUserId(UUID.fromString(USER_ID));
     entity.setAuthoritySourceFileCodes(Set.of(code));
+
+    return entity;
+  }
+
+  public AuthoritySourceFile prepareFolioSourceFile(int sourceFileIdNum) {
+    var entity = new AuthoritySourceFile();
+    entity.setId(SOURCE_FILE_IDS[sourceFileIdNum]);
+    entity.setName(SOURCE_FILE_NAMES[sourceFileIdNum]);
+    entity.setSource(SourceEnum.FOLIO.getValue());
+    entity.setType(SOURCE_FILE_TYPES[sourceFileIdNum]);
+    entity.setBaseUrl(SOURCE_FILE_URLS[sourceFileIdNum] + "/");
+
+    var code = prepareAuthoritySourceFileCode(sourceFileIdNum);
+    entity.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
+    entity.setCreatedByUserId(UUID.fromString(USER_ID));
+    entity.setUpdatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));
+    entity.setUpdatedByUserId(UUID.fromString(USER_ID));
+    entity.addCode(code);
 
     return entity;
   }
