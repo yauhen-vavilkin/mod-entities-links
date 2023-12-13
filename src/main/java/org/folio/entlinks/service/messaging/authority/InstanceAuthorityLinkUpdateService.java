@@ -1,6 +1,5 @@
 package org.folio.entlinks.service.messaging.authority;
 
-import static org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType.DELETE;
 import static org.folio.entlinks.service.messaging.authority.model.AuthorityChangeType.UPDATE;
 import static org.folio.entlinks.utils.ObjectUtils.getDifference;
 
@@ -15,7 +14,9 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
-import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
+import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
+import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
+import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.entlinks.integration.internal.AuthoritySourceRecordService;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
@@ -115,16 +116,16 @@ public class InstanceAuthorityLinkUpdateService {
   }
 
   private boolean isProcessableChange(AuthorityChangeHolder changeHolder) {
-    if (changeHolder.getChangeType() == DELETE) {
-      return true;
+    if (changeHolder.getEvent().getType() == DomainEventType.DELETE) {
+      return changeHolder.getEvent().getDeleteEventSubType() == AuthorityDeleteEventSubType.SOFT_DELETE;
     }
 
-    if (changeHolder.getChangeType() == UPDATE && changeHolder.getNumberOfLinks() > 0) {
+    if (changeHolder.getEvent().getType() == DomainEventType.UPDATE && changeHolder.getNumberOfLinks() > 0) {
       return true;
     }
 
     log.info("Skip message for {} event. Authority record [tenantId: {}, id: {}] doesn't have links",
-        changeHolder.getChangeType(), folioExecutionContext.getTenantId(), changeHolder.getAuthorityId());
+        changeHolder.getEvent().getType(), folioExecutionContext.getTenantId(), changeHolder.getAuthorityId());
     return false;
 
   }

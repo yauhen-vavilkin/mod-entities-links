@@ -22,7 +22,7 @@ import org.folio.entlinks.config.properties.InstanceAuthorityChangeProperties;
 import org.folio.entlinks.domain.dto.ChangeTarget;
 import org.folio.entlinks.domain.dto.ChangeTargetLink;
 import org.folio.entlinks.domain.dto.LinksChangeEvent;
-import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
+import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeHolder;

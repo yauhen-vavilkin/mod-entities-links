@@ -1,18 +1,14 @@
-package org.folio.entlinks.service.reindex.event;
-
-import static org.folio.entlinks.service.reindex.event.DomainEventType.CREATE;
-import static org.folio.entlinks.service.reindex.event.DomainEventType.DELETE;
-import static org.folio.entlinks.service.reindex.event.DomainEventType.REINDEX;
-import static org.folio.entlinks.service.reindex.event.DomainEventType.UPDATE;
+package org.folio.entlinks.integration.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.UUID;
 import lombok.Data;
-import org.folio.entlinks.integration.dto.BaseEvent;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DomainEvent<T> implements BaseEvent {
 
@@ -39,19 +35,19 @@ public class DomainEvent<T> implements BaseEvent {
   }
 
   public static <T> DomainEvent<T> createEvent(UUID id, T newEntity, String tenant) {
-    return new DomainEvent<>(id, null, newEntity, CREATE, tenant);
+    return new DomainEvent<>(id, null, newEntity, DomainEventType.CREATE, tenant);
   }
 
   public static <T> DomainEvent<T> updateEvent(UUID id, T oldEntity, T newEntity, String tenant) {
-    return new DomainEvent<>(id, oldEntity, newEntity, UPDATE, tenant);
+    return new DomainEvent<>(id, oldEntity, newEntity, DomainEventType.UPDATE, tenant);
   }
 
   public static <T> DomainEvent<T> deleteEvent(UUID id, T oldEntity, String tenant) {
-    return new DomainEvent<>(id, oldEntity, null, DELETE, tenant);
+    return new DomainEvent<>(id, oldEntity, null, DomainEventType.DELETE, tenant);
   }
 
   public static <T> DomainEvent<T> reindexEvent(UUID id, T newEntity, String tenant) {
-    return new DomainEvent<>(id, null, newEntity, REINDEX, tenant);
+    return new DomainEvent<>(id, null, newEntity, DomainEventType.REINDEX, tenant);
   }
 
 }

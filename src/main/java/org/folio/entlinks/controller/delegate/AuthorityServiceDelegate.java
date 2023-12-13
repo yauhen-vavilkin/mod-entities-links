@@ -59,7 +59,7 @@ public class AuthorityServiceDelegate {
     var entity = service.getById(id);
     var dto = mapper.toDto(entity);
     service.deleteById(id);
-    eventPublisher.publishDeleteEvent(dto);
+    eventPublisher.publishSoftDeleteEvent(dto);
     propagationService.propagate(entity, DELETE, context.getTenantId());
   }
 }

@@ -9,10 +9,12 @@ import static org.mockito.Mockito.when;
 
 import java.util.UUID;
 import org.folio.entlinks.domain.dto.AuthorityDto;
+import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
+import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
+import org.folio.entlinks.integration.dto.event.DomainEvent;
+import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.reindex.ReindexContext;
-import org.folio.entlinks.service.reindex.event.DomainEvent;
-import org.folio.entlinks.service.reindex.event.DomainEventType;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.test.type.UnitTest;
 import org.junit.jupiter.api.Test;
@@ -94,28 +96,57 @@ class AuthorityDomainEventPublisherTest {
   }
 
   @Test
-  void shouldNotSendDeletedEventWhenIdIsNull() {
+  void shouldNotSendSoftDeletedEventWhenIdIsNull() {
     // when
-    eventPublisher.publishDeleteEvent(new AuthorityDto());
+    eventPublisher.publishSoftDeleteEvent(new AuthorityDto());
 
     // then
     verifyNoInteractions(eventProducer);
   }
 
   @Test
-  void shouldSendDeletedEvent() {
+  void shouldSendSoftDeletedEvent() {
     // given
     var dto = new AuthorityDto().id(UUID.randomUUID()).source("source");
     when(folioExecutionContext.getTenantId()).thenReturn(TENANT_ID);
+    var deleteEventCaptor = ArgumentCaptor.forClass(AuthorityDomainEvent.class);
 
     // when
-    eventPublisher.publishDeleteEvent(dto);
+    eventPublisher.publishSoftDeleteEvent(dto);
 
     // then
-    verify(eventProducer).sendMessage(eq(dto.getId().toString()), captor.capture(), eq(DOMAIN_EVENT_TYPE_HEADER),
-        eq(DomainEventType.DELETE));
-    assertEquals(dto, captor.getValue().getOldEntity());
-    assertEquals(TENANT_ID, captor.getValue().getTenant());
+    verify(eventProducer).sendMessage(eq(dto.getId().toString()), deleteEventCaptor.capture(),
+        eq(DOMAIN_EVENT_TYPE_HEADER), eq(DomainEventType.DELETE));
+    assertEquals(dto, deleteEventCaptor.getValue().getOldEntity());
+    assertEquals(AuthorityDeleteEventSubType.SOFT_DELETE, deleteEventCaptor.getValue().getDeleteEventSubType());
+    assertEquals(TENANT_ID, deleteEventCaptor.getValue().getTenant());
+  }
+
+  @Test
+  void shouldNotSendHardDeletedEventWhenIdIsNull() {
+    // when
+    eventPublisher.publishHardDeleteEvent(new AuthorityDto());
+
+    // then
+    verifyNoInteractions(eventProducer);
+  }
+
+  @Test
+  void shouldSendHardDeletedEvent() {
+    // given
+    var dto = new AuthorityDto().id(UUID.randomUUID()).source("source");
+    when(folioExecutionContext.getTenantId()).thenReturn(TENANT_ID);
+    var deleteEventCaptor = ArgumentCaptor.forClass(AuthorityDomainEvent.class);
+
+    // when
+    eventPublisher.publishHardDeleteEvent(dto);
+
+    // then
+    verify(eventProducer).sendMessage(eq(dto.getId().toString()), deleteEventCaptor.capture(),
+        eq(DOMAIN_EVENT_TYPE_HEADER), eq(DomainEventType.DELETE));
+    assertEquals(dto, deleteEventCaptor.getValue().getOldEntity());
+    assertEquals(AuthorityDeleteEventSubType.HARD_DELETE, deleteEventCaptor.getValue().getDeleteEventSubType());
+    assertEquals(TENANT_ID, deleteEventCaptor.getValue().getTenant());
   }
 
   @Test

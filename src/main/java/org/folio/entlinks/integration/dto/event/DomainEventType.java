@@ -1,4 +1,4 @@
-package org.folio.entlinks.service.reindex.event;
+package org.folio.entlinks.integration.dto.event;
 
 public enum DomainEventType {
 

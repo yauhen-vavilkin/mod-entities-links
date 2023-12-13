@@ -8,10 +8,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.client.SettingsClient;
 import org.folio.entlinks.config.properties.AuthorityArchiveProperties;
+import org.folio.entlinks.controller.converter.AuthorityMapper;
 import org.folio.entlinks.domain.entity.AuthorityArchive;
 import org.folio.entlinks.domain.repository.AuthorityArchiveRepository;
 import org.folio.entlinks.integration.SettingsService;
 import org.folio.entlinks.service.authority.AuthorityArchiveService;
+import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,8 @@ public class AuthorityArchiveServiceDelegate {
   private final SettingsService settingsService;
   private final AuthorityArchiveRepository authorityArchiveRepository;
   private final AuthorityArchiveProperties authorityArchiveProperties;
+  private final AuthorityDomainEventPublisher eventPublisher;
+  private final AuthorityMapper authorityMapper;
 
   @Transactional(readOnly = true)
   public void expire() {
@@ -35,8 +39,14 @@ public class AuthorityArchiveServiceDelegate {
 
     var tillDate = LocalDateTime.now().minus(retention.get(), ChronoUnit.DAYS);
     try (Stream<AuthorityArchive> archives = authorityArchiveRepository.streamByUpdatedTillDate(tillDate)) {
-      archives.forEach(authorityArchiveService::delete);
+      archives.forEach(this::process);
     }
+  }
+
+  private void process(AuthorityArchive archive) {
+    authorityArchiveService.delete(archive);
+    var dto = authorityMapper.toDto(archive);
+    eventPublisher.publishHardDeleteEvent(dto);
   }
 
   private Optional<Integer> fetchAuthoritiesRetentionDuration() {

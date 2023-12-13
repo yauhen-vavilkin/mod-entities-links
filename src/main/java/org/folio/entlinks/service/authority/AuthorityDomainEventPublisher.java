@@ -3,10 +3,11 @@ package org.folio.entlinks.service.authority;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.domain.dto.AuthorityDto;
+import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
+import org.folio.entlinks.integration.dto.event.DomainEvent;
+import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.reindex.ReindexContext;
-import org.folio.entlinks.service.reindex.event.DomainEvent;
-import org.folio.entlinks.service.reindex.event.DomainEventType;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;
 
@@ -31,8 +32,7 @@ public class AuthorityDomainEventPublisher {
     log.debug("publishCreated::process authority id={}", id);
 
     var domainEvent = DomainEvent.createEvent(id, created, folioExecutionContext.getTenantId());
-    eventProducer.sendMessage(id.toString(), domainEvent,
-      DOMAIN_EVENT_TYPE_HEADER, DomainEventType.CREATE);
+    eventProducer.sendMessage(id.toString(), domainEvent, DOMAIN_EVENT_TYPE_HEADER, DomainEventType.CREATE);
   }
 
   public void publishUpdateEvent(AuthorityDto oldAuthority, AuthorityDto updatedAuthority) {
@@ -46,22 +46,33 @@ public class AuthorityDomainEventPublisher {
 
     var domainEvent = DomainEvent.updateEvent(id, oldAuthority, updatedAuthority,
       folioExecutionContext.getTenantId());
-    eventProducer.sendMessage(id.toString(), domainEvent,
-      DOMAIN_EVENT_TYPE_HEADER, DomainEventType.UPDATE);
+    eventProducer.sendMessage(id.toString(), domainEvent, DOMAIN_EVENT_TYPE_HEADER, DomainEventType.UPDATE);
   }
 
-  public void publishDeleteEvent(AuthorityDto authorityDto) {
-    var id = authorityDto.getId();
+  public void publishSoftDeleteEvent(AuthorityDto deleted) {
+    var id = deleted.getId();
     if (id == null) {
-      log.warn("Deleted Authority cannot have null id: {}", authorityDto);
+      log.warn("Deleted Authority cannot have null id: {}", deleted);
       return;
     }
 
     log.debug("publishRemoved::process authority id={}", id);
 
-    var domainEvent = DomainEvent.deleteEvent(id, authorityDto, folioExecutionContext.getTenantId());
-    eventProducer.sendMessage(id.toString(), domainEvent,
-      DOMAIN_EVENT_TYPE_HEADER, DomainEventType.DELETE);
+    var domainEvent = AuthorityDomainEvent.softDeleteEvent(id, deleted, folioExecutionContext.getTenantId());
+    eventProducer.sendMessage(id.toString(), domainEvent, DOMAIN_EVENT_TYPE_HEADER, DomainEventType.DELETE);
+  }
+
+  public void publishHardDeleteEvent(AuthorityDto deleted) {
+    var id = deleted.getId();
+    if (id == null) {
+      log.warn("Deleted Authority cannot have null id: {}", deleted);
+      return;
+    }
+
+    log.debug("publishRemoved::process authority id={}", id);
+
+    var domainEvent = AuthorityDomainEvent.hardDeleteEvent(id, deleted, folioExecutionContext.getTenantId());
+    eventProducer.sendMessage(id.toString(), domainEvent, DOMAIN_EVENT_TYPE_HEADER, DomainEventType.DELETE);
   }
 
   public void publishReindexEvent(AuthorityDto authority, ReindexContext context) {

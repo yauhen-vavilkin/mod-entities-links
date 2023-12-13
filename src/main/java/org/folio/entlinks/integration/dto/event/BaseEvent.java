@@ -1,4 +1,4 @@
-package org.folio.entlinks.integration.dto;
+package org.folio.entlinks.integration.dto.event;
 
 public interface BaseEvent {
 

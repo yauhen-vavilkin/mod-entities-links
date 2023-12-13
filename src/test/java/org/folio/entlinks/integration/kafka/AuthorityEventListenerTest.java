@@ -13,7 +13,7 @@ import java.util.concurrent.Callable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.Metadata;
-import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
+import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.service.messaging.authority.InstanceAuthorityLinkUpdateService;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.folio.spring.test.type.UnitTest;

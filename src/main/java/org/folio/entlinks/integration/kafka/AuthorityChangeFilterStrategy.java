@@ -2,7 +2,7 @@ package org.folio.entlinks.integration.kafka;
 
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
+import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.kafka.listener.adapter.RecordFilterStrategy;
 

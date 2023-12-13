@@ -127,7 +127,7 @@ class AuthorityServiceDelegateTest {
     delegate.deleteAuthorityById(id);
 
     // then
-    verify(eventPublisher).publishDeleteEvent(captor.capture());
+    verify(eventPublisher).publishSoftDeleteEvent(captor.capture());
     assertEquals(dto, captor.getValue());
     verify(service).getById(id);
     verify(service).deleteById(id);

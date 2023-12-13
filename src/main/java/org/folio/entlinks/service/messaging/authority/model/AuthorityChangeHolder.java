@@ -12,9 +12,9 @@ import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityDataStat;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
-import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
 import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
-import org.folio.entlinks.service.reindex.event.DomainEventType;
+import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
+import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

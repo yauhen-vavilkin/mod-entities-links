@@ -2,9 +2,11 @@ package org.folio.entlinks.domain.entity;
 
 import io.hypersistence.utils.hibernate.type.basic.PostgreSQLEnumType;
 import jakarta.persistence.Column;
+import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -39,7 +41,7 @@ public class AuthorityDataStat extends AuditableEntity implements Identifiable<U
 
   @ToString.Exclude
   @ManyToOne
-  @JoinColumn(name = "authority_id")
+  @JoinColumn(name = "authority_id", foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
   private Authority authority;
 
   @Enumerated(EnumType.STRING)

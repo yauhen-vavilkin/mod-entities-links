@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.codehaus.plexus.util.StringUtils;
-import org.folio.entlinks.integration.dto.BaseEvent;
+import org.folio.entlinks.integration.dto.event.BaseEvent;
 import org.folio.entlinks.utils.DateUtils;
 import org.folio.entlinks.utils.KafkaUtils;
 import org.folio.spring.FolioExecutionContext;

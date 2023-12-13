@@ -11,6 +11,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.ONE_SECOND;
 import static org.awaitility.Durations.TEN_SECONDS;
+import static org.folio.spring.integration.XOkapiHeaders.TENANT;
+import static org.folio.spring.integration.XOkapiHeaders.URL;
 import static org.folio.support.JsonTestUtils.asJson;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
@@ -25,7 +27,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -42,8 +43,9 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.awaitility.core.ThrowingRunnable;
 import org.folio.entlinks.client.ConsortiumTenantsClient;
 import org.folio.entlinks.client.UserTenantsClient;
-import org.folio.entlinks.service.reindex.event.DomainEvent;
-import org.folio.entlinks.service.reindex.event.DomainEventType;
+import org.folio.entlinks.domain.dto.AuthorityDto;
+import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
+import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.test.extension.EnableKafka;
@@ -90,6 +92,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 public class IntegrationTestBase {
 
   protected static final String DOMAIN_EVENT_HEADER_KEY = "domain-event-type";
+  protected static final List<String> DOMAIN_EVENT_HEADER_KEYS =
+      List.of(TENANT, URL, XOkapiHeaders.USER_ID, DOMAIN_EVENT_HEADER_KEY);
+  protected static final String[] IGNORED_FIELDS_FOR_VERIFICATION = {"metadata.createdDate", "metadata.updatedDate"};
   protected static MockMvc mockMvc;
   protected static OkapiConfiguration okapi;
   protected static KafkaTemplate<String, String> kafkaTemplate;
@@ -113,9 +118,9 @@ public class IntegrationTestBase {
   protected static void setUpTenant(String tenantId, boolean loadReference) {
     var httpHeaders = new HttpHeaders();
     httpHeaders.setContentType(APPLICATION_JSON);
-    httpHeaders.add(XOkapiHeaders.TENANT, tenantId);
+    httpHeaders.add(TENANT, tenantId);
     httpHeaders.add(XOkapiHeaders.USER_ID, USER_ID);
-    httpHeaders.add(XOkapiHeaders.URL, okapi.getOkapiUrl());
+    httpHeaders.add(URL, okapi.getOkapiUrl());
 
     var tenantAttributes = new TenantAttributes().moduleTo("mod-entities-links")
       .addParametersItem(new Parameter("loadReference").value(String.valueOf(loadReference)));
@@ -151,9 +156,9 @@ public class IntegrationTestBase {
     var httpHeaders = new HttpHeaders();
 
     httpHeaders.setContentType(APPLICATION_JSON);
-    httpHeaders.add(XOkapiHeaders.TENANT, TENANT_ID);
+    httpHeaders.add(TENANT, TENANT_ID);
     httpHeaders.add(XOkapiHeaders.USER_ID, USER_ID);
-    httpHeaders.add(XOkapiHeaders.URL, okapi.getOkapiUrl());
+    httpHeaders.add(URL, okapi.getOkapiUrl());
 
     return httpHeaders;
   }
@@ -265,40 +270,37 @@ public class IntegrationTestBase {
     await().pollInterval(ONE_SECOND).atMost(TEN_SECONDS).untilAsserted(throwingRunnable);
   }
 
-  protected <T> void verifyReceivedDomainEvent(ConsumerRecord<String, DomainEvent> receivedEvent,
-                                               DomainEventType expectedEventType,
-                                               List<String> expectedHeaderKeys,
-                                               T expectedDto,
-                                               Class<T> dtoClassType,
-                                               String... ignoreFields) throws JsonProcessingException {
-    assertNotNull(receivedEvent);
-    var headerKeys = Arrays.stream(receivedEvent.headers().toArray())
+  protected <T> void verifyConsumedAuthorityEvent(ConsumerRecord<String, AuthorityDomainEvent> event,
+                                                  DomainEventType expectedEventType,
+                                                  T expectedDto) {
+    assertNotNull(event);
+    var headerKeys = Arrays.stream(event.headers().toArray())
       .map(Header::key)
       .collect(Collectors.toSet());
-    var domainType = Arrays.stream(receivedEvent.headers().toArray())
+    var domainType = Arrays.stream(event.headers().toArray())
       .filter(header -> header.key().equals(DOMAIN_EVENT_HEADER_KEY))
       .map(Header::value)
       .map(String::new)
       .findFirst().orElse("");
 
-    assertThat(headerKeys).containsAll(expectedHeaderKeys);
+    assertThat(headerKeys).containsAll(DOMAIN_EVENT_HEADER_KEYS);
     assertThat(domainType).isEqualTo(expectedEventType.toString());
+    assertNotNull(event.value());
 
-    assertNotNull(receivedEvent.value());
-    var event = (DomainEvent<T>) receivedEvent.value();
-    var eventDtoAsString = "";
-    if (List.of(DomainEventType.CREATE, DomainEventType.UPDATE, DomainEventType.REINDEX).contains(expectedEventType)) {
-      eventDtoAsString = objectMapper.writeValueAsString(event.getNewEntity());
-    } else if (expectedEventType == DomainEventType.DELETE) {
-      eventDtoAsString = objectMapper.writeValueAsString(event.getOldEntity());
-    }
-    var dtoFromEvent = objectMapper.readValue(eventDtoAsString, dtoClassType);
+    var dto = getAuthorityDomainEventDto(event.value(), expectedEventType);
 
-    var comparison = assertThat(dtoFromEvent).usingRecursiveComparison();
-    if (ignoreFields.length > 0) {
-      comparison = comparison.ignoringFields(ignoreFields);
+    assertThat(dto)
+        .usingRecursiveComparison()
+        .ignoringFields(IGNORED_FIELDS_FOR_VERIFICATION)
+        .isEqualTo(expectedDto);
+  }
+
+  private AuthorityDto getAuthorityDomainEventDto(AuthorityDomainEvent event, DomainEventType eventType) {
+    if (List.of(DomainEventType.CREATE, DomainEventType.UPDATE, DomainEventType.REINDEX).contains(eventType)) {
+      return event.getNewEntity();
     }
-    comparison.isEqualTo(expectedDto);
+
+    return event.getOldEntity();
   }
 
   protected <T> ResultMatcher exceptionMatch(Class<T> type) {

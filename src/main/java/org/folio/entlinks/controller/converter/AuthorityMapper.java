@@ -8,6 +8,7 @@ import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
 import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
 import org.folio.entlinks.domain.dto.AuthorityDtoNote;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.entity.AuthorityBase;
 import org.folio.entlinks.domain.entity.AuthorityIdentifier;
 import org.folio.entlinks.domain.entity.AuthorityNote;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
@@ -42,7 +43,7 @@ public interface AuthorityMapper {
   @Mapping(target = "sourceFileId", source = "authoritySourceFile.id")
   @Mapping(target = "subjectHeadings",
       expression = "java(toSubjectHeadingsDto(authority.getSubjectHeadingCode()))")
-  AuthorityDto toDto(Authority authority);
+  AuthorityDto toDto(AuthorityBase authority);
 
   AuthorityIdentifier toAuthorityIdentifier(AuthorityDtoIdentifier dto);
 
@@ -88,14 +89,14 @@ public interface AuthorityMapper {
   }
 
   @AfterMapping
-  default void authorityPostProcess(AuthorityDto source, @MappingTarget Authority target) {
+  default void authorityPostProcess(AuthorityDto source, @MappingTarget AuthorityBase target) {
     AuthorityUtilityMapper.extractAuthorityHeading(source, target);
     AuthorityUtilityMapper.extractAuthoritySftHeadings(source, target);
     AuthorityUtilityMapper.extractAuthoritySaftHeadings(source, target);
   }
 
   @AfterMapping
-  default void authorityDtoPostProcessing(Authority source, @MappingTarget AuthorityDto target) {
+  default void authorityDtoPostProcessing(AuthorityBase source, @MappingTarget AuthorityDto target) {
     AuthorityUtilityMapper.extractAuthorityDtoHeadingValue(source, target);
     AuthorityUtilityMapper.extractAuthorityDtoSftHeadings(source, target);
     AuthorityUtilityMapper.extractAuthorityDtoSaftHeadings(source, target);

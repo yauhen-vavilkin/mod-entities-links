@@ -1,15 +1,15 @@
 package org.folio.entlinks.integration.kafka;
 
-import static org.folio.entlinks.service.reindex.event.DomainEventType.DELETE;
-import static org.folio.entlinks.service.reindex.event.DomainEventType.UPDATE;
+import static org.folio.entlinks.integration.dto.event.DomainEventType.DELETE;
+import static org.folio.entlinks.integration.dto.event.DomainEventType.UPDATE;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.entlinks.domain.dto.AuthorityDto;
-import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
-import org.folio.entlinks.service.reindex.event.DomainEventType;
+import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
+import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.spring.test.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +29,7 @@ class AuthorityChangeFilterStrategyTest {
 
   @Test
   void shouldNotFilterDeleteEvent() {
-    var event = new AuthorityDomainEvent(null, null, null, DELETE, null);
+    var event = new AuthorityDomainEvent(null, null, null, DELETE, null, null);
     mockConsumerRecord(event);
 
     var actual = filterStrategy.filter(consumerRecord);
@@ -41,7 +41,7 @@ class AuthorityChangeFilterStrategyTest {
   void shouldNotFilterUpdateEvent_whenNewAndOldAreNotEqual() {
     var newRecord = new AuthorityDto().naturalId("1");
     var oldRecord = new AuthorityDto().naturalId("2");
-    var event = new AuthorityDomainEvent(null, oldRecord, newRecord, UPDATE, null);
+    var event = new AuthorityDomainEvent(null, oldRecord, newRecord, UPDATE, null, null);
     mockConsumerRecord(event);
 
     var actual = filterStrategy.filter(consumerRecord);
@@ -53,7 +53,7 @@ class AuthorityChangeFilterStrategyTest {
   void shouldFilterUpdateEvent_whenNewAndOldAreEqual() {
     var newRecord = new AuthorityDto().naturalId("1");
     var oldRecord = new AuthorityDto().naturalId("1");
-    var event = new AuthorityDomainEvent(null, oldRecord, newRecord, UPDATE, null);
+    var event = new AuthorityDomainEvent(null, oldRecord, newRecord, UPDATE, null, null);
     mockConsumerRecord(event);
 
     var actual = filterStrategy.filter(consumerRecord);

@@ -56,8 +56,9 @@ import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.domain.entity.ReindexJob;
 import org.folio.entlinks.domain.entity.ReindexJobResource;
 import org.folio.entlinks.domain.entity.ReindexJobStatus;
-import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
-import org.folio.entlinks.service.reindex.event.DomainEventType;
+import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
+import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
+import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.spring.client.UsersClient;
 import org.folio.spring.model.ResultList;
 
@@ -67,12 +68,17 @@ public class TestDataUtils {
   public static final UUID[] AUTHORITY_IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID(), randomUUID()};
   public static final String[] NATURAL_IDS = new String[] {"naturalId1", "naturalId2", "naturalId3", "naturalId4"};
 
-  public static AuthorityDomainEvent inventoryEvent(String resource, String type, AuthorityDto n, AuthorityDto o) {
+  public static AuthorityDomainEvent domainEvent(String resource, String type, AuthorityDto n, AuthorityDto o) {
     return new AuthorityDomainEvent(randomUUID(), o, n, DomainEventType.valueOf(type), TENANT_ID);
   }
 
   public static AuthorityDomainEvent authorityEvent(String type, AuthorityDto n, AuthorityDto o) {
-    return inventoryEvent("authority", type, n, o);
+    return domainEvent("authority", type, n, o);
+  }
+
+  public static AuthorityDomainEvent authoritySoftDeleteEvent(AuthorityDto n, AuthorityDto o) {
+    return new AuthorityDomainEvent(randomUUID(), o, n, DomainEventType.DELETE, AuthorityDeleteEventSubType.SOFT_DELETE,
+        TENANT_ID);
   }
 
   public static List<InstanceLinkDto> linksDto(UUID instanceId, Link... links) {

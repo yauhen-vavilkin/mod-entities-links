@@ -1,12 +1,12 @@
 package org.folio.entlinks.service.messaging.authority.model;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.folio.entlinks.integration.dto.event.DomainEventType.DELETE;
+import static org.folio.entlinks.integration.dto.event.DomainEventType.UPDATE;
 import static org.folio.entlinks.service.messaging.authority.model.AuthorityChangeField.CORPORATE_NAME;
 import static org.folio.entlinks.service.messaging.authority.model.AuthorityChangeField.NATURAL_ID;
 import static org.folio.entlinks.service.messaging.authority.model.AuthorityChangeField.PERSONAL_NAME;
 import static org.folio.entlinks.service.messaging.authority.model.AuthorityChangeField.PERSONAL_NAME_TITLE;
-import static org.folio.entlinks.service.reindex.event.DomainEventType.DELETE;
-import static org.folio.entlinks.service.reindex.event.DomainEventType.UPDATE;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -18,7 +18,7 @@ import java.util.UUID;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.Metadata;
 import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
-import org.folio.entlinks.integration.dto.AuthorityDomainEvent;
+import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.spring.test.type.UnitTest;
 import org.junit.jupiter.api.Test;
 

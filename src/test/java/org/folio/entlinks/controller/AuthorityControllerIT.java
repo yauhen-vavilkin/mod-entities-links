@@ -2,9 +2,9 @@ package org.folio.entlinks.controller;
 
 import static java.util.UUID.randomUUID;
 import static org.folio.entlinks.config.constants.ErrorCode.DUPLICATE_AUTHORITY_ID;
-import static org.folio.entlinks.service.reindex.event.DomainEventType.CREATE;
-import static org.folio.entlinks.service.reindex.event.DomainEventType.DELETE;
-import static org.folio.entlinks.service.reindex.event.DomainEventType.UPDATE;
+import static org.folio.entlinks.integration.dto.event.DomainEventType.CREATE;
+import static org.folio.entlinks.integration.dto.event.DomainEventType.DELETE;
+import static org.folio.entlinks.integration.dto.event.DomainEventType.UPDATE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_DATA_STAT_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
@@ -21,12 +21,16 @@ import static org.folio.support.base.TestConstants.authorityTopic;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -45,8 +49,8 @@ import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
-import org.folio.entlinks.service.reindex.event.DomainEvent;
-import org.folio.spring.integration.XOkapiHeaders;
+import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
+import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.spring.test.extension.DatabaseCleanup;
 import org.folio.spring.test.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
@@ -75,11 +79,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
   DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class AuthorityControllerIT extends IntegrationTestBase {
 
-  private static final List<String> DOMAIN_EVENT_HEADER_KEYS =
-      List.of(XOkapiHeaders.TENANT, XOkapiHeaders.URL, XOkapiHeaders.USER_ID, DOMAIN_EVENT_HEADER_KEY);
-
-  private KafkaMessageListenerContainer<String, DomainEvent> container;
-  private BlockingQueue<ConsumerRecord<String, DomainEvent>> consumerRecords;
+  private KafkaMessageListenerContainer<String, AuthorityDomainEvent> container;
+  private BlockingQueue<ConsumerRecord<String, AuthorityDomainEvent>> consumerRecords;
 
   @BeforeAll
   static void prepare() {
@@ -89,7 +90,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @BeforeEach
   void setUp(@Autowired KafkaProperties kafkaProperties) {
     consumerRecords = new LinkedBlockingQueue<>();
-    container = createAndStartTestConsumer(authorityTopic(), consumerRecords, kafkaProperties, DomainEvent.class);
+    container =
+        createAndStartTestConsumer(authorityTopic(), consumerRecords, kafkaProperties, AuthorityDomainEvent.class);
   }
 
   @AfterEach
@@ -193,10 +195,9 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andReturn().getResponse().getContentAsString();
 
     var created = objectMapper.readValue(content, AuthorityDto.class);
-    var receivedEvent = getReceivedEvent();
+    var event = getConsumedEvent();
 
-    verifyReceivedDomainEvent(receivedEvent, CREATE, DOMAIN_EVENT_HEADER_KEYS, created, AuthorityDto.class,
-        "metadata.createdDate", "metadata.updatedDate");
+    verifyConsumedAuthorityEvent(event, CREATE, created);
     assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID));
     assertEquals(dto.getNotes(), created.getNotes());
     assertEquals(dto.getIdentifiers(), created.getIdentifiers());
@@ -227,7 +228,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andReturn().getResponse().getContentAsString();
 
     var created = objectMapper.readValue(content, AuthorityDto.class);
-    getReceivedEvent();
+    getConsumedEvent();
 
     assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID));
     assertEquals(dto.getNotes(), created.getNotes());
@@ -255,7 +256,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
       .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
       .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
-    getReceivedEvent();
+    getConsumedEvent();
 
     assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, TENANT_ID));
   }
@@ -285,7 +286,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     dto.setSourceFileId(null);
 
     tryPost(authorityEndpoint(), dto).andExpect(status().isCreated());
-    getReceivedEvent();
+    getConsumedEvent();
 
     tryPost(authorityEndpoint(), dto)
       .andExpect(status().isUnprocessableEntity())
@@ -298,12 +299,12 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("PUT: update existing Authority entity")
   void updateAuthority_positive_entityUpdated() throws Exception {
-    getReceivedEvent();
+    getConsumedEvent();
     var dto = authorityDto(0, 0);
     createSourceFile(0);
 
     doPost(authorityEndpoint(), dto);
-    getReceivedEvent();
+    getConsumedEvent();
     var existingAsString = doGet(authorityEndpoint()).andReturn().getResponse().getContentAsString();
     var collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
     var expected = collection.getAuthorities().get(0);
@@ -329,12 +330,11 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andReturn().getResponse().getContentAsString();
 
     var resultDto = objectMapper.readValue(content, AuthorityDto.class);
-    var receivedEvent = getReceivedEvent();
+    var event = getConsumedEvent();
     awaitUntilAsserted(() ->
         assertEquals(1, databaseHelper.countRows(AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
 
-    verifyReceivedDomainEvent(receivedEvent, UPDATE, DOMAIN_EVENT_HEADER_KEYS, resultDto, AuthorityDto.class,
-        "metadata.createdDate", "metadata.updatedDate");
+    verifyConsumedAuthorityEvent(event, UPDATE, resultDto);
     assertEquals(expected.getNotes(), resultDto.getNotes());
     assertEquals(expected.getIdentifiers(), resultDto.getIdentifiers());
     assertEquals(expected.getSftPersonalName(), resultDto.getSftPersonalName());
@@ -346,12 +346,12 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("PUT: update Authority without any changes")
   void updateAuthorityWithoutModification_positive_entityUpdatedAndVersionIncreased() throws Exception {
-    getReceivedEvent();
+    getConsumedEvent();
     var dto = authorityDto(0, 0);
     createSourceFile(0);
 
     doPost(authorityEndpoint(), dto);
-    getReceivedEvent();
+    getConsumedEvent();
     var existingAsString = doGet(authorityEndpoint())
         .andExpect(jsonPath("authorities[0]._version", is(0)))
         .andReturn().getResponse().getContentAsString();
@@ -377,7 +377,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     createSourceFile(0);
 
     doPost(authorityEndpoint(), dto);
-    getReceivedEvent();
+    getConsumedEvent();
     var existingAsString = doGet(authorityEndpoint()).andReturn().getResponse().getContentAsString();
     var collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
     var expected = collection.getAuthorities().get(0);
@@ -393,12 +393,12 @@ class AuthorityControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("PUT: repeated update of Authority with old version")
   void repeatedUpdateWithOldVersion_negative_shouldReturnOptimisticLockingError() throws Exception {
-    getReceivedEvent();
+    getConsumedEvent();
     var dto = authorityDto(0, 0);
     createSourceFile(0);
 
     doPost(authorityEndpoint(), dto);
-    getReceivedEvent();
+    getConsumedEvent();
     var existingAsString = doGet(authorityEndpoint())
         .andExpect(jsonPath("authorities[0]._version", is(0)))
         .andReturn().getResponse().getContentAsString();
@@ -437,9 +437,9 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var expectedDto = objectMapper.readValue(contentAsString, AuthorityDto.class);
 
     doDelete(authorityEndpoint(authority.getId()));
-    var receivedEvent = getReceivedEvent();
-    verifyReceivedDomainEvent(receivedEvent, DELETE, DOMAIN_EVENT_HEADER_KEYS, expectedDto, AuthorityDto.class,
-        "metadata.createdDate", "metadata.updatedDate");
+    var event = getConsumedEvent();
+    assertEquals(AuthorityDeleteEventSubType.SOFT_DELETE, event.value().getDeleteEventSubType());
+    verifyConsumedAuthorityEvent(event, DELETE, expectedDto);
 
     awaitUntilAsserted(() ->
         assertEquals(1, databaseHelper.countRows(AUTHORITY_DATA_STAT_TABLE, TENANT_ID)));
@@ -455,16 +455,18 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
   @Test
   @DisplayName("DELETE: Should delete existing authority archives")
-  void expireAuthorityArchives_positive_shouldExpireExistingArchives() {
+  void expireAuthorityArchives_positive_shouldExpireExistingArchives()
+      throws JsonProcessingException, UnsupportedEncodingException {
     createSourceFile(0);
     var authority1 = createAuthority(0, 0);
     var authority2 = createAuthority(1, 0);
+    final var content1 = doGet(authorityEndpoint(authority1.getId())).andReturn().getResponse().getContentAsString();
+    final var content2 = doGet(authorityEndpoint(authority2.getId())).andReturn().getResponse().getContentAsString();
 
     doDelete(authorityEndpoint(authority1.getId()));
+    getConsumedEvent();
     doDelete(authorityEndpoint(authority2.getId()));
-    getReceivedEvent();
-    getReceivedEvent();
-
+    getConsumedEvent();
     awaitUntilAsserted(() ->
         assertEquals(2, databaseHelper.countRowsWhere(AUTHORITY_ARCHIVE_TABLE, TENANT_ID, "deleted = true")));
     awaitUntilAsserted(() ->
@@ -473,8 +475,21 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var dateInPast = Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS));
     databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority1.getId(), dateInPast);
     databaseHelper.updateAuthorityArchiveUpdateDate(TENANT_ID, authority2.getId(), dateInPast);
+
     doPost(authorityExpireEndpoint(), null);
 
+    getConsumedEvent();
+    var consumedEvent = getConsumedEvent();
+    assertAll(() -> {
+      assertNotNull(consumedEvent);
+      assertNotNull(consumedEvent.value());
+    });
+    var content = authority1.getId().equals(consumedEvent.value().getId()) ? content1 : content2;
+    var dto = objectMapper.readValue(content, AuthorityDto.class);
+    dto.setVersion(dto.getVersion() + 1);
+
+    verifyConsumedAuthorityEvent(consumedEvent, DELETE, dto);
+    assertEquals(AuthorityDeleteEventSubType.HARD_DELETE, consumedEvent.value().getDeleteEventSubType());
     assertEquals(0, databaseHelper.countRows(AUTHORITY_ARCHIVE_TABLE, TENANT_ID));
   }
 
@@ -504,7 +519,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     createSourceFile(0);
 
     doPost(authorityEndpoint(), dto);
-    getReceivedEvent();
+    getConsumedEvent();
     var existingAsString = doGet(authorityEndpoint())
       .andReturn().getResponse().getContentAsString();
     var collection = objectMapper.readValue(existingAsString, AuthorityDtoCollection.class);
@@ -548,7 +563,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
   @Nullable
   @SneakyThrows
-  private ConsumerRecord<String, DomainEvent> getReceivedEvent() {
+  private ConsumerRecord<String, AuthorityDomainEvent> getConsumedEvent() {
     return consumerRecords.poll(10, TimeUnit.SECONDS);
   }
 

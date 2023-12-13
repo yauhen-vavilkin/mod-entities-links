@@ -29,7 +29,6 @@ public class TestConstants {
   public static final String INSTANCE_AUTHORITY_TOPIC = "links.instance-authority";
   public static final String INSTANCE_AUTHORITY_STATS_TOPIC = "links.instance-authority-stats";
   public static final String AUTHORITY_TOPIC = "authorities.authority";
-  public static final String DELETE_TYPE = "DELETE";
   public static final String UPDATE_TYPE = "UPDATE";
   public static final String TEST_STRING = "test, ";
 

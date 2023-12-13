@@ -19,14 +19,14 @@ import java.util.Objects;
 import lombok.experimental.UtilityClass;
 import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.domain.dto.AuthorityDto;
-import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.entity.AuthorityBase;
 import org.folio.entlinks.domain.entity.HeadingRef;
 
 @UtilityClass
 @Log4j2
 public class AuthorityUtilityMapper {
 
-  public static void extractAuthorityHeading(AuthorityDto source, Authority target) {
+  public static void extractAuthorityHeading(AuthorityDto source, AuthorityBase target) {
     if (Objects.nonNull(source.getPersonalName())) {
       target.setHeading(source.getPersonalName());
       target.setHeadingType(PERSONAL_NAME_HEADING);
@@ -78,7 +78,7 @@ public class AuthorityUtilityMapper {
     }
   }
 
-  public static void extractAuthoritySftHeadings(AuthorityDto source, Authority target) {
+  public static void extractAuthoritySftHeadings(AuthorityDto source, AuthorityBase target) {
     List<HeadingRef> sftHeadings = new ArrayList<>();
     if (isNotEmpty(source.getSftPersonalName())) {
       sftHeadings.addAll(asSftHeadings(source.getSftPersonalName(), PERSONAL_NAME_HEADING));
@@ -113,7 +113,7 @@ public class AuthorityUtilityMapper {
     target.setSftHeadings(sftHeadings);
   }
 
-  public static void extractAuthoritySaftHeadings(AuthorityDto source, Authority target) {
+  public static void extractAuthoritySaftHeadings(AuthorityDto source, AuthorityBase target) {
     List<HeadingRef> saftHeadings = new ArrayList<>();
     if (isNotEmpty(source.getSaftPersonalName())) {
       saftHeadings.addAll(asSftHeadings(source.getSaftPersonalName(), PERSONAL_NAME_HEADING));
@@ -148,7 +148,7 @@ public class AuthorityUtilityMapper {
     target.setSaftHeadings(saftHeadings);
   }
 
-  public static void extractAuthorityDtoHeadingValue(Authority source, AuthorityDto target) {
+  public static void extractAuthorityDtoHeadingValue(AuthorityBase source, AuthorityDto target) {
     if (source.getHeadingType() == null || source.getHeading() == null) {
       return;
     }
@@ -167,14 +167,14 @@ public class AuthorityUtilityMapper {
     }
   }
 
-  public static void extractAuthorityDtoSftHeadings(Authority source, AuthorityDto target) {
+  public static void extractAuthorityDtoSftHeadings(AuthorityBase source, AuthorityDto target) {
     if (isEmpty(source.getSftHeadings())) {
       return;
     }
     source.getSftHeadings().forEach(headingRef -> extractAuthorityDtoSftHeading(headingRef, target));
   }
 
-  public static void extractAuthorityDtoSaftHeadings(Authority source, AuthorityDto target) {
+  public static void extractAuthorityDtoSaftHeadings(AuthorityBase source, AuthorityDto target) {
     if (isEmpty(source.getSaftHeadings())) {
       return;
     }

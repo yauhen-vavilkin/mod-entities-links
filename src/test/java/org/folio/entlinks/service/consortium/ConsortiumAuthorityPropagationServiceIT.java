@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.entlinks.service.consortium.ConsortiumAuthorityPropagationServiceIT.CENTRAL_TENANT_ID;
 import static org.folio.entlinks.service.consortium.ConsortiumAuthorityPropagationServiceIT.COLLEGE_TENANT_ID;
 import static org.folio.entlinks.service.consortium.ConsortiumAuthorityPropagationServiceIT.UNIVERSITY_TENANT_ID;
+import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_DATA_STAT_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_NOTE_TYPE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE;
@@ -11,6 +12,7 @@ import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -29,10 +31,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 
 @IntegrationTest
-@DatabaseCleanup(tables = {AUTHORITY_DATA_STAT_TABLE, AUTHORITY_TABLE, AUTHORITY_SOURCE_FILE_CODE_TABLE,
-                           AUTHORITY_SOURCE_FILE_TABLE, AUTHORITY_NOTE_TYPE_TABLE},
-                 tenants = {CENTRAL_TENANT_ID, COLLEGE_TENANT_ID, UNIVERSITY_TENANT_ID
-                 })
+@DatabaseCleanup(tables = {AUTHORITY_DATA_STAT_TABLE, AUTHORITY_ARCHIVE_TABLE, AUTHORITY_TABLE,
+  AUTHORITY_SOURCE_FILE_CODE_TABLE, AUTHORITY_SOURCE_FILE_TABLE, AUTHORITY_NOTE_TYPE_TABLE},
+                 tenants = {CENTRAL_TENANT_ID, COLLEGE_TENANT_ID, UNIVERSITY_TENANT_ID})
 class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
 
   public static final String CENTRAL_TENANT_ID = "consortium";
@@ -40,6 +41,7 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
   public static final String UNIVERSITY_TENANT_ID = "university";
 
   private static final String CONSORTIUM_SOURCE_PREFIX = "CONSORTIUM-";
+  private static final UUID AUTHORITY_ID = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
 
   @BeforeAll
   static void beforeAll() {
@@ -49,15 +51,14 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
   @Test
   @SneakyThrows
   void testAuthorityCreatePropagation() {
-    var authorityId = UUID.randomUUID();
     var dto = new AuthorityDto()
-      .id(authorityId)
+      .id(AUTHORITY_ID)
       .version(0)
       .source("MARC")
       .naturalId("ns12345")
       .personalName("Nikola Tesla");
     doPost(authorityEndpoint(), dto, tenantHeaders(CENTRAL_TENANT_ID));
-    var centralAuthority = requestAuthority(authorityId, CENTRAL_TENANT_ID);
+    var centralAuthority = requestAuthority(CENTRAL_TENANT_ID);
     assertThat(centralAuthority)
       .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
         AuthorityDto::getPersonalName)
@@ -65,7 +66,7 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
 
     awaitUntilAsserted(() ->
       assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, COLLEGE_TENANT_ID)));
-    var collegeAuthority = requestAuthority(authorityId, COLLEGE_TENANT_ID);
+    var collegeAuthority = requestAuthority(COLLEGE_TENANT_ID);
     assertThat(collegeAuthority)
       .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
         AuthorityDto::getPersonalName)
@@ -74,7 +75,7 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
 
     awaitUntilAsserted(() ->
       assertEquals(1, databaseHelper.countRows(AUTHORITY_TABLE, UNIVERSITY_TENANT_ID)));
-    var universityAuthority = requestAuthority(authorityId, UNIVERSITY_TENANT_ID);
+    var universityAuthority = requestAuthority(UNIVERSITY_TENANT_ID);
     assertThat(universityAuthority)
       .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
         AuthorityDto::getPersonalName)
@@ -86,41 +87,41 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
   @Test
   @SneakyThrows
   void testAuthorityDeletePropagation() {
-    var authorityId = UUID.randomUUID();
     var dto = new AuthorityDto()
-      .id(authorityId)
+      .id(AUTHORITY_ID)
       .version(0)
       .source("MARC")
       .naturalId("ns12345")
       .personalName("Nikola Tesla");
     doPost(authorityEndpoint(), dto, tenantHeaders(CENTRAL_TENANT_ID));
-    assertThat(requestAuthority(authorityId, CENTRAL_TENANT_ID)).isNotNull();
-    doDelete(authorityEndpoint(authorityId), tenantHeaders(CENTRAL_TENANT_ID));
-    tryGet(authorityEndpoint(authorityId), tenantHeaders(CENTRAL_TENANT_ID)).andExpect(status().isNotFound());
+    assertThat(requestAuthority(CENTRAL_TENANT_ID)).isNotNull();
+    doDelete(authorityEndpoint(AUTHORITY_ID), tenantHeaders(CENTRAL_TENANT_ID));
+    tryGet(authorityEndpoint(AUTHORITY_ID), tenantHeaders(CENTRAL_TENANT_ID)).andExpect(status().isNotFound());
 
     awaitUntilAsserted(() ->
-      assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_TABLE, COLLEGE_TENANT_ID, "deleted")));
-    tryGet(authorityEndpoint(authorityId), tenantHeaders(COLLEGE_TENANT_ID)).andExpect(status().isNotFound());
+        assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, CENTRAL_TENANT_ID)));
     awaitUntilAsserted(() ->
-      assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_TABLE, UNIVERSITY_TENANT_ID, "deleted")));
-    tryGet(authorityEndpoint(authorityId), tenantHeaders(UNIVERSITY_TENANT_ID)).andExpect(status().isNotFound());
+      assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, COLLEGE_TENANT_ID)));
+    awaitUntilAsserted(() ->
+      assertEquals(0, databaseHelper.countRows(AUTHORITY_TABLE, UNIVERSITY_TENANT_ID)));
   }
 
   @Test
   @SneakyThrows
   void testAuthorityUpdatePropagation() {
-    var authorityId = UUID.randomUUID();
     var dto = new AuthorityDto()
-      .id(authorityId)
+      .id(AUTHORITY_ID)
       .version(0)
       .source("MARC")
       .naturalId("ns12345")
       .personalName("Nikola Tesla");
     doPost(authorityEndpoint(), dto, tenantHeaders(CENTRAL_TENANT_ID));
-    assertThat(requestAuthority(authorityId, CENTRAL_TENANT_ID)).isNotNull();
-    doPut(authorityEndpoint(authorityId), dto.personalName("updated"), tenantHeaders(CENTRAL_TENANT_ID));
+    assertThat(requestAuthority(CENTRAL_TENANT_ID)).isNotNull();
+    awaitUntilAsserted(() -> assertNotNull(requestAuthority(COLLEGE_TENANT_ID)));
+    awaitUntilAsserted(() -> assertNotNull(requestAuthority(UNIVERSITY_TENANT_ID)));
+    doPut(authorityEndpoint(AUTHORITY_ID), dto.personalName("updated"), tenantHeaders(CENTRAL_TENANT_ID));
 
-    var centralAuthority = requestAuthority(authorityId, CENTRAL_TENANT_ID);
+    var centralAuthority = requestAuthority(CENTRAL_TENANT_ID);
     assertThat(centralAuthority)
       .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
         AuthorityDto::getPersonalName)
@@ -128,7 +129,7 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
 
     awaitUntilAsserted(() ->
       assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_TABLE, COLLEGE_TENANT_ID, "heading = 'updated'")));
-    var collegeAuthority = requestAuthority(authorityId, COLLEGE_TENANT_ID);
+    var collegeAuthority = requestAuthority(COLLEGE_TENANT_ID);
     assertThat(collegeAuthority)
       .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
         AuthorityDto::getPersonalName)
@@ -137,7 +138,7 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
 
     awaitUntilAsserted(() ->
       assertEquals(1, databaseHelper.countRowsWhere(AUTHORITY_TABLE, UNIVERSITY_TENANT_ID, "heading = 'updated'")));
-    var universityAuthority = requestAuthority(authorityId, UNIVERSITY_TENANT_ID);
+    var universityAuthority = requestAuthority(UNIVERSITY_TENANT_ID);
     assertThat(universityAuthority)
       .extracting(AuthorityDto::getId, AuthorityDto::getSource, AuthorityDto::getNaturalId,
         AuthorityDto::getPersonalName)
@@ -146,9 +147,9 @@ class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
 
   }
 
-  private AuthorityDto requestAuthority(UUID authorityId, String tenantId)
+  private AuthorityDto requestAuthority(String tenantId)
     throws UnsupportedEncodingException, JsonProcessingException {
-    var response = doGet(authorityEndpoint(authorityId), tenantHeaders(tenantId)).andReturn()
+    var response = doGet(authorityEndpoint(AUTHORITY_ID), tenantHeaders(tenantId)).andReturn()
       .getResponse()
       .getContentAsString();
     return objectMapper.readValue(response, AuthorityDto.class);
