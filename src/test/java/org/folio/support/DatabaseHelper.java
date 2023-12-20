@@ -58,11 +58,33 @@ public class DatabaseHelper {
 
   public void saveAuthoritySourceFile(String tenant, AuthoritySourceFile entity) {
     var sql = "INSERT INTO " + getTable(tenant, AUTHORITY_SOURCE_FILE_TABLE)
-      + " (id, name, source, type, base_url, created_date, updated_date,"
-      + "created_by_user_id, updated_by_user_id) VALUES (?,?,?,?,?,?,?,?,?)";
+      + " (id, name, source, type, base_url, hrid_start_number, created_date, updated_date,"
+      + "created_by_user_id, updated_by_user_id) VALUES (?,?,?,?,?,?,?,?,?,?)";
     jdbcTemplate.update(sql, entity.getId(), entity.getName(),
-      entity.getSource(), entity.getType(), entity.getBaseUrl(), entity.getCreatedDate(),
+      entity.getSource(), entity.getType(), entity.getBaseUrl(), entity.getHridStartNumber(), entity.getCreatedDate(),
       entity.getUpdatedDate(), entity.getCreatedByUserId(), entity.getUpdatedByUserId());
+  }
+
+  public String queryAuthoritySourceFileSequenceName(String tenant, UUID id) {
+    var sql = "SELECT * from " + getTable(tenant, AUTHORITY_SOURCE_FILE_TABLE) + " where id = '" + id + "'";
+    return jdbcTemplate.query(sql, rs -> {
+      if (rs.next()) {
+        return rs.getString("sequence_name");
+      } else {
+        return null;
+      }
+    });
+  }
+
+  public Integer queryAuthoritySourceFileSequenceStartNumber(String sequenceName) {
+    var sql = "SELECT * from information_schema.sequences where sequence_name='" + sequenceName + "'";
+    return jdbcTemplate.query(sql, rs -> {
+      if (rs.next()) {
+        return rs.getInt("start_value");
+      } else {
+        return null;
+      }
+    });
   }
 
   public void updateAuthorityNaturalId(String tenant, UUID authorityId, String naturalId) {
@@ -98,8 +120,8 @@ public class DatabaseHelper {
   }
 
   public AuthorityNoteType getAuthorityNoteTypeById(UUID id, String tenant) {
-    String sql = "SELECT * FROM " + getTable(tenant, AUTHORITY_NOTE_TYPE_TABLE) + " WHERE id = ?";
-    return jdbcTemplate.query(sql, new Object[] {id}, rs -> {
+    String sql = "SELECT * FROM " + getTable(tenant, AUTHORITY_NOTE_TYPE_TABLE) + " WHERE id = '" + id + "'";
+    return jdbcTemplate.query(sql, rs -> {
       if (rs.next()) {
         var authorityNoteType = new AuthorityNoteType();
         authorityNoteType.setId(UUID.fromString(rs.getString("id")));

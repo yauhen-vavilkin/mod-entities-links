@@ -16,7 +16,6 @@ import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.repository.AuthorityNoteTypeRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.service.authority.AuthorityNoteTypeService;
-import org.folio.entlinks.service.authority.AuthoritySourceFileService;
 import org.folio.spring.test.type.UnitTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -35,11 +34,9 @@ class ReferenceDataLoaderTest {
 
   private final AuthorityNoteTypeRepository noteTypeRepository = mock(AuthorityNoteTypeRepository.class);
 
-  private final AuthoritySourceFileService sourceFileService = mock(AuthoritySourceFileService.class);
-
   private final AuthoritySourceFileRepository sourceFileRepository = mock(AuthoritySourceFileRepository.class);
 
-  private final ReferenceDataLoader referenceDataLoader = new ReferenceDataLoader(noteTypeService, sourceFileService,
+  private final ReferenceDataLoader referenceDataLoader = new ReferenceDataLoader(noteTypeService,
       noteTypeRepository, sourceFileRepository, OBJECT_MAPPER);
 
   @Test
@@ -47,7 +44,7 @@ class ReferenceDataLoaderTest {
     when(noteTypeRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
     when(noteTypeService.create(any(AuthorityNoteType.class))).thenAnswer(i -> i.getArguments()[0]);
     when(sourceFileRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
-    when(sourceFileService.create(any(AuthoritySourceFile.class))).thenAnswer(i -> i.getArguments()[0]);
+    when(sourceFileRepository.save(any(AuthoritySourceFile.class))).thenAnswer(i -> i.getArguments()[0]);
 
     referenceDataLoader.loadRefData();
 
@@ -57,7 +54,7 @@ class ReferenceDataLoaderTest {
     var noteTypeCaptor = ArgumentCaptor.forClass(AuthorityNoteType.class);
     var sourceFileCaptor = ArgumentCaptor.forClass(AuthoritySourceFile.class);
     verify(noteTypeService).create(noteTypeCaptor.capture());
-    verify(sourceFileService).create(sourceFileCaptor.capture());
+    verify(sourceFileRepository).save(sourceFileCaptor.capture());
 
     var loadedNoteType = noteTypeCaptor.getValue();
     assertNotNull(loadedNoteType.getId());

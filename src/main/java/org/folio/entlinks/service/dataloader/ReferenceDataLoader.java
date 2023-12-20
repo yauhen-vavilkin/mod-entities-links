@@ -12,7 +12,6 @@ import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.repository.AuthorityNoteTypeRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.service.authority.AuthorityNoteTypeService;
-import org.folio.entlinks.service.authority.AuthoritySourceFileService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
@@ -30,7 +29,6 @@ public class ReferenceDataLoader {
     new PathMatchingResourcePatternResolver(ReferenceDataLoader.class.getClassLoader());
 
   private final AuthorityNoteTypeService noteTypeService;
-  private final AuthoritySourceFileService sourceFileService;
   private final AuthorityNoteTypeRepository noteTypeRepository;
   private final AuthoritySourceFileRepository sourceFileRepository;
   private final ObjectMapper mapper;
@@ -69,9 +67,19 @@ public class ReferenceDataLoader {
 
       if (Objects.isNull(existing)) {
         log.info("Creating reference Authority Source File {}", sourceFile);
-        sourceFileService.create(sourceFile);
+        createAuthoritySourceFile(sourceFile);
       }
     }
+  }
+
+  private void createAuthoritySourceFile(AuthoritySourceFile entity) {
+    log.debug("create:: Attempting to create AuthoritySourceFile [entity: {}]", entity);
+
+    for (var code : entity.getAuthoritySourceFileCodes()) {
+      code.setAuthoritySourceFile(entity);
+    }
+
+    sourceFileRepository.save(entity);
   }
 
   private void registerAuthoritySourceFileDeserializer() {

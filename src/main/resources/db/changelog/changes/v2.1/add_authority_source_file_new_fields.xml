@@ -1,0 +1,35 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
+
+  <changeSet id="MODELINKS-123@@add-sequence_name-and-selectable-authority_source_file_fields" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="authority_source_file"/>
+    </preConditions>
+
+    <comment>Add sequence_name and selectable columns into authority_source_file</comment>
+
+    <addColumn tableName="authority_source_file" schemaName="">
+      <column name="sequence_name" type="varchar(50)">
+        <constraints unique="true" uniqueConstraintName="authority_source_file_sequence_name_unq"/>
+      </column>
+      <column name="selectable" type="BOOLEAN" defaultValueBoolean="false"/>
+      <column name="hrid_start_number" type="INT"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="MODELINKS-123@@make-type-nullable-in-authority_source_file" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="authority_source_file"/>
+    </preConditions>
+
+    <comment>Drop not nullable constraint from type column in authority_source_file</comment>
+
+    <dropNotNullConstraint columnDataType="varchar"
+                           columnName="type"
+                           tableName="authority_source_file"/>
+  </changeSet>
+
+</databaseChangeLog>

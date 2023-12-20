@@ -75,7 +75,7 @@
         <tableExists tableName="authority_archive"/>
       </and>
     </preConditions>
-    <sqlFile path="archiveAuthorityRecord.sql" relativeToChangelogFile="true"/>
+    <sqlFile path="archiveAuthorityRecord.sql" relativeToChangelogFile="true" splitStatements="false"/>
   </changeSet>
 
 </databaseChangeLog>

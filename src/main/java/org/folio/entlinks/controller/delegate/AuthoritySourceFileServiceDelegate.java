@@ -8,6 +8,7 @@ import org.folio.entlinks.controller.converter.AuthoritySourceFileMapper;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDtoCollection;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
+import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDto;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.service.authority.AuthoritySourceFileService;
 import org.springframework.stereotype.Service;
@@ -32,10 +33,13 @@ public class AuthoritySourceFileServiceDelegate {
     return mapper.toDto(entity);
   }
 
-  public AuthoritySourceFileDto createAuthoritySourceFile(AuthoritySourceFileDto authoritySourceFile) {
+  public AuthoritySourceFileDto createAuthoritySourceFile(AuthoritySourceFilePostDto authoritySourceFile) {
     var entity = mapper.toEntity(authoritySourceFile);
     normalizeBaseUrl(entity);
     var created = service.create(entity);
+
+    service.createSequence(created.getSequenceName(), created.getHridStartNumber());
+
     return mapper.toDto(created);
   }
 

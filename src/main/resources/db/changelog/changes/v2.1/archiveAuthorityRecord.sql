@@ -1,7 +1,7 @@
 CREATE OR REPLACE FUNCTION archive_authority_record()
   RETURNS TRIGGER
   AS
-'
+$$
 BEGIN
   IF OLD.deleted = false AND NEW.deleted = true THEN
     INSERT INTO authority_archive(id, natural_id, source_file_id, source, heading, heading_type, _version,
@@ -14,7 +14,7 @@ BEGIN
 
   RETURN NEW;
 END;
-'
+$$
 LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS archive_authority_on_soft_delete ON authority CASCADE;

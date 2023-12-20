@@ -14,6 +14,8 @@ import org.folio.entlinks.controller.converter.AuthoritySourceFileMapper;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDtoCollection;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
+import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDto;
+import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDtoHridManagement;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.service.authority.AuthoritySourceFileService;
 import org.folio.spring.test.type.UnitTest;
@@ -74,13 +76,16 @@ class AuthoritySourceFileServiceDelegateTest {
 
   @Test
   void shouldNormalizeBaseUrlForSourceFileCreate() {
-    var dto = new AuthoritySourceFileDto().baseUrl(INPUT_BASE_URL);
+    var dto = new AuthoritySourceFilePostDto().baseUrl(INPUT_BASE_URL)
+        .hridManagement(new AuthoritySourceFilePostDtoHridManagement().startNumber(10));
     var expected = new AuthoritySourceFile();
     expected.setBaseUrl(INPUT_BASE_URL);
+    expected.setSequenceName("sequence_name");
+    expected.setHridStartNumber(dto.getHridManagement().getStartNumber());
 
     when(mapper.toEntity(dto)).thenReturn(expected);
     when(service.create(expected)).thenReturn(expected);
-    when(mapper.toDto(expected)).thenReturn(dto);
+    when(mapper.toDto(expected)).thenReturn(new AuthoritySourceFileDto());
 
     delegate.createAuthoritySourceFile(dto);
 
@@ -88,6 +93,7 @@ class AuthoritySourceFileServiceDelegateTest {
     verify(mapper).toEntity(dto);
     verify(service).create(expected);
     verify(mapper).toDto(expected);
+    verify(service).createSequence(expected.getSequenceName(), expected.getHridStartNumber());
     verifyNoMoreInteractions(mapper, service);
   }
 

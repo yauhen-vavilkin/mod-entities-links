@@ -8,35 +8,25 @@ properties:
   name:
     type: string
     description: Authority source file name
-  codes:
-    type: array
-    description: List of identifying prefix
-    items:
-      type: string
-      description: identifying prefix, i.e. 'n', 'D', 'fst'
+  code:
+    type: string
+    description: Label identifying prefix, i.e. 'n', 'D', 'fst'
   type:
     type: string
     description: Type of authority records stored in source file
   baseUrl:
     type: string
     description: Base URL of the source file origin
-  source:
-    type: string
-    description: label indicating where the authority source file entry originates from, i.e. 'folio' or 'local'
-    enum:
-      - folio
-      - local
   selectable:
     type: boolean
+    default: true
   hridManagement:
     description: Identifies HRID management properties
     type: object
     properties:
       startNumber:
         type: integer
-  metadata:
-    $ref: '../common/metadata.yaml'
+        default: 1
 required:
   - name
-  - codes
-  - source
+  - code
