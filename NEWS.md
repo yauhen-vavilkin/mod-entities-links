@@ -11,6 +11,7 @@
 * Add scheduled job to expire archive records with tenant-level retention policy ([MODELINKS-139](https://issues.folio.org/browse/MODELINKS-139))
 * Update authority-source-files DELETE endpoint error message([MODELINKS-162](https://issues.folio.org/browse/MODELINKS-162))
 * Update authority-source-files POST API request body and DB table schemas with new fields([MODELINKS-123](https://issues.folio.org/browse/MODELINKS-123))
+* Prohibit update/delete of authority consortium shadow copy([MODELINKS-174](https://issues.folio.org/browse/MODELINKS-174))
 
 ### Bug fixes
 * Fix secure setup of system users by default ([MODELINKS-135](https://issues.folio.org/browse/MODELINKS-135))

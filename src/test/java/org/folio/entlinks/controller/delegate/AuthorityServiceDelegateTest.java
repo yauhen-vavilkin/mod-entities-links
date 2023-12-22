@@ -10,18 +10,22 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.UUID;
+import org.assertj.core.api.Assertions;
 import org.folio.entlinks.controller.converter.AuthorityMapper;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
 import org.folio.entlinks.service.authority.AuthorityService;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthorityPropagationService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.test.type.UnitTest;
+import org.folio.tenant.domain.dto.Parameter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +37,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @UnitTest
 @ExtendWith(MockitoExtension.class)
 class AuthorityServiceDelegateTest {
+
+  public static final String CONSORTIUM_SOURCE = "CONSORTIUM-MARC";
 
   private final ArgumentCaptor<AuthorityDto> captor = ArgumentCaptor.forClass(AuthorityDto.class);
   @Mock
@@ -134,5 +140,50 @@ class AuthorityServiceDelegateTest {
     verifyNoMoreInteractions(service);
     verify(mapper).toDto(any(Authority.class));
     verify(propagationService).propagate(entity, DELETE, TENANT_ID);
+  }
+
+  @Test
+  void shouldNotUpdateConsortiumShadowCopyAuthority() {
+    // given
+    var id = UUID.randomUUID();
+    var entity = new Authority();
+    entity.setId(id);
+    entity.setSource(CONSORTIUM_SOURCE);
+    var expectedParam = new Parameter("id").value(id.toString());
+    when(service.getById(id)).thenReturn(entity);
+
+    // then
+    Assertions.assertThatThrownBy(() -> delegate.updateAuthority(id, null))
+        .isInstanceOf(RequestBodyValidationException.class)
+        .hasMessage("UPDATE is not applicable to consortium shadow copy")
+        .extracting(ex -> (RequestBodyValidationException) ex)
+        .matches(ex -> ex.getInvalidParameters().get(0).equals(expectedParam));
+    verify(mapper, times(1)).toEntity(any());
+    verifyNoMoreInteractions(mapper);
+    verifyNoMoreInteractions(service);
+    verifyNoInteractions(eventPublisher);
+    verifyNoInteractions(propagationService);
+  }
+
+  @Test
+  void shouldNotDeleteConsortiumShadowCopyAuthority() {
+    // given
+    var id = UUID.randomUUID();
+    var entity = new Authority();
+    entity.setId(id);
+    entity.setSource(CONSORTIUM_SOURCE);
+    var expectedParam = new Parameter("id").value(id.toString());
+    when(service.getById(id)).thenReturn(entity);
+
+    // then
+    Assertions.assertThatThrownBy(() -> delegate.deleteAuthorityById(id))
+        .isInstanceOf(RequestBodyValidationException.class)
+        .hasMessage("DELETE is not applicable to consortium shadow copy")
+        .extracting(ex -> (RequestBodyValidationException) ex)
+        .matches(ex -> ex.getInvalidParameters().get(0).equals(expectedParam));
+    verifyNoInteractions(mapper);
+    verifyNoMoreInteractions(service);
+    verifyNoInteractions(eventPublisher);
+    verifyNoInteractions(propagationService);
   }
 }
