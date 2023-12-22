@@ -129,6 +129,12 @@ public class AuthoritySourceFileService {
       throw new RequestBodyValidationException("Authority Source File with source Local should have only one prefix",
           List.of(new Parameter("code").value(codes)));
     }
+
+    var code = entity.getAuthoritySourceFileCodes().iterator().next().getCode();
+    if (StringUtils.isBlank(code) || !StringUtils.isAlpha(code)) {
+      throw new RequestBodyValidationException("Authority Source File prefix should be non-empty sequence of letters",
+          List.of(new Parameter("code").value(code)));
+    }
   }
 
   private void initOnCreate(AuthoritySourceFile entity) {

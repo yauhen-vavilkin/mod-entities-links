@@ -12,7 +12,7 @@
     <comment>Add sequence_name and selectable columns into authority_source_file</comment>
 
     <addColumn tableName="authority_source_file" schemaName="">
-      <column name="sequence_name" type="varchar(50)">
+      <column name="sequence_name" type="varchar(55)">
         <constraints unique="true" uniqueConstraintName="authority_source_file_sequence_name_unq"/>
       </column>
       <column name="selectable" type="BOOLEAN" defaultValueBoolean="false"/>

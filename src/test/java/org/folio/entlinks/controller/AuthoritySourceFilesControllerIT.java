@@ -11,6 +11,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -53,7 +54,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
 
   private static final UUID[] SOURCE_FILE_IDS = new UUID[] {randomUUID(), randomUUID(), randomUUID()};
   private static final Integer[] SOURCE_FILE_CODE_IDS = new Integer[] {1, 2, 3};
-  private static final String[] SOURCE_FILE_CODES = new String[] {"code1", "code2", "code3"};
+  private static final String[] SOURCE_FILE_CODES = new String[] {"c", "co", "cod"};
   private static final String[] SOURCE_FILE_NAMES = new String[] {"name1", "name2", "name3"};
   private static final String[] SOURCE_FILE_SOURCES = {"local", "local", "folio"};
   private static final String[] SOURCE_FILE_TYPES = new String[] {"type1", "type2", "type3"};
@@ -151,9 +152,12 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
 
     var id = UUID.randomUUID();
     var dto = new AuthoritySourceFilePostDto()
-        .id(id).name("name").code("code").type("type").baseUrl("url").selectable(true)
+        .id(id).name("name")
+        // set max length (25) for the prefix/code
+        .code("abcdefghijklmnopqrstuvwxy")
+        .type("type").baseUrl("url")
         .hridManagement(new AuthoritySourceFilePostDtoHridManagement().startNumber(10));
-    var expectedSequenceName = "hrid_authority_local_file_code_seq";
+    var expectedSequenceName = "hrid_authority_local_file_abcdefghijklmnopqrstuvwxy_seq";
 
     tryPost(authoritySourceFilesEndpoint(), dto)
       .andExpect(status().isCreated())
@@ -170,6 +174,24 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     assertEquals(expectedSequenceName, databaseHelper.queryAuthoritySourceFileSequenceName(TENANT_ID, id));
     assertEquals(dto.getHridManagement().getStartNumber(),
         databaseHelper.queryAuthoritySourceFileSequenceStartNumber(expectedSequenceName));
+  }
+
+  @Test
+  @DisplayName("POST: create Authority Source File with existing ID")
+  void createAuthoritySourceFile_negative_existsById() throws Exception {
+    var entity = prepareAuthoritySourceFile(0);
+    createAuthoritySourceFile(entity);
+
+    var dto = new AuthoritySourceFilePostDto("name111", "code").id(entity.getId())
+        .baseUrl("url").type("type");
+
+    tryPost(authoritySourceFilesEndpoint(), dto)
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(errorMessageMatch(is("Authority Source File with the given 'id' already exists.")))
+        .andExpect(exceptionMatch(DataIntegrityViolationException.class));
+
+    assertEquals(1,
+        databaseHelper.countRows(DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE, TENANT_ID));
   }
 
   @Test
@@ -211,7 +233,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   void createAuthoritySourceFile_negative_existedCode() throws Exception {
     var createdEntities = createAuthoritySourceTypes();
 
-    var dto = new AuthoritySourceFilePostDto("new name", "code1").baseUrl("new url").type("type");
+    var dto = new AuthoritySourceFilePostDto("new name", "co").baseUrl("new url").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
       .andExpect(status().isUnprocessableEntity())
@@ -220,6 +242,34 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
 
     assertEquals(createdEntities.size(),
       databaseHelper.countRows(DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE, TENANT_ID));
+  }
+
+  @Test
+  @DisplayName("POST: create new Authority Source File with invalid code value")
+  void createAuthoritySourceFile_negative_invalidCodeValue() throws Exception {
+    var dto = new AuthoritySourceFilePostDto().name("new name").baseUrl("new url").type("type");
+
+    for (var code : List.of("123", "0x123", "abc ", "$")) {
+      dto.setCode(code);
+      tryPost(authoritySourceFilesEndpoint(), dto)
+          .andExpect(status().isUnprocessableEntity())
+          .andExpect(errorMessageMatch(
+              containsString("Authority Source File prefix should be non-empty sequence of letters")))
+          .andExpect(exceptionMatch(RequestBodyValidationException.class));
+    }
+
+    // cases which violates code length constraints
+    for (var code : List.of("", "abcdefghijklmnopqrstuvwxyz")) {
+      dto.setCode(code);
+      tryPost(authoritySourceFilesEndpoint(), dto)
+          .andExpect(status().isUnprocessableEntity())
+          .andExpect(errorMessageMatch(is(
+              "size must be between 1 and 25")))
+          .andExpect(exceptionMatch(MethodArgumentNotValidException.class));
+    }
+
+    assertEquals(0,
+        databaseHelper.countRows(DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE, TENANT_ID));
   }
 
   @Test
@@ -241,7 +291,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("PATCH: partially update Authority Source File")
   void updateAuthoritySourceFilePartially_positive_entityGetUpdated() throws Exception {
-    var dto = new AuthoritySourceFilePostDto("name", "code1").type("type").baseUrl("url");
+    var dto = new AuthoritySourceFilePostDto("name", "code").type("type").baseUrl("url");
 
     doPost(authoritySourceFilesEndpoint(), dto);
     var existingAsString = doGet(authoritySourceFilesEndpoint()).andReturn().getResponse().getContentAsString();
@@ -276,13 +326,15 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("DELETE: Should delete existing authority source file")
   void deleteAuthoritySourceFile_positive_deleteExistingEntity() {
-    var noteType = prepareAuthoritySourceFile(0);
-    createAuthoritySourceFile(noteType);
+    var sourceFile = prepareAuthoritySourceFile(0);
+    sourceFile.setSequenceName(String.format("hrid_authority_local_file_%s_seq", SOURCE_FILE_CODE_IDS[0]));
+    createAuthoritySourceFile(sourceFile);
 
-    doDelete(authoritySourceFilesEndpoint(noteType.getId()));
+    doDelete(authoritySourceFilesEndpoint(sourceFile.getId()));
 
     assertEquals(0, databaseHelper.countRows(DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE, TENANT_ID));
     assertEquals(0, databaseHelper.countRows(DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE, TENANT_ID));
+    assertNull(databaseHelper.queryAuthoritySourceFileSequenceStartNumber(sourceFile.getSequenceName()));
   }
 
   @Test

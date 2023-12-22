@@ -13,7 +13,11 @@ public enum ErrorCode {
   VIOLATION_OF_RELATION_BETWEEN_AUTHORITY_AND_SOURCE_FILE("108",
       "Cannot complete operation on the entity due to it's relation with Authority/Authority Source File."),
   DUPLICATE_AUTHORITY_ID("109",
-      "Authority with the given 'id' already exists.");
+      "Authority with the given 'id' already exists."),
+  DUPLICATE_AUTHORITY_SOURCE_FILE_SEQUENCE("110",
+      "Authority source file with the same given 'code' and HRID generator name already exist."),
+  DUPLICATE_AUTHORITY_SOURCE_FILE_ID("111",
+      "Authority Source File with the given 'id' already exists.");
 
   @Getter
   private final String code;

@@ -10,6 +10,8 @@ properties:
     description: Authority source file name
   code:
     type: string
+    minLength: 1
+    maxLength: 25
     description: Label identifying prefix, i.e. 'n', 'D', 'fst'
   type:
     type: string
