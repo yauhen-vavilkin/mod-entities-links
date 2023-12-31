@@ -61,8 +61,8 @@ public class DatabaseHelper {
       + " (id, name, source, type, base_url, hrid_start_number, created_date, updated_date,"
       + "created_by_user_id, updated_by_user_id) VALUES (?,?,?,?,?,?,?,?,?,?)";
     jdbcTemplate.update(sql, entity.getId(), entity.getName(),
-      entity.getSource(), entity.getType(), entity.getBaseUrl(), entity.getHridStartNumber(), entity.getCreatedDate(),
-      entity.getUpdatedDate(), entity.getCreatedByUserId(), entity.getUpdatedByUserId());
+        entity.getSource().name(), entity.getType(), entity.getBaseUrl(), entity.getHridStartNumber(),
+        entity.getCreatedDate(), entity.getUpdatedDate(), entity.getCreatedByUserId(), entity.getUpdatedByUserId());
   }
 
   public String queryAuthoritySourceFileSequenceName(String tenant, UUID id) {

@@ -1,6 +1,6 @@
 package org.folio.entlinks.service.authority;
 
-import static org.folio.entlinks.domain.entity.AuthoritySourceType.FOLIO;
+import static org.folio.entlinks.domain.entity.AuthoritySourceFileSource.FOLIO;
 import static org.folio.entlinks.utils.ServiceUtils.initId;
 
 import java.util.List;
@@ -14,7 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.controller.converter.AuthoritySourceFileMapper;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
-import org.folio.entlinks.domain.entity.AuthoritySourceType;
+import org.folio.entlinks.domain.entity.AuthoritySourceFileSource;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
@@ -96,11 +96,11 @@ public class AuthoritySourceFileService {
     log.debug("deleteById:: Attempt to delete AuthoritySourceFile by [id: {}]", id);
     var authoritySourceFile = repository.findById(id)
         .orElseThrow(() -> new AuthoritySourceFileNotFoundException(id));
-    if (!FOLIO.getValue().equals(authoritySourceFile.getSource())) {
+    if (!FOLIO.equals(authoritySourceFile.getSource())) {
       repository.deleteById(id);
     } else {
       throw new RequestBodyValidationException("Cannot delete Authority source file with source 'folio'",
-          List.of(new Parameter("source").value(authoritySourceFile.getSource())));
+          List.of(new Parameter("source").value(authoritySourceFile.getSource().name())));
     }
   }
 
@@ -117,9 +117,9 @@ public class AuthoritySourceFileService {
   }
 
   private void validateOnCreate(AuthoritySourceFile entity) {
-    if (!AuthoritySourceType.LOCAL.getValue().equals(entity.getSource())) {
+    if (!AuthoritySourceFileSource.LOCAL.equals(entity.getSource())) {
       throw new RequestBodyValidationException("Only Authority Source File with source Local can be created",
-          List.of(new Parameter("source").value(entity.getSource())));
+          List.of(new Parameter("source").value(entity.getSource().name())));
     }
 
     if (entity.getAuthoritySourceFileCodes().size() != 1) {

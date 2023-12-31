@@ -45,10 +45,10 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.exception.OptimisticLockingException;
-import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.spring.test.extension.DatabaseCleanup;
@@ -529,8 +529,9 @@ class AuthorityControllerIT extends IntegrationTestBase {
 
     tryDelete(authoritySourceFilesEndpoint(expected.getSourceFileId()))
       .andExpect(status().isUnprocessableEntity())
-      .andExpect(errorMessageMatch(is("Cannot delete Authority source file with source 'folio'")))
-      .andExpect(exceptionMatch(RequestBodyValidationException.class));
+      .andExpect(errorMessageMatch(is("Cannot complete operation on the entity due to it's relation with"
+          + " Authority/Authority Source File.")))
+      .andExpect(exceptionMatch(DataIntegrityViolationException.class));
   }
 
   private List<Authority> createAuthorities() {
@@ -548,13 +549,13 @@ class AuthorityControllerIT extends IntegrationTestBase {
     return entity;
   }
 
-  private void createSourceFile(int sourceFileNum) {
+  private AuthoritySourceFile createSourceFile(int sourceFileNum) {
     var entity = authoritySourceFile(sourceFileNum);
     databaseHelper.saveAuthoritySourceFile(TENANT_ID, entity);
 
     entity.getAuthoritySourceFileCodes().forEach(code ->
         databaseHelper.saveAuthoritySourceFileCode(TENANT_ID, entity.getId(), code));
-
+    return entity;
   }
 
   private ResultMatcher errorMessageMatch(Matcher<String> errorMessageMatcher) {

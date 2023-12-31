@@ -17,4 +17,5 @@
   <include file="/changes/v2.0/update_authority_heading.xml" relativeToChangelogFile="true"/>
   <include file="/changes/v2.1/create-authority_archive.xml" relativeToChangelogFile="true"/>
   <include file="/changes/v2.1/add_authority_source_file_new_fields.xml" relativeToChangelogFile="true"/>
+  <include file="changes/v2.1/changes-authority-source-type.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

@@ -29,7 +29,6 @@ import org.folio.entlinks.domain.dto.AuthorityControlMetadata;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
 import org.folio.entlinks.domain.dto.AuthorityDtoNote;
-import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthorityStatsDto;
 import org.folio.entlinks.domain.dto.BibStatsDto;
 import org.folio.entlinks.domain.dto.BibStatsDtoCollection;
@@ -50,6 +49,7 @@ import org.folio.entlinks.domain.entity.AuthorityDataStatAction;
 import org.folio.entlinks.domain.entity.AuthorityDataStatStatus;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
+import org.folio.entlinks.domain.entity.AuthoritySourceFileSource;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLink;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkStatus;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
@@ -303,9 +303,11 @@ public class TestDataUtils {
     private static final Integer[] SOURCE_FILE_CODE_IDS = new Integer[] {1, 2, 3};
     private static final String[] SOURCE_FILE_CODES = new String[] {"code1", "code2", "code3"};
     private static final String[] SOURCE_FILE_NAMES = new String[] {"name1", "name2", "name3"};
-    private static final AuthoritySourceFileDto.SourceEnum[] SOURCE_FILE_SOURCES =
-        new AuthoritySourceFileDto.SourceEnum[] {AuthoritySourceFileDto.SourceEnum.FOLIO,
-          AuthoritySourceFileDto.SourceEnum.LOCAL, AuthoritySourceFileDto.SourceEnum.FOLIO};
+    private static final AuthoritySourceFileSource[] SOURCE_FILE_SOURCES = new AuthoritySourceFileSource[] {
+      AuthoritySourceFileSource.LOCAL,
+      AuthoritySourceFileSource.LOCAL,
+      AuthoritySourceFileSource.FOLIO
+    };
     private static final String[] SOURCE_FILE_TYPES = new String[] {"type1", "type2", "type3"};
     private static final String[] SOURCE_FILE_URLS = new String[] {"baseUrl1", "baseUrl2", "baseUrl3"};
 
@@ -329,7 +331,7 @@ public class TestDataUtils {
       var entity = new AuthoritySourceFile();
       entity.setId(SOURCE_FILE_IDS[sourceFileIdNum]);
       entity.setName(SOURCE_FILE_NAMES[sourceFileIdNum]);
-      entity.setSource(SOURCE_FILE_SOURCES[sourceFileIdNum].getValue());
+      entity.setSource(SOURCE_FILE_SOURCES[sourceFileIdNum]);
       entity.setType(SOURCE_FILE_TYPES[sourceFileIdNum]);
       entity.setBaseUrl(SOURCE_FILE_URLS[sourceFileIdNum]  + "/");
 

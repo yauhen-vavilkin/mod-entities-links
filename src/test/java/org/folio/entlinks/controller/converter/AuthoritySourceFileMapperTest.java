@@ -1,7 +1,6 @@
 package org.folio.entlinks.controller.converter;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.entlinks.domain.dto.AuthoritySourceFileDto.SourceEnum.FOLIO;
 import static org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto.SourceEnum.LOCAL;
 import static org.folio.support.base.TestConstants.INPUT_BASE_URL;
 import static org.folio.support.base.TestConstants.SOURCE_FILE_CODE;
@@ -16,6 +15,7 @@ import org.folio.entlinks.domain.dto.AuthoritySourceFileDtoCollection;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDto;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
+import org.folio.entlinks.domain.entity.AuthoritySourceFileSource;
 import org.folio.spring.test.type.UnitTest;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ class AuthoritySourceFileMapperTest {
     assertThat(dto.getName()).isEqualTo(entity.getName());
     assertThat(dto.getType()).isEqualTo(entity.getType());
     assertThat(dto.getBaseUrl()).isEqualTo(entity.getBaseUrl());
-    assertThat(entity.getSource()).isEqualTo("local");
+    assertThat(entity.getSource().name()).isEqualTo("LOCAL");
     assertThat(entity.getAuthoritySourceFileCodes()).hasSize(1);
     assertThat(dto.getCode()).isEqualTo(entity.getAuthoritySourceFileCodes().iterator().next().getCode());
   }
@@ -58,7 +58,7 @@ class AuthoritySourceFileMapperTest {
     assertThat(sourceFile.getName()).isEqualTo(dto.getName());
     assertThat(sourceFile.getType()).isEqualTo(dto.getType());
     assertThat(sourceFile.getBaseUrl()).isEqualTo(dto.getBaseUrl());
-    assertThat(sourceFile.getSource()).isEqualTo(dto.getSource().getValue());
+    assertThat(sourceFile.getSource().name()).isEqualTo(dto.getSource().name());
     assertThat(dto.getCodes()).hasSize(sourceFile.getAuthoritySourceFileCodes().size());
   }
 
@@ -126,7 +126,7 @@ class AuthoritySourceFileMapperTest {
     sourceFile.setType(SOURCE_FILE_TYPE);
     sourceFile.setBaseUrl(INPUT_BASE_URL);
     sourceFile.setAuthoritySourceFileCodes(Set.of());
-    sourceFile.setSource(FOLIO.getValue());
+    sourceFile.setSource(AuthoritySourceFileSource.FOLIO);
     return sourceFile;
   }
 

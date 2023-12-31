@@ -70,7 +70,7 @@ class ReferenceDataLoaderTest {
     assertEquals("aat", loadedSourceFile.getAuthoritySourceFileCodes().iterator().next().getCode());
     assertEquals("Subjects", loadedSourceFile.getType());
     assertEquals("vocab.getty.edu/aat/", loadedSourceFile.getBaseUrl());
-    assertEquals("folio", loadedSourceFile.getSource());
+    assertEquals("FOLIO", loadedSourceFile.getSource().name());
   }
 
   @Test

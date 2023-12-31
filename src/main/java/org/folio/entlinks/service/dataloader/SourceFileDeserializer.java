@@ -10,6 +10,7 @@ import java.util.UUID;
 import lombok.SneakyThrows;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
+import org.folio.entlinks.domain.entity.AuthoritySourceFileSource;
 
 public class SourceFileDeserializer extends StdDeserializer<AuthoritySourceFile> {
 
@@ -44,14 +45,23 @@ public class SourceFileDeserializer extends StdDeserializer<AuthoritySourceFile>
     var type = Optional.ofNullable(node.get("type")).map(JsonNode::asText).orElse(null);
     var name = Optional.ofNullable(node.get("name")).map(JsonNode::asText).orElse(null);
     var url = Optional.ofNullable(node.get("baseUrl")).map(JsonNode::asText).orElse(null);
-    var source = Optional.ofNullable(node.get("source")).map(JsonNode::asText).orElse(null);
+    final var source = Optional.ofNullable(node.get("source")).map(JsonNode::asText).orElse(null);
 
     sourceFile.setId(id);
     sourceFile.setName(name);
     sourceFile.setType(type);
     sourceFile.setBaseUrl(url);
-    sourceFile.setSource(source);
-
+    setSourceType(sourceFile, source);
     return sourceFile;
+  }
+
+  private static void setSourceType(AuthoritySourceFile sourceFile, String source) {
+    if (source != null) {
+      if (source.equals("folio")) {
+        sourceFile.setSource(AuthoritySourceFileSource.FOLIO);
+      } else {
+        throw new IllegalArgumentException("Unknown source type: " + source);
+      }
+    }
   }
 }
