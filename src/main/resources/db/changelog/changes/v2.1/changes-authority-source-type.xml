@@ -16,7 +16,7 @@
 
     <comment>Create AuthoritySourceType enum</comment>
 
-    <sql>CREATE TYPE AuthoritySourceType AS ENUM ('FOLIO', 'LOCAL')</sql>
+    <sql>CREATE TYPE AuthoritySourceType AS ENUM ('FOLIO', 'LOCAL', 'CONSORTIUM')</sql>
   </changeSet>
 
 </databaseChangeLog>
