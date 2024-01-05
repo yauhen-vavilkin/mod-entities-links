@@ -1,5 +1,6 @@
 package org.folio.entlinks.controller.delegate;
 
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -10,7 +11,11 @@ import org.folio.entlinks.domain.dto.AuthoritySourceFileDtoCollection;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDto;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
+import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.service.authority.AuthoritySourceFileService;
+import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.tenant.domain.dto.Parameter;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -22,6 +27,8 @@ public class AuthoritySourceFileServiceDelegate {
 
   private final AuthoritySourceFileService service;
   private final AuthoritySourceFileMapper mapper;
+  private final ConsortiumTenantsService tenantsService;
+  private final FolioExecutionContext context;
 
   public AuthoritySourceFileDtoCollection getAuthoritySourceFiles(Integer offset, Integer limit, String cqlQuery) {
     var entities = service.getAll(offset, limit, cqlQuery);
@@ -34,6 +41,8 @@ public class AuthoritySourceFileServiceDelegate {
   }
 
   public AuthoritySourceFileDto createAuthoritySourceFile(AuthoritySourceFilePostDto authoritySourceFile) {
+    log.debug("create:: Attempting to create AuthoritySourceFile [createDto: {}]", authoritySourceFile);
+    validateCreateRightsForTenant();
     var entity = mapper.toEntity(authoritySourceFile);
     normalizeBaseUrl(entity);
     var created = service.create(entity);
@@ -53,7 +62,7 @@ public class AuthoritySourceFileServiceDelegate {
     log.debug("patch:: Authority Source File partially updated: {}", patched);
   }
 
-  public void deleteAuthorityNoteTypeById(UUID id) {
+  public void deleteAuthoritySourceFileById(UUID id) {
     service.deleteById(id);
   }
 
@@ -65,6 +74,14 @@ public class AuthoritySourceFileServiceDelegate {
         baseUrl += "/";
       }
       entity.setBaseUrl(baseUrl);
+    }
+  }
+
+  private void validateCreateRightsForTenant() {
+    var tenantId = context.getTenantId();
+    if (tenantsService.getConsortiumTenants(tenantId).contains(tenantId)) {
+      throw new RequestBodyValidationException("Create is not supported for consortium member tenant",
+          List.of(new Parameter("tenantId").value(tenantId)));
     }
   }
 }

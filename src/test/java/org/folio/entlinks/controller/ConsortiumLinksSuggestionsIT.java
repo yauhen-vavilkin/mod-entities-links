@@ -1,7 +1,6 @@
 package org.folio.entlinks.controller;
 
 import static org.folio.entlinks.config.constants.ErrorCode.NO_SUGGESTIONS;
-import static org.folio.entlinks.controller.ConsortiumLinksSuggestionsIT.CENTRAL_TENANT_ID;
 import static org.folio.entlinks.controller.ConsortiumLinksSuggestionsIT.COLLEGE_TENANT_ID;
 import static org.folio.entlinks.controller.ConsortiumLinksSuggestionsIT.UNIVERSITY_TENANT_ID;
 import static org.folio.entlinks.domain.dto.LinkStatus.ACTUAL;
@@ -9,6 +8,7 @@ import static org.folio.entlinks.domain.dto.LinkStatus.ERROR;
 import static org.folio.entlinks.domain.dto.LinkStatus.NEW;
 import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
 import static org.folio.support.JsonTestUtils.asJson;
+import static org.folio.support.base.TestConstants.CENTRAL_TENANT_ID;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.folio.support.base.TestConstants.linksSuggestionsEndpoint;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,7 +46,6 @@ import org.springframework.http.HttpHeaders;
                  })
 class ConsortiumLinksSuggestionsIT extends IntegrationTestBase {
 
-  public static final String CENTRAL_TENANT_ID = "consortium";
   public static final String COLLEGE_TENANT_ID = "college";
   public static final String UNIVERSITY_TENANT_ID = "university";
 

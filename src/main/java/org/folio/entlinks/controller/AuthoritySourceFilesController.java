@@ -30,7 +30,7 @@ public class AuthoritySourceFilesController implements AuthoritySourceFileApi {
 
   @Override
   public ResponseEntity<Void> deleteAuthoritySourceFile(UUID id) {
-    delegate.deleteAuthorityNoteTypeById(id);
+    delegate.deleteAuthoritySourceFileById(id);
     return noContent().build();
   }
 

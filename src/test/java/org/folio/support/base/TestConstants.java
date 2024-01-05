@@ -14,6 +14,7 @@ import org.folio.entlinks.domain.dto.LinkStatus;
 public class TestConstants {
 
   public static final String TENANT_ID = "test";
+  public static final String CENTRAL_TENANT_ID = "consortium";
   public static final String USER_ID = "38d3a441-c100-5e8d-bd12-71bde492b723";
   public static final String SOURCE_FILE_NAME = "sourceFileName";
   public static final String SOURCE_FILE_TYPE = "sourceFileType";

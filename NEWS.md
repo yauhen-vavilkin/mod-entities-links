@@ -13,6 +13,7 @@
 * Update authority-source-files POST API request body and DB table schemas with new fields([MODELINKS-123](https://issues.folio.org/browse/MODELINKS-123))
 * Change the AuthoritySourceType field type from String to Enum([MODELINKS-170](https://issues.folio.org/browse/MODELINKS-170))
 * Prohibit update/delete of authority consortium shadow copy([MODELINKS-174](https://issues.folio.org/browse/MODELINKS-174))
+* Prohibit authority source files creation from consortium member tenant([MODELINKS-174](https://issues.folio.org/browse/MODELINKS-174))
 
 ### Bug fixes
 * Fix secure setup of system users by default ([MODELINKS-135](https://issues.folio.org/browse/MODELINKS-135))

@@ -1,7 +1,6 @@
 package org.folio.entlinks.service.consortium;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.entlinks.service.consortium.ConsortiumAuthorityPropagationServiceIT.CENTRAL_TENANT_ID;
 import static org.folio.entlinks.service.consortium.ConsortiumAuthorityPropagationServiceIT.COLLEGE_TENANT_ID;
 import static org.folio.entlinks.service.consortium.ConsortiumAuthorityPropagationServiceIT.UNIVERSITY_TENANT_ID;
 import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
@@ -10,6 +9,7 @@ import static org.folio.support.DatabaseHelper.AUTHORITY_NOTE_TYPE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
+import static org.folio.support.base.TestConstants.CENTRAL_TENANT_ID;
 import static org.folio.support.base.TestConstants.authorityEndpoint;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -36,7 +36,6 @@ import org.springframework.http.HttpHeaders;
                  tenants = {CENTRAL_TENANT_ID, COLLEGE_TENANT_ID, UNIVERSITY_TENANT_ID})
 class ConsortiumAuthorityPropagationServiceIT extends IntegrationTestBase {
 
-  public static final String CENTRAL_TENANT_ID = "consortium";
   public static final String COLLEGE_TENANT_ID = "college";
   public static final String UNIVERSITY_TENANT_ID = "university";
 
