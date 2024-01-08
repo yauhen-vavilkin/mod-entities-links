@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
@@ -77,7 +76,7 @@ public class AuthoritySourceFileService {
     return repository.save(entity);
   }
 
-  public AuthoritySourceFile update(@Nonnull UUID id, AuthoritySourceFile modified) {
+  public AuthoritySourceFile update(UUID id, AuthoritySourceFile modified) {
     log.debug("update:: Attempting to update AuthoritySourceFile [id: {}]", id);
 
     if (!Objects.equals(id, modified.getId())) {

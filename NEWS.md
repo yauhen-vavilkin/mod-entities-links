@@ -14,6 +14,7 @@
 * Change the AuthoritySourceType field type from String to Enum([MODELINKS-170](https://issues.folio.org/browse/MODELINKS-170))
 * Prohibit update/delete of authority consortium shadow copy([MODELINKS-174](https://issues.folio.org/browse/MODELINKS-174))
 * Prohibit authority source files creation from consortium member tenant([MODELINKS-174](https://issues.folio.org/browse/MODELINKS-174))
+* Propagate authority source files to member tenants([MODELINKS-175](https://issues.folio.org/browse/MODELINKS-175))
 
 ### Bug fixes
 * Fix secure setup of system users by default ([MODELINKS-135](https://issues.folio.org/browse/MODELINKS-135))

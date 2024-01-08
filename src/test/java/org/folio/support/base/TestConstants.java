@@ -15,12 +15,15 @@ public class TestConstants {
 
   public static final String TENANT_ID = "test";
   public static final String CENTRAL_TENANT_ID = "consortium";
+  public static final String CONSORTIUM_SOURCE_PREFIX = "CONSORTIUM-";
   public static final String USER_ID = "38d3a441-c100-5e8d-bd12-71bde492b723";
   public static final String SOURCE_FILE_NAME = "sourceFileName";
   public static final String SOURCE_FILE_TYPE = "sourceFileType";
   public static final String SOURCE_FILE_CODE = "sourceFileType";
   public static final String SOURCE_FILE_NATURAL_ID = "sourceFileNaturalId";
   public static final String SOURCE_FILE_SOURCE = "sourceFileSource";
+  public static final String AUTHORITY_SOURCE = "SOURCE";
+  public static final String AUTHORITY_CONSORTIUM_SOURCE = CONSORTIUM_SOURCE_PREFIX + AUTHORITY_SOURCE;
   public static final String TEST_PROPERTY_VALUE = "value";
   public static final UUID TEST_ID = UUID.randomUUID();
   public static final int TEST_VERSION = 2;

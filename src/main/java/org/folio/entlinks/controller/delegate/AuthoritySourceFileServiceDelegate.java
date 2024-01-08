@@ -1,5 +1,9 @@
 package org.folio.entlinks.controller.delegate;
 
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.CREATE;
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.DELETE;
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.UPDATE;
+
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +16,10 @@ import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDto;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.exception.RequestBodyValidationException;
+import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.entlinks.service.authority.AuthoritySourceFileService;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.tenant.domain.dto.Parameter;
 import org.springframework.stereotype.Service;
@@ -28,6 +34,7 @@ public class AuthoritySourceFileServiceDelegate {
   private final AuthoritySourceFileService service;
   private final AuthoritySourceFileMapper mapper;
   private final ConsortiumTenantsService tenantsService;
+  private final ConsortiumPropagationService<AuthoritySourceFile> propagationService;
   private final FolioExecutionContext context;
 
   public AuthoritySourceFileDtoCollection getAuthoritySourceFiles(Integer offset, Integer limit, String cqlQuery) {
@@ -49,21 +56,28 @@ public class AuthoritySourceFileServiceDelegate {
 
     service.createSequence(created.getSequenceName(), created.getHridStartNumber());
 
+    propagationService.propagate(entity, CREATE, context.getTenantId());
     return mapper.toDto(created);
   }
 
   public void patchAuthoritySourceFile(UUID id, AuthoritySourceFilePatchDto partiallyModifiedDto) {
     log.debug("patch:: Attempting to patch AuthoritySourceFile [id: {}, patchDto: {}]", id, partiallyModifiedDto);
     var existingEntity = service.getById(id);
+    validateModifyPossibility(DomainEventType.UPDATE, existingEntity);
     var partialEntityUpdate = new AuthoritySourceFile(existingEntity);
     partialEntityUpdate = mapper.partialUpdate(partiallyModifiedDto, partialEntityUpdate);
     normalizeBaseUrl(partialEntityUpdate);
     var patched = service.update(id, partialEntityUpdate);
     log.debug("patch:: Authority Source File partially updated: {}", patched);
+    propagationService.propagate(patched, UPDATE, context.getTenantId());
   }
 
   public void deleteAuthoritySourceFileById(UUID id) {
+    var entity = service.getById(id);
+    validateModifyPossibility(DomainEventType.DELETE, entity);
+
     service.deleteById(id);
+    propagationService.propagate(entity, DELETE, context.getTenantId());
   }
 
   private void normalizeBaseUrl(AuthoritySourceFile entity) {
@@ -82,6 +96,13 @@ public class AuthoritySourceFileServiceDelegate {
     if (tenantsService.getConsortiumTenants(tenantId).contains(tenantId)) {
       throw new RequestBodyValidationException("Create is not supported for consortium member tenant",
           List.of(new Parameter("tenantId").value(tenantId)));
+    }
+  }
+
+  private void validateModifyPossibility(DomainEventType eventType, AuthoritySourceFile entity) {
+    if (entity.isConsortiumShadowCopy()) {
+      throw new RequestBodyValidationException(eventType.name() + " is not applicable to consortium shadow copy",
+          List.of(new Parameter("id").value(String.valueOf(entity.getId()))));
     }
   }
 }

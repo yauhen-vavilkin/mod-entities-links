@@ -1,6 +1,9 @@
 package org.folio.entlinks.controller.delegate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.CREATE;
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.DELETE;
+import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.UPDATE;
 import static org.folio.support.base.TestConstants.CENTRAL_TENANT_ID;
 import static org.folio.support.base.TestConstants.INPUT_BASE_URL;
 import static org.folio.support.base.TestConstants.TENANT_ID;
@@ -21,9 +24,11 @@ import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDtoHridManagement;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
+import org.folio.entlinks.domain.entity.AuthoritySourceFileSource;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.service.authority.AuthoritySourceFileService;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
+import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthoritySourceFilePropagationService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.test.type.UnitTest;
 import org.folio.support.TestDataUtils;
@@ -46,13 +51,12 @@ class AuthoritySourceFileServiceDelegateTest {
 
   @Mock
   private AuthoritySourceFileMapper mapper;
-
   @Mock
   private AuthoritySourceFileService service;
-
   @Mock
   private ConsortiumTenantsService tenantsService;
-
+  @Mock
+  private ConsortiumAuthoritySourceFilePropagationService propagationService;
   @Mock
   private FolioExecutionContext context;
 
@@ -99,6 +103,7 @@ class AuthoritySourceFileServiceDelegateTest {
     when(mapper.toEntity(dto)).thenReturn(expected);
     when(service.create(expected)).thenReturn(expected);
     when(mapper.toDto(expected)).thenReturn(new AuthoritySourceFileDto());
+    when(context.getTenantId()).thenReturn(TENANT_ID);
 
     delegate.createAuthoritySourceFile(dto);
 
@@ -107,6 +112,7 @@ class AuthoritySourceFileServiceDelegateTest {
     verify(service).create(expected);
     verify(mapper).toDto(expected);
     verify(service).createSequence(expected.getSequenceName(), expected.getHridStartNumber());
+    verify(propagationService).propagate(expected, CREATE, TENANT_ID);
     verifyNoMoreInteractions(mapper, service);
   }
 
@@ -132,6 +138,7 @@ class AuthoritySourceFileServiceDelegateTest {
     verify(service).create(expected);
     verify(mapper).toDto(expected);
     verify(service).createSequence(expected.getSequenceName(), expected.getHridStartNumber());
+    verify(propagationService).propagate(expected, CREATE, CENTRAL_TENANT_ID);
     verifyNoMoreInteractions(mapper, service);
   }
 
@@ -148,6 +155,7 @@ class AuthoritySourceFileServiceDelegateTest {
     when(mapper.partialUpdate(any(AuthoritySourceFilePatchDto.class), any(AuthoritySourceFile.class)))
         .thenAnswer(i -> i.getArguments()[1]);
     when(service.update(any(UUID.class), any(AuthoritySourceFile.class))).thenAnswer(i -> i.getArguments()[1]);
+    when(context.getTenantId()).thenReturn(TENANT_ID);
     var dto = new AuthoritySourceFilePatchDto().id(existing.getId()).baseUrl(INPUT_BASE_URL);
 
     delegate.patchAuthoritySourceFile(existing.getId(), dto);
@@ -157,7 +165,21 @@ class AuthoritySourceFileServiceDelegateTest {
     assertThat(expected).usingDefaultComparator().isEqualTo(patchedSourceFile);
     verify(mapper).partialUpdate(any(AuthoritySourceFilePatchDto.class), any(AuthoritySourceFile.class));
     verify(service).getById(any(UUID.class));
+    verify(propagationService).propagate(expected, UPDATE, TENANT_ID);
     verifyNoMoreInteractions(mapper, service);
+  }
+
+  @Test
+  void shouldDeleteAuthoritySourceFileById() {
+    var existing = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
+
+    when(service.getById(existing.getId())).thenReturn(existing);
+    when(context.getTenantId()).thenReturn(TENANT_ID);
+
+    delegate.deleteAuthoritySourceFileById(existing.getId());
+
+    verify(service).deleteById(existing.getId());
+    verify(propagationService).propagate(existing, DELETE, TENANT_ID);
   }
 
   @Test
@@ -175,5 +197,45 @@ class AuthoritySourceFileServiceDelegateTest {
         .matches(param -> param.getKey().equals("tenantId") && param.getValue().equals(TENANT_ID));
     verifyNoInteractions(mapper);
     verifyNoInteractions(service);
+  }
+
+  @Test
+  void shouldNotUpdateConsortiumShadowCopy() {
+    var existing = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
+    existing.setSource(AuthoritySourceFileSource.CONSORTIUM);
+    var id = existing.getId();
+    var dto = new AuthoritySourceFilePatchDto().id(id);
+
+    when(service.getById(existing.getId())).thenReturn(existing);
+
+    var exc = assertThrows(RequestBodyValidationException.class,
+        () -> delegate.patchAuthoritySourceFile(id, dto));
+
+    assertThat(exc.getMessage()).isEqualTo("UPDATE is not applicable to consortium shadow copy");
+    assertThat(exc.getInvalidParameters()).hasSize(1);
+    assertThat(exc.getInvalidParameters().get(0))
+        .matches(param -> param.getKey().equals("id") && param.getValue().equals(String.valueOf(id)));
+    verifyNoInteractions(mapper);
+    verifyNoMoreInteractions(service);
+    verifyNoInteractions(propagationService);
+  }
+
+  @Test
+  void shouldNotDeleteConsortiumShadowCopy() {
+    var existing = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
+    existing.setSource(AuthoritySourceFileSource.CONSORTIUM);
+    var id = existing.getId();
+
+    when(service.getById(existing.getId())).thenReturn(existing);
+
+    var exc = assertThrows(RequestBodyValidationException.class,
+        () -> delegate.deleteAuthoritySourceFileById(id));
+
+    assertThat(exc.getMessage()).isEqualTo("DELETE is not applicable to consortium shadow copy");
+    assertThat(exc.getInvalidParameters()).hasSize(1);
+    assertThat(exc.getInvalidParameters().get(0))
+        .matches(param -> param.getKey().equals("id") && param.getValue().equals(String.valueOf(id)));
+    verifyNoMoreInteractions(service);
+    verifyNoInteractions(propagationService);
   }
 }
