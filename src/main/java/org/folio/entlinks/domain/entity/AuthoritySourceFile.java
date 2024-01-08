@@ -1,6 +1,5 @@
 package org.folio.entlinks.domain.entity;
 
-import io.hypersistence.utils.hibernate.type.basic.PostgreSQLEnumType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,7 +26,8 @@ import lombok.Setter;
 import lombok.ToString;
 import org.folio.entlinks.domain.entity.base.Identifiable;
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.domain.Persistable;
 
 @Getter
@@ -56,7 +56,7 @@ public class AuthoritySourceFile extends MetadataEntity implements Persistable<U
   private String baseUrl;
 
   @Enumerated(EnumType.STRING)
-  @Type(PostgreSQLEnumType.class)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "source", length = 100)
   private AuthoritySourceFileSource source;
 

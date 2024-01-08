@@ -1,0 +1,63 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
+
+  <changeSet id="MODELINKS-141@@create-authority_archive-heading_type-index" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_authority_archive_heading_type" tableName="authority_archive"/>
+      </not>
+    </preConditions>
+
+    <comment>Create B-tree index for heading_type in authority</comment>
+
+    <createIndex tableName="authority_archive" indexName="idx_authority_archive_heading_type">
+      <column name="heading_type"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="MODELINKS-141@@create-authority_archive-source_file_id-index" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_authority_archive_source_file_id" tableName="authority_archive"/>
+      </not>
+    </preConditions>
+
+    <comment>Create B-tree index for source_file_id in authority</comment>
+
+    <createIndex tableName="authority_archive" indexName="idx_authority_archive_source_file_id">
+      <column name="source_file_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="MODELINKS-141@@create-authority_archive-created_date-index" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_authority_archive_created_date" tableName="authority_archive"/>
+      </not>
+    </preConditions>
+
+    <comment>Create B-tree index for created_date in authority</comment>
+
+    <createIndex tableName="authority_archive" indexName="idx_authority_archive_created_date">
+      <column name="created_date"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="MODELINKS-141@@create-authority_archive-updated_date-index" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_authority_archive_updated_date" tableName="authority_archive"/>
+      </not>
+    </preConditions>
+
+    <comment>Create B-tree index for updated_date in authority</comment>
+
+    <createIndex tableName="authority_archive" indexName="idx_authority_archive_updated_date">
+      <column name="updated_date"/>
+    </createIndex>
+  </changeSet>
+
+</databaseChangeLog>

@@ -11,7 +11,7 @@ import java.util.List;
 import org.folio.entlinks.domain.dto.AuthorityNoteTypeDto;
 import org.folio.entlinks.domain.dto.AuthorityNoteTypeDtoCollection;
 import org.folio.entlinks.domain.entity.AuthorityNoteType;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;

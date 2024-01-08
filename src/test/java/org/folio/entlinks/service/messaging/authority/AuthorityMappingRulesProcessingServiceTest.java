@@ -9,7 +9,7 @@ import java.util.Map;
 import lombok.SneakyThrows;
 import org.folio.entlinks.integration.internal.MappingRulesService;
 import org.folio.entlinks.service.messaging.authority.model.AuthorityChangeField;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

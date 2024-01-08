@@ -12,7 +12,7 @@ import org.folio.entlinks.domain.dto.SourceParsedRecord;
 import org.folio.entlinks.domain.dto.SourceRecord;
 import org.folio.entlinks.exception.FolioIntegrationException;
 import org.folio.entlinks.integration.dto.AuthoritySourceRecord;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -18,7 +18,7 @@ import org.folio.entlinks.domain.entity.AuthorityNoteType;
 import org.folio.entlinks.domain.repository.AuthorityNoteTypeRepository;
 import org.folio.entlinks.exception.AuthorityNoteTypeNotFoundException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

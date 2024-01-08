@@ -18,7 +18,7 @@ import org.folio.entlinks.exception.FolioIntegrationException;
 import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.spring.service.SystemUserScopedExecutionService;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

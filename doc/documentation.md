@@ -18,23 +18,28 @@
   * [APIs](#apis)
     * [API instance-authority-links](#api-instance-authority-links)
       * [Examples](#examples)
-        * [Retrieve all links by the given instance id:](#retrieve-all-links-by-the-given-instance-id)
-        * [Modify links by the given instance id:](#modify-links-by-the-given-instance-id)
-        * [Count number of links for each authority id:](#count-number-of-links-for-each-authority-id)
+        * [Retrieve all links by the given instance id:](#retrieve-all-links-by-the-given-instance-id-)
+        * [Modify links by the given instance id:](#modify-links-by-the-given-instance-id-)
+        * [Count number of links for each authority id:](#count-number-of-links-for-each-authority-id-)
     * [API instance-authority-linking-rules](#api-instance-authority-linking-rules)
       * [Instance to Authority linking rule parameters](#instance-to-authority-linking-rule-parameters)
       * [Examples](#examples-1)
-        * [Retrieve instance to authority linking rules collection:](#retrieve-instance-to-authority-linking-rules-collection)
-        * [Change auto-linking flag in instance to authority linking rule:](#change-auto-linking-flag-in-instance-to-authority-linking-rule)
+        * [Retrieve instance to authority linking rules collection:](#retrieve-instance-to-authority-linking-rules-collection-)
+        * [Change auto-linking flag in instance to authority linking rule:](#change-auto-linking-flag-in-instance-to-authority-linking-rule-)
     * [API instance-authority-links-statistics](#api-instance-authority-links-statistics)
       * [Examples](#examples-2)
-        * [Retrieve instance to authority links statistics collection:](#retrieve-instance-to-authority-links-statistics-collection)
+        * [Retrieve instance to authority links statistics collection:](#retrieve-instance-to-authority-links-statistics-collection-)
           * [Instance to Authority links statistics parameters](#instance-to-authority-links-statistics-parameters)
-        * [Retrieve linked bib updates statistics collection:](#retrieve-linked-bib-updates-statistics-collection)
+        * [Retrieve linked bib updates statistics collection:](#retrieve-linked-bib-updates-statistics-collection-)
           * [Linked bib updates statistics parameters](#linked-bib-updates-statistics-parameters)
     * [API instance-authority-links-suggestions](#api-instance-authority-links-suggestions)
       * [Examples](#examples-3)
-        * [Retrieve links suggestions for marc records:](#retrieve-links-suggestions-for-marc-records)
+        * [Retrieve links suggestions for marc records:](#retrieve-links-suggestions-for-marc-records-)
+    * [Configuration setting for Authority Archive records expiration](#configuration-setting-for-authority-archive-records-expiration)
+      * [Permissions](#permissions)
+      * [Example request](#example-request)
+    * [CQL support for GET /authority-storage/authorities](#cql-support-for-get-authority-storageauthorities)
+      * [Example queries to retrieve authorities with filtering](#example-queries-to-retrieve-authorities-with-filtering)
 <!-- TOC -->
 
 ## Compiling
@@ -644,3 +649,24 @@ POST https://{okapi-location}/settings/entries
 |---------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `expirationEnabled` | boolean | Indicates whether or not to enable expiration of Authority Archives for the tenant.                                                                                                   |
 | `retentionInDays`   | int     | Retention period of Authority Archives provided in days. If not specified, the default value would be taken by the `AUTHORITY_ARCHIVES_DEFAULT_EXPIRATION_DAYS` environment variable. |
+
+
+### CQL support for GET /authority-storage/authorities
+
+> _Basic fields for filtering authorities:_
+> * _headingType_
+> * _authoritySourceFile.id_
+> * _authoritySourceFile.name_
+> * _createdDate_
+> * _updatedDate_
+
+#### Example queries to retrieve authorities with filtering
+
+
+| Example                                           | Description                                                              |
+|:--------------------------------------------------|:-------------------------------------------------------------------------|
+| `headingType = personalName`                      | Matches authorities with `Personal Name` heading type                    |
+| `authoritySourceFile.id = 12345`                  | Matches authorities with `12345` source file id                          |
+| `createdDate > 2021-10-25T12:00:00.0"`            | Matches authorities that were created after `2021-10-25 12:00:00`        |
+| `updatedDate <= 2021-10-28T12:00:00.0`            | Matches authorities that were updated before or at `2021-10-28 12:00:00` |
+| `authoritySourceFile.name = LC Genre/Form Terms`  | Matches authorities with source file name `LC Genre/Form Terms`          |

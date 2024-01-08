@@ -9,6 +9,8 @@ import static org.folio.support.DatabaseHelper.AUTHORITY_ARCHIVE_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_DATA_STAT_TABLE;
 import static org.folio.support.DatabaseHelper.AUTHORITY_TABLE;
 import static org.folio.support.KafkaTestUtils.createAndStartTestConsumer;
+import static org.folio.support.TestDataUtils.AuthorityTestData.CREATED_DATE;
+import static org.folio.support.TestDataUtils.AuthorityTestData.UPDATED_DATE;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authority;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authorityDto;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authoritySourceFile;
@@ -51,8 +53,8 @@ import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
-import org.folio.spring.test.extension.DatabaseCleanup;
-import org.folio.spring.test.type.IntegrationTest;
+import org.folio.spring.testing.extension.DatabaseCleanup;
+import org.folio.spring.testing.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
 import org.folio.support.base.IntegrationTestBase;
 import org.hamcrest.Matcher;
@@ -131,7 +133,7 @@ class AuthorityControllerIT extends IntegrationTestBase {
     "2, 2, descending, source1"
   })
   @DisplayName("Get Collection: return list of authorities for the given limit and offset")
-  void getCollection_positive_entitiesSortedByNameAndLimitedWithOffset(String offset, String limit, String sortOrder,
+  void getCollection_positive_entitiesSortedBySourceAndLimitedWithOffset(String offset, String limit, String sortOrder,
                                                                        String firstSourceName) throws Exception {
     createAuthorities();
     // the following two authorities should be filtered out and not included in the result because of deleted = true
@@ -151,6 +153,38 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andExpect(jsonPath("authorities[0].metadata.createdDate", notNullValue()))
       .andExpect(jsonPath("authorities[0].metadata.createdByUserId", is(USER_ID)))
       .andExpect(jsonPath("totalRecords").value(3));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "headingType=personalName, personalName, 1",
+    "authoritySourceFile.id=51243be4-27cb-4d78-9206-c956299483b1, personalName, 2",
+    "authoritySourceFile.id=51243be4-27cb-4d78-9206-c956299483b1 and headingType=corporateName, corporateName, 1",
+    "authoritySourceFile.name=name2, genreTerm, 1",
+    "createdDate>2021-10-25T12:00:00.0 and createdDate<=2021-10-30T12:00:00.0, genreTerm, 2",
+    "updatedDate>=2021-10-24T12:00:00.0 and updatedDate<=2021-10-28T12:00:00.0, corporateName, 1",
+    "authoritySourceFile.name=name1 and createdDate>2021-10-28T12:00:00.0, corporateName, 1",
+  })
+  @DisplayName("Get Collection: return list of authorities for the given query")
+  void getCollection_positive_filterAuthoritiesByGivenQuery(String query, String heading, int numberOfRecords)
+      throws Exception {
+    createSourceFile(0);
+    createSourceFile(1);
+    var authority1 = authority(0, 0);
+    authority1.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE).minus(5, ChronoUnit.DAYS)));
+    authority1.setUpdatedDate(Timestamp.from(Instant.parse(UPDATED_DATE).minus(2, ChronoUnit.DAYS)));
+    var authority2 = authority(1, 0);
+    authority2.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE).plus(2, ChronoUnit.DAYS)));
+    var authority3 = authority(2, 1);
+    authority3.setUpdatedDate(Timestamp.from(Instant.parse(UPDATED_DATE).plus(4, ChronoUnit.DAYS)));
+    databaseHelper.saveAuthority(TENANT_ID, authority1);
+    databaseHelper.saveAuthority(TENANT_ID, authority2);
+    databaseHelper.saveAuthority(TENANT_ID, authority3);
+
+    var cqlQuery = "(cql.allRecords=1 and " + query + ")sortby createdDate";
+    doGet(authorityEndpoint() + "?query={cql}", cqlQuery)
+        .andExpect(jsonPath("authorities[0]." + heading, notNullValue()))
+        .andExpect(jsonPath("totalRecords").value(numberOfRecords));
   }
 
   // Tests for Get By ID

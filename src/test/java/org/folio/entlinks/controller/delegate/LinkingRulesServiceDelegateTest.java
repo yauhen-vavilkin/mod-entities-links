@@ -18,7 +18,7 @@ import org.folio.entlinks.domain.dto.SubfieldValidation;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingRulesService;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

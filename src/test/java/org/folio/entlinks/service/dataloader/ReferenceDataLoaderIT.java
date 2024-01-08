@@ -6,8 +6,8 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import lombok.SneakyThrows;
-import org.folio.spring.test.extension.DatabaseCleanup;
-import org.folio.spring.test.type.IntegrationTest;
+import org.folio.spring.testing.extension.DatabaseCleanup;
+import org.folio.spring.testing.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
 import org.folio.support.base.IntegrationTestBase;
 import org.junit.jupiter.api.BeforeAll;

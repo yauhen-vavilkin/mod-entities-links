@@ -16,7 +16,7 @@ import org.folio.entlinks.client.InstanceStorageClient.InventoryInstanceDto;
 import org.folio.entlinks.client.InstanceStorageClient.InventoryInstanceDtoCollection;
 import org.folio.entlinks.config.properties.InstanceStorageProperties;
 import org.folio.entlinks.exception.FolioIntegrationException;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,6 +1,5 @@
 package org.folio.entlinks.domain.entity;
 
-import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -21,7 +20,8 @@ import lombok.ToString;
 import org.folio.entlinks.domain.dto.SubfieldModification;
 import org.folio.entlinks.domain.entity.converter.StringToCharArrayConverter;
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Getter
@@ -50,11 +50,11 @@ public class InstanceAuthorityLinkingRule {
   @Column(name = "authority_subfields", nullable = false, length = 30)
   private char[] authoritySubfields;
 
-  @Type(JsonBinaryType.class)
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "subfield_modifications", columnDefinition = "jsonb")
   private List<SubfieldModification> subfieldModifications;
 
-  @Type(JsonBinaryType.class)
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "subfields_existence_validations", columnDefinition = "jsonb")
   private Map<String, Boolean> subfieldsExistenceValidations;
 

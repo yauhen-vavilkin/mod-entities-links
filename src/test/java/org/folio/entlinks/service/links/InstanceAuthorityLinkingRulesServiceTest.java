@@ -17,7 +17,7 @@ import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
 import org.folio.entlinks.domain.repository.LinkingRulesRepository;
 import org.folio.entlinks.exception.LinkingRuleNotFoundException;
 import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

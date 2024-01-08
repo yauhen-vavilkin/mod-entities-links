@@ -1,6 +1,5 @@
 package org.folio.entlinks.domain.entity;
 
-import io.hypersistence.utils.hibernate.type.basic.PostgreSQLEnumType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
@@ -22,7 +21,8 @@ import lombok.Setter;
 import lombok.ToString;
 import org.folio.entlinks.domain.entity.base.Identifiable;
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 
 @Builder
@@ -45,7 +45,7 @@ public class AuthorityDataStat extends AuditableEntity implements Identifiable<U
   private Authority authority;
 
   @Enumerated(EnumType.STRING)
-  @Type(PostgreSQLEnumType.class)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "action", nullable = false)
   private AuthorityDataStatAction action;
 
@@ -83,7 +83,7 @@ public class AuthorityDataStat extends AuditableEntity implements Identifiable<U
   private int lbFailed;
 
   @Enumerated(EnumType.STRING)
-  @Type(PostgreSQLEnumType.class)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "status", nullable = false)
   private AuthorityDataStatStatus status;
 

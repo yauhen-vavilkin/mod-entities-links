@@ -24,7 +24,7 @@ import org.folio.entlinks.domain.dto.LinkingRulePatchRequest;
 import org.folio.entlinks.domain.dto.SubfieldModification;
 import org.folio.entlinks.domain.dto.SubfieldValidation;
 import org.folio.entlinks.exception.type.ErrorType;
-import org.folio.spring.test.type.IntegrationTest;
+import org.folio.spring.testing.type.IntegrationTest;
 import org.folio.support.base.IntegrationTestBase;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;

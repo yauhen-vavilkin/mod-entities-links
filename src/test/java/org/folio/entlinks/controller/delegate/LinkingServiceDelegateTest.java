@@ -40,7 +40,7 @@ import org.folio.entlinks.service.consortium.propagation.ConsortiumLinksPropagat
 import org.folio.entlinks.service.consortium.propagation.model.LinksPropagationData;
 import org.folio.entlinks.service.links.InstanceAuthorityLinkingService;
 import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.folio.support.TestDataUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

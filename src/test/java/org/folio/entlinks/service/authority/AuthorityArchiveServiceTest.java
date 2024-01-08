@@ -4,7 +4,7 @@ import static org.mockito.Mockito.verify;
 
 import org.folio.entlinks.domain.entity.AuthorityArchive;
 import org.folio.entlinks.domain.repository.AuthorityArchiveRepository;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

@@ -11,7 +11,7 @@ import java.util.List;
 import org.folio.entlinks.domain.dto.ReindexJobDto;
 import org.folio.entlinks.domain.dto.ReindexJobDtoCollection;
 import org.folio.entlinks.domain.entity.ReindexJob;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;

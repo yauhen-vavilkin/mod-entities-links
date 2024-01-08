@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.folio.entlinks.client.SettingsClient;
 import org.folio.entlinks.exception.FolioIntegrationException;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

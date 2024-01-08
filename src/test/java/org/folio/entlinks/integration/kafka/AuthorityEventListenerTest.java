@@ -16,7 +16,7 @@ import org.folio.entlinks.domain.dto.Metadata;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.service.messaging.authority.InstanceAuthorityLinkUpdateService;
 import org.folio.spring.service.SystemUserScopedExecutionService;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
 import org.folio.support.TestDataUtils;
 import org.junit.jupiter.api.BeforeEach;

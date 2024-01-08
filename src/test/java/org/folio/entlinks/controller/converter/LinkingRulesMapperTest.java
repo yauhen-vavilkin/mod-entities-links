@@ -13,7 +13,7 @@ import org.folio.entlinks.domain.dto.LinkingRulePatchRequest;
 import org.folio.entlinks.domain.dto.SubfieldModification;
 import org.folio.entlinks.domain.dto.SubfieldValidation;
 import org.folio.entlinks.domain.entity.InstanceAuthorityLinkingRule;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
 
 @UnitTest

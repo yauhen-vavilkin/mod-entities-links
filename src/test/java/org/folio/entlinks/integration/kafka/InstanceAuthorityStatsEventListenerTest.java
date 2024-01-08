@@ -16,7 +16,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.folio.entlinks.service.links.AuthorityDataStatService;
 import org.folio.spring.service.SystemUserScopedExecutionService;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.folio.spring.tools.batch.MessageBatchProcessor;
 import org.folio.support.KafkaTestUtils;
 import org.junit.jupiter.api.BeforeEach;

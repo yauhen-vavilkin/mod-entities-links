@@ -36,7 +36,7 @@ import org.folio.entlinks.exception.DeletedLinkingAuthorityException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.integration.kafka.EventProducer;
 import org.folio.entlinks.service.authority.AuthorityService;
-import org.folio.spring.test.type.UnitTest;
+import org.folio.spring.testing.type.UnitTest;
 import org.folio.support.TestDataUtils;
 import org.folio.support.TestDataUtils.Link;
 import org.junit.jupiter.api.Assertions;
