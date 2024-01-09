@@ -6,7 +6,9 @@
 
   <changeSet id="MODELINKS-123@@add-sequence_name-and-selectable-authority_source_file_fields" author="Mukhiddin_Yusupov">
     <preConditions onFail="MARK_RAN">
-      <tableExists tableName="authority_source_file"/>
+      <not>
+        <columnExists tableName="authority_source_file" columnName="sequence_name"/>
+      </not>
     </preConditions>
 
     <comment>Add sequence_name and selectable columns into authority_source_file</comment>

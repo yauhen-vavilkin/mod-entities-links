@@ -10,13 +10,24 @@
         SELECT COUNT(*)
         FROM pg_type t
                JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-        WHERE t.typname = 'AuthoritySourceType' AND n.nspname = '${database.defaultSchemaName}';
+        WHERE t.typname = 'authoritysourcetype' AND n.nspname = '${database.defaultSchemaName}';
       </sqlCheck>
     </preConditions>
 
     <comment>Create AuthoritySourceType enum</comment>
 
     <sql>CREATE TYPE AuthoritySourceType AS ENUM ('FOLIO', 'LOCAL', 'CONSORTIUM')</sql>
+  </changeSet>
+
+  <changeSet id="MODELINKS-184@@change-authority-source-file-source-column-type" author="Viacheslav_Kolesnyk">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="authority_source_file"/>
+    </preConditions>
+
+    <comment>Change 'source' column type from varchar to AuthoritySourceType for authority_source_file</comment>
+
+    <sql>ALTER TABLE authority_source_file
+      ALTER COLUMN source TYPE AuthoritySourceType using UPPER(source)::AuthoritySourceType;</sql>
   </changeSet>
 
 </databaseChangeLog>
