@@ -116,8 +116,8 @@ public class AuthoritySourceFileService {
   }
 
   private void validateOnCreate(AuthoritySourceFile entity) {
-    if (!AuthoritySourceFileSource.LOCAL.equals(entity.getSource())) {
-      throw new RequestBodyValidationException("Only Authority Source File with source Local can be created",
+    if (AuthoritySourceFileSource.FOLIO.equals(entity.getSource())) {
+      throw new RequestBodyValidationException("Authority Source File with source folio cannot be created",
           List.of(new Parameter("source").value(entity.getSource().name())));
     }
 

@@ -111,13 +111,14 @@ class AuthoritySourceFileServiceTest {
     verifyNoInteractions(repository);
   }
 
-  @Test
-  void shouldCreateAuthoritySourceFile() {
+  @ParameterizedTest
+  @ValueSource(strings = {"LOCAL", "CONSORTIUM"})
+  void shouldCreateAuthoritySourceFile(String source) {
     var code = new AuthoritySourceFileCode();
     code.setCode("code");
     var entity = new AuthoritySourceFile();
     entity.setAuthoritySourceFileCodes(Set.of(code));
-    entity.setSource(LOCAL);
+    entity.setSource(AuthoritySourceFileSource.valueOf(source));
     var expected = new AuthoritySourceFile(entity);
     when(repository.save(any(AuthoritySourceFile.class))).thenAnswer(i -> i.getArguments()[0]);
 
