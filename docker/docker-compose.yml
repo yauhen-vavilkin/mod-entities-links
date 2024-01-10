@@ -25,7 +25,7 @@ services:
 
   api-mock:
     image: wiremock/wiremock:2.32.0
-    container_name: api-mock
+    container_name: api-mock-entities-links
     networks:
       - mod-entities-links-local
     command:
@@ -36,16 +36,16 @@ services:
       - ../src/test/resources/mappings:/home/wiremock/mappings
 
   zookeeper:
-    container_name: zookeeper
     image: wurstmeister/zookeeper:3.4.6
+    container_name: zookeeper-entities-links
     networks:
       - mod-entities-links-local
     ports:
       - "2181:2181"
 
   kafka:
-    container_name: kafka
     image: wurstmeister/kafka:2.13-2.8.1
+    container_name: kafka-entities-links
     networks:
       - mod-entities-links-local
     depends_on:
@@ -64,8 +64,8 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
 
   kafka-ui:
-    container_name: kafka-ui
     image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui-entities-links
     ports:
       - "8080:8080"
     depends_on:
@@ -80,8 +80,8 @@ services:
       - mod-entities-links-local
 
   postgres:
-    container_name: postgres
     image: postgres:12-alpine
+    container_name: postgres-entities-links
     networks:
       - mod-entities-links-local
     ports:
@@ -92,8 +92,8 @@ services:
       POSTGRES_DB: okapi_modules
 
   pgadmin:
-    container_name: "pgadmin-test"
-    image: "dpage/pgadmin4:latest"
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin-entities-links
     networks:
       - mod-entities-links-local
     ports:

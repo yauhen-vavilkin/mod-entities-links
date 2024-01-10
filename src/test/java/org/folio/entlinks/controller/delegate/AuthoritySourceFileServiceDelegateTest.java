@@ -15,11 +15,13 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.folio.entlinks.controller.converter.AuthoritySourceFileMapper;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDtoCollection;
+import org.folio.entlinks.domain.dto.AuthoritySourceFileHridDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDtoHridManagement;
@@ -191,11 +193,42 @@ class AuthoritySourceFileServiceDelegateTest {
 
     var exc = assertThrows(RequestBodyValidationException.class, () -> delegate.createAuthoritySourceFile(dto));
 
-    assertThat(exc.getMessage()).isEqualTo("Create is not supported for consortium member tenant");
+    assertThat(exc.getMessage()).isEqualTo("Action 'create' is not supported for consortium member tenant");
     assertThat(exc.getInvalidParameters()).hasSize(1);
     assertThat(exc.getInvalidParameters().get(0))
         .matches(param -> param.getKey().equals("tenantId") && param.getValue().equals(TENANT_ID));
     verifyNoInteractions(mapper);
+    verifyNoInteractions(service);
+  }
+
+  @Test
+  void shouldGetNextHrid() {
+    var id = UUID.randomUUID();
+    var code = "CODE10";
+    when(context.getTenantId()).thenReturn(TENANT_ID);
+    when(tenantsService.getConsortiumTenants(TENANT_ID)).thenReturn(Collections.emptyList());
+    when(service.nextHrid(id)).thenReturn(code);
+
+    var hridDto = delegate.getAuthoritySourceFileNextHrid(id);
+
+    assertThat(hridDto)
+      .extracting(AuthoritySourceFileHridDto::getId, AuthoritySourceFileHridDto::getHrid)
+      .containsExactly(id, code);
+    verify(service).nextHrid(id);
+  }
+
+  @Test
+  void shouldNotNextHridForConsortiumMemberTenant() {
+    when(context.getTenantId()).thenReturn(TENANT_ID);
+    when(tenantsService.getConsortiumTenants(TENANT_ID)).thenReturn(List.of("test", TENANT_ID));
+
+    var id = UUID.randomUUID();
+    var exc = assertThrows(RequestBodyValidationException.class, () -> delegate.getAuthoritySourceFileNextHrid(id));
+
+    assertThat(exc.getMessage()).isEqualTo("Action 'next HRID' is not supported for consortium member tenant");
+    assertThat(exc.getInvalidParameters()).hasSize(1);
+    assertThat(exc.getInvalidParameters().get(0))
+      .matches(param -> param.getKey().equals("tenantId") && param.getValue().equals(TENANT_ID));
     verifyNoInteractions(service);
   }
 

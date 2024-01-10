@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -22,6 +23,7 @@ import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileSource;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
+import org.folio.entlinks.exception.AuthoritySourceFileHridException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.spring.testing.type.UnitTest;
@@ -34,6 +36,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.jdbc.BadSqlGrammarException;
 
 @UnitTest
 @ExtendWith(MockitoExtension.class)
@@ -264,5 +267,69 @@ class AuthoritySourceFileServiceTest {
     assertThat(thrown.getMessage()).isEqualTo("Cannot delete Authority source file with source 'folio'");
     verify(repository).findById(id);
     verify(repository, never()).deleteById(any(UUID.class));
+  }
+
+  @Test
+  void nextHrid_SuccessfulExecution_ReturnsNextHrid() {
+    // Arrange
+    final var id = UUID.randomUUID();
+    var code = new AuthoritySourceFileCode();
+    code.setCode("CODE");
+    var sourceFile = new AuthoritySourceFile();
+    sourceFile.setSequenceName("sequenceName");
+    sourceFile.setAuthoritySourceFileCodes(Collections.singleton(code));
+
+    when(repository.getNextSequenceNumber("sequenceName")).thenReturn(10L);
+    when(repository.findById(id)).thenReturn(Optional.of(sourceFile));
+
+    // Act
+    String nextHrid = service.nextHrid(id);
+
+    // Assert
+    assertEquals("CODE10", nextHrid);
+  }
+
+  @Test
+  void nextHrid_BlankSequenceName_ThrowsException() {
+    // Arrange
+    final var id = UUID.randomUUID();
+    var sourceFile = new AuthoritySourceFile();
+    sourceFile.setAuthoritySourceFileCodes(Collections.singleton(new AuthoritySourceFileCode()));
+
+    when(repository.findById(id)).thenReturn(Optional.of(sourceFile));
+
+    // Act & Assert
+    assertThrows(AuthoritySourceFileHridException.class, () -> service.nextHrid(id));
+  }
+
+  @Test
+  void nextHrid_MultipleCodes_ThrowsException() {
+    // Arrange
+    final var id = UUID.randomUUID();
+    var sourceFile = new AuthoritySourceFile();
+    sourceFile.setSequenceName("sequenceName");
+    sourceFile.setAuthoritySourceFileCodes(Set.of(new AuthoritySourceFileCode(), new AuthoritySourceFileCode()));
+
+    when(repository.findById(id)).thenReturn(Optional.of(sourceFile));
+
+    // Act & Assert
+    assertThrows(AuthoritySourceFileHridException.class, () -> service.nextHrid(id));
+  }
+
+  @Test
+  void nextHrid_DataAccessException_ThrowsException() {
+    // Arrange
+    final var id = UUID.randomUUID();
+    var code = new AuthoritySourceFileCode();
+    code.setCode("CODE");
+    var sourceFile = new AuthoritySourceFile();
+    sourceFile.setSequenceName("sequenceName");
+    sourceFile.setAuthoritySourceFileCodes(Collections.singleton(code));
+
+    when(repository.findById(id)).thenReturn(Optional.of(sourceFile));
+    when(repository.getNextSequenceNumber("sequenceName")).thenThrow(BadSqlGrammarException.class);
+
+    // Act & Assert
+    assertThrows(AuthoritySourceFileHridException.class, () -> service.nextHrid(id));
   }
 }

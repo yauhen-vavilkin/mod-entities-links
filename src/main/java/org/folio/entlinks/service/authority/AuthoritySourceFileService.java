@@ -15,12 +15,14 @@ import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileSource;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
+import org.folio.entlinks.exception.AuthoritySourceFileHridException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.data.OffsetRequest;
 import org.folio.tenant.domain.dto.Parameter;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -94,25 +96,37 @@ public class AuthoritySourceFileService {
   public void deleteById(UUID id) {
     log.debug("deleteById:: Attempt to delete AuthoritySourceFile by [id: {}]", id);
     var authoritySourceFile = repository.findById(id)
-        .orElseThrow(() -> new AuthoritySourceFileNotFoundException(id));
+      .orElseThrow(() -> new AuthoritySourceFileNotFoundException(id));
     if (!FOLIO.equals(authoritySourceFile.getSource())) {
       repository.deleteById(id);
     } else {
       throw new RequestBodyValidationException("Cannot delete Authority source file with source 'folio'",
-          List.of(new Parameter("source").value(authoritySourceFile.getSource().name())));
+        List.of(new Parameter("source").value(authoritySourceFile.getSource().name())));
     }
-  }
-
-  public long getNextSequenceNumber(String sequenceName) {
-    return repository.getNextSequenceNumber(sequenceName);
   }
 
   public void createSequence(String sequenceName, int startNumber) {
     var command = String.format("""
-        CREATE SEQUENCE %s MINVALUE %d INCREMENT BY 1 OWNED BY %s.authority_source_file.sequence_name
+        CREATE SEQUENCE %s MINVALUE %d INCREMENT BY 1 OWNED BY %s.authority_source_file.sequence_name;
         """,
-        sequenceName, startNumber, moduleMetadata.getDBSchemaName(folioExecutionContext.getTenantId()));
+      sequenceName, startNumber, moduleMetadata.getDBSchemaName(folioExecutionContext.getTenantId()));
     jdbcTemplate.execute(command);
+  }
+
+  public String nextHrid(UUID id) {
+    log.debug("nextHrid:: Attempting to get next AuthoritySourceFile HRID [id: {}]", id);
+    var sourceFile = getById(id);
+    var sequenceName = sourceFile.getSequenceName();
+    var codes = sourceFile.getAuthoritySourceFileCodes();
+    if (StringUtils.isBlank(sequenceName) || codes.size() != 1) {
+      throw new AuthoritySourceFileHridException(id);
+    }
+    try {
+      long nextVal = repository.getNextSequenceNumber(sequenceName);
+      return codes.iterator().next().getCode() + nextVal;
+    } catch (DataAccessException e) {
+      throw new AuthoritySourceFileHridException(id, e);
+    }
   }
 
   private void validateOnCreate(AuthoritySourceFile entity) {
@@ -123,16 +137,16 @@ public class AuthoritySourceFileService {
 
     if (entity.getAuthoritySourceFileCodes().size() != 1) {
       var codes = entity.getAuthoritySourceFileCodes().stream()
-          .map(AuthoritySourceFileCode::getCode)
-          .collect(Collectors.joining(","));
+        .map(AuthoritySourceFileCode::getCode)
+        .collect(Collectors.joining(","));
       throw new RequestBodyValidationException("Authority Source File with source Local should have only one prefix",
-          List.of(new Parameter("code").value(codes)));
+        List.of(new Parameter("code").value(codes)));
     }
 
     var code = entity.getAuthoritySourceFileCodes().iterator().next().getCode();
     if (StringUtils.isBlank(code) || !StringUtils.isAlpha(code)) {
       throw new RequestBodyValidationException("Authority Source File prefix should be non-empty sequence of letters",
-          List.of(new Parameter("code").value(code)));
+        List.of(new Parameter("code").value(code)));
     }
   }
 
@@ -170,4 +184,5 @@ public class AuthoritySourceFileService {
       }
     }
   }
+
 }

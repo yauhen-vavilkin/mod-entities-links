@@ -4,6 +4,7 @@ import static java.util.UUID.randomUUID;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 import static org.folio.support.base.TestConstants.authoritySourceFilesEndpoint;
+import static org.folio.support.base.TestConstants.authoritySourceFilesHridEndpoint;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -107,10 +108,10 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
 
     var cqlQuery = "(cql.allRecords=1)sortby name/sort." + sortOrder;
     doGet(authoritySourceFilesEndpoint() + "?limit={l}&offset={o}&query={cql}", limit, offset, cqlQuery)
-        .andExpect(jsonPath("authoritySourceFiles[0].name", is(firstNoteTypeName)))
-        .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdByUserId", is(USER_ID)))
-        .andExpect(jsonPath("totalRecords").value(3));
+      .andExpect(jsonPath("authoritySourceFiles[0].name", is(firstNoteTypeName)))
+      .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("authoritySourceFiles[0].metadata.createdByUserId", is(USER_ID)))
+      .andExpect(jsonPath("totalRecords").value(3));
   }
 
   // Tests for Get By ID
@@ -122,10 +123,10 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     createAuthoritySourceFile(sourceFile);
 
     doGet(authoritySourceFilesEndpoint(sourceFile.getId()))
-        .andExpect(jsonPath("name", is(sourceFile.getName())))
-        .andExpect(jsonPath("hridManagement.startNumber", is(1)))
-        .andExpect(jsonPath("metadata.createdDate", notNullValue()))
-        .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
+      .andExpect(jsonPath("name", is(sourceFile.getName())))
+      .andExpect(jsonPath("hridManagement.startNumber", is(1)))
+      .andExpect(jsonPath("metadata.createdDate", notNullValue()))
+      .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)));
   }
 
   @Test
@@ -133,19 +134,19 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   void getById_negative_noAuthoritySourceFileExistForGivenId() throws Exception {
 
     tryGet(authoritySourceFilesEndpoint(UUID.randomUUID()))
-        .andExpect(status().isNotFound())
-        .andExpect(exceptionMatch(AuthoritySourceFileNotFoundException.class))
-        .andExpect(errorMessageMatch(containsString("was not found")));
+      .andExpect(status().isNotFound())
+      .andExpect(exceptionMatch(AuthoritySourceFileNotFoundException.class))
+      .andExpect(errorMessageMatch(containsString("was not found")));
   }
 
   @Test
   @DisplayName("Get By ID: return 400 when id is invalid")
   void getById_negative_IdIsInvalid() throws Exception {
     tryGet(authoritySourceFilesEndpoint() + "/{id}", "invalid-uuid")
-        .andExpect(status().isBadRequest())
-        .andExpect(exceptionMatch(MethodArgumentTypeMismatchException.class))
-        .andExpect(errorMessageMatch(containsString(
-            "Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'")));
+      .andExpect(status().isBadRequest())
+      .andExpect(exceptionMatch(MethodArgumentTypeMismatchException.class))
+      .andExpect(errorMessageMatch(containsString(
+        "Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'")));
   }
 
   // Tests for POST
@@ -157,11 +158,11 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
 
     var id = UUID.randomUUID();
     var dto = new AuthoritySourceFilePostDto()
-        .id(id).name("name")
-        // set max length (25) for the prefix/code
-        .code("abcdefghijklmnopqrstuvwxy")
-        .type("type").baseUrl("url")
-        .hridManagement(new AuthoritySourceFilePostDtoHridManagement().startNumber(10));
+      .id(id).name("name")
+      // set max length (25) for the prefix/code
+      .code("abcdefghijklmnopqrstuvwxy")
+      .type("type").baseUrl("url")
+      .hridManagement(new AuthoritySourceFilePostDtoHridManagement().startNumber(10));
     var expectedSequenceName = "hrid_authority_local_file_abcdefghijklmnopqrstuvwxy_seq";
 
     tryPost(authoritySourceFilesEndpoint(), dto)
@@ -178,7 +179,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     assertEquals(1, databaseHelper.countRows(DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE, TENANT_ID));
     assertEquals(expectedSequenceName, databaseHelper.queryAuthoritySourceFileSequenceName(TENANT_ID, id));
     assertEquals(dto.getHridManagement().getStartNumber(),
-        databaseHelper.queryAuthoritySourceFileSequenceStartNumber(expectedSequenceName));
+      databaseHelper.queryAuthoritySourceFileSequenceStartNumber(expectedSequenceName));
   }
 
   @Test
@@ -188,15 +189,15 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     createAuthoritySourceFile(entity);
 
     var dto = new AuthoritySourceFilePostDto("name111", "code").id(entity.getId())
-        .baseUrl("url").type("type");
+      .baseUrl("url").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
-        .andExpect(status().isUnprocessableEntity())
-        .andExpect(errorMessageMatch(is("Authority Source File with the given 'id' already exists.")))
-        .andExpect(exceptionMatch(DataIntegrityViolationException.class));
+      .andExpect(status().isUnprocessableEntity())
+      .andExpect(errorMessageMatch(is("Authority Source File with the given 'id' already exists.")))
+      .andExpect(exceptionMatch(DataIntegrityViolationException.class));
 
     assertEquals(1,
-        databaseHelper.countRows(DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE, TENANT_ID));
+      databaseHelper.countRows(DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE, TENANT_ID));
   }
 
   @Test
@@ -205,7 +206,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var createdEntities = createAuthoritySourceTypes();
 
     var dto = new AuthoritySourceFilePostDto(createdEntities.get(0).getName(), "code")
-        .baseUrl("url").type("type");
+      .baseUrl("url").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
       .andExpect(status().isUnprocessableEntity())
@@ -222,7 +223,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var createdEntities = createAuthoritySourceTypes();
 
     var dto = new AuthoritySourceFilePostDto("new name", "code")
-        .baseUrl(createdEntities.get(0).getBaseUrl()).type("type");
+      .baseUrl(createdEntities.get(0).getBaseUrl()).type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
       .andExpect(status().isUnprocessableEntity())
@@ -257,24 +258,24 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     for (var code : List.of("123", "0x123", "abc ", "$")) {
       dto.setCode(code);
       tryPost(authoritySourceFilesEndpoint(), dto)
-          .andExpect(status().isUnprocessableEntity())
-          .andExpect(errorMessageMatch(
-              containsString("Authority Source File prefix should be non-empty sequence of letters")))
-          .andExpect(exceptionMatch(RequestBodyValidationException.class));
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(errorMessageMatch(
+          containsString("Authority Source File prefix should be non-empty sequence of letters")))
+        .andExpect(exceptionMatch(RequestBodyValidationException.class));
     }
 
     // cases which violates code length constraints
     for (var code : List.of("", "abcdefghijklmnopqrstuvwxyz")) {
       dto.setCode(code);
       tryPost(authoritySourceFilesEndpoint(), dto)
-          .andExpect(status().isUnprocessableEntity())
-          .andExpect(errorMessageMatch(is(
-              "size must be between 1 and 25")))
-          .andExpect(exceptionMatch(MethodArgumentNotValidException.class));
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(errorMessageMatch(is(
+          "size must be between 1 and 25")))
+        .andExpect(exceptionMatch(MethodArgumentNotValidException.class));
     }
 
     assertEquals(0,
-        databaseHelper.countRows(DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE, TENANT_ID));
+      databaseHelper.countRows(DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE, TENANT_ID));
   }
 
   @Test
@@ -283,11 +284,11 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var dto = new AuthoritySourceFilePostDto(null, "code").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
-        .andExpect(status().isUnprocessableEntity())
-        .andExpect(exceptionMatch(MethodArgumentNotValidException.class))
-        .andExpect(jsonPath("$.errors.[0].parameters[0].key", is("name")))
-        .andExpect(jsonPath("$.errors.[0].parameters[0].value", is("null")))
-        .andExpect(errorMessageMatch(containsString("must not be null")));
+      .andExpect(status().isUnprocessableEntity())
+      .andExpect(exceptionMatch(MethodArgumentNotValidException.class))
+      .andExpect(jsonPath("$.errors.[0].parameters[0].key", is("name")))
+      .andExpect(jsonPath("$.errors.[0].parameters[0].value", is("null")))
+      .andExpect(errorMessageMatch(containsString("must not be null")));
 
   }
 
@@ -349,10 +350,10 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     createAuthoritySourceFile(entity);
 
     tryDelete(authoritySourceFilesEndpoint(entity.getId()))
-        .andExpect(status().isUnprocessableEntity())
-        .andExpect(exceptionMatch(RequestBodyValidationException.class))
-        .andExpect(errorMessageMatch(containsString(
-            "Cannot delete Authority source file with source 'folio'")));
+      .andExpect(status().isUnprocessableEntity())
+      .andExpect(exceptionMatch(RequestBodyValidationException.class))
+      .andExpect(errorMessageMatch(containsString(
+        "Cannot delete Authority source file with source 'folio'")));
   }
 
   @Test
@@ -360,8 +361,8 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   void deleteAuthoritySourceFile_negative_entityNotFound() throws Exception {
 
     tryDelete(authoritySourceFilesEndpoint(UUID.randomUUID())).andExpect(status().isNotFound())
-        .andExpect(exceptionMatch(AuthoritySourceFileNotFoundException.class))
-        .andExpect(errorMessageMatch(containsString("was not found")));
+      .andExpect(exceptionMatch(AuthoritySourceFileNotFoundException.class))
+      .andExpect(errorMessageMatch(containsString("was not found")));
   }
 
   @Test
@@ -369,9 +370,33 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   void deleteAuthoritySourceFile_negative_invalidProvidedRequestId() throws Exception {
 
     tryDelete(authoritySourceFilesEndpoint() + "/{id}", "invalid-uuid").andExpect(status().isBadRequest())
-        .andExpect(exceptionMatch(MethodArgumentTypeMismatchException.class))
-        .andExpect(errorMessageMatch(containsString(
-            "Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'")));
+      .andExpect(exceptionMatch(MethodArgumentTypeMismatchException.class))
+      .andExpect(errorMessageMatch(containsString(
+        "Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'")));
+  }
+
+  @Test
+  @DisplayName("POST: Generate next HR ID for the specified Authority Source File")
+  void newAuthoritySourceFileNextHrid_positive_hridReturned() throws Exception {
+    // Arrange
+    var id = UUID.randomUUID();
+    var code = "abc";
+    var startNumber = 10;
+    var dto = new AuthoritySourceFilePostDto()
+      .id(id).name("name")
+      .code(code)
+      .hridManagement(new AuthoritySourceFilePostDtoHridManagement().startNumber(startNumber));
+
+    doPost(authoritySourceFilesEndpoint(), dto);
+
+    // Act & Assert
+    for (int i = 0; i < 5; i++) {
+      tryPost(authoritySourceFilesHridEndpoint(id), null)
+        .andExpect(status().is2xxSuccessful())
+        .andExpect(jsonPath("id", is(id.toString())))
+        .andExpect(jsonPath("hrid", is(code + (startNumber + i))));
+    }
+
   }
 
   private List<AuthoritySourceFile> createAuthoritySourceTypes() {
@@ -392,7 +417,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     entity.setName(SOURCE_FILE_NAMES[i]);
     entity.setSource(SOURCE_FILE_SOURCES[i]);
     entity.setType(SOURCE_FILE_TYPES[i]);
-    entity.setBaseUrl(SOURCE_FILE_URLS[i]  + "/");
+    entity.setBaseUrl(SOURCE_FILE_URLS[i] + "/");
     entity.setHridStartNumber(i + 1);
 
     var code = prepareAuthoritySourceFileCode(i);
@@ -405,7 +430,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     return entity;
   }
 
-  public AuthoritySourceFile prepareFolioSourceFile(int sourceFileIdNum) {
+  private AuthoritySourceFile prepareFolioSourceFile(int sourceFileIdNum) {
     var entity = new AuthoritySourceFile();
     entity.setId(SOURCE_FILE_IDS[sourceFileIdNum]);
     entity.setName(SOURCE_FILE_NAMES[sourceFileIdNum]);

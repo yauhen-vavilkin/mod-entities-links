@@ -125,6 +125,10 @@ public class TestConstants {
     return AUTHORITY_SOURCE_FILES_ENDPOINT + "/" + id;
   }
 
+  public static String authoritySourceFilesHridEndpoint(UUID id) {
+    return AUTHORITY_SOURCE_FILES_ENDPOINT + "/" + id + "/" + "hrid";
+  }
+
   public static String authorityEndpoint() {
     return AUTHORITY_STORAGE_ENDPOINT;
   }

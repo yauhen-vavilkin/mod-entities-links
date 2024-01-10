@@ -670,3 +670,16 @@ POST https://{okapi-location}/settings/entries
 | `createdDate > 2021-10-25T12:00:00.0"`            | Matches authorities that were created after `2021-10-25 12:00:00`        |
 | `updatedDate <= 2021-10-28T12:00:00.0`            | Matches authorities that were updated before or at `2021-10-28 12:00:00` |
 | `authoritySourceFile.name = LC Genre/Form Terms`  | Matches authorities with source file name `LC Genre/Form Terms`          |
+
+### API authority-source-files
+
+The API provides endpoints for authority source files management
+
+| METHOD | URL                                 | Required permissions                                      | DESCRIPTION                   |
+|:-------|:------------------------------------|:----------------------------------------------------------|:------------------------------|
+| GET    | `/authority-source-files`           | `inventory-storage.authority-source-files.collection.get` | Retrieve source files         |
+| POST   | `/authority-source-files`           | `inventory-storage.authority-source-files.item.post`      | Create new local source file  |
+| GET    | `/authority-source-files/{id}`      | `inventory-storage.authority-source-files.item.get`       | Get source file               |
+| PATCH  | `/authority-source-files/{id}`      | `inventory-storage.authority-source-files.item.patch`     | Update source file            |
+| DELETE | `/authority-source-files/{id}`      | `inventory-storage.authority-source-files.item.delete`    | Delete source file            |
+| POST   | `/authority-source-files/{id}/hrid` | `inventory-storage.authority-source-files.hrid.post`      | Get next HRID for source file |

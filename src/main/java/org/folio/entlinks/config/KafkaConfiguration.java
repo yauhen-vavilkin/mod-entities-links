@@ -177,14 +177,14 @@ public class KafkaConfiguration {
 
   private <T> ConsumerFactory<String, T> consumerFactoryForEvent(KafkaProperties kafkaProperties, Class<T> eventClass) {
     var deserializer = new JsonDeserializer<>(eventClass, objectMapper, false);
-    Map<String, Object> config = new HashMap<>(kafkaProperties.buildConsumerProperties());
+    Map<String, Object> config = new HashMap<>(kafkaProperties.buildConsumerProperties(null));
     config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     config.put(VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
     return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), deserializer);
   }
 
   private <T> ProducerFactory<String, T> getProducerConfigProps(KafkaProperties kafkaProperties) {
-    return new DefaultKafkaProducerFactory<>(kafkaProperties.buildProducerProperties(),
+    return new DefaultKafkaProducerFactory<>(kafkaProperties.buildProducerProperties(null),
         new StringSerializer(), new JsonSerializer<>(objectMapper));
   }
 }

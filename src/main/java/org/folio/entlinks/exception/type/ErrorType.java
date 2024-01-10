@@ -9,7 +9,7 @@ public enum ErrorType {
 
   VALIDATION_ERROR("validation"),
   NOT_FOUND_ERROR("not-found"),
-  INTEGRATION_ERROR("intregration-error"),
+  INTEGRATION_ERROR("integration-error"),
   OPTIMISTIC_LOCKING_ERROR("optimistic locking"),
   UNKNOWN_ERROR("unknown");
 

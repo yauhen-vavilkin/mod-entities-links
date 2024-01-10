@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.folio.entlinks.controller.delegate.AuthoritySourceFileServiceDelegate;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDtoCollection;
+import org.folio.entlinks.domain.dto.AuthoritySourceFileHridDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDto;
 import org.folio.entlinks.rest.resource.AuthoritySourceFileApi;
@@ -51,5 +52,10 @@ public class AuthoritySourceFilesController implements AuthoritySourceFileApi {
                                                                                        String query) {
     var authoritySourceFiles = delegate.getAuthoritySourceFiles(offset, limit, query);
     return ResponseEntity.ok(authoritySourceFiles);
+  }
+
+  @Override
+  public ResponseEntity<AuthoritySourceFileHridDto> newAuthoritySourceFileNextHrid(UUID id) {
+    return ResponseEntity.ok(delegate.getAuthoritySourceFileNextHrid(id));
   }
 }
