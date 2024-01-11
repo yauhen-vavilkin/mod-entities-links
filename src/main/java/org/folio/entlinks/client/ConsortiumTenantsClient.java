@@ -11,6 +11,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient("consortia")
 public interface ConsortiumTenantsClient {
 
+  /**
+   * Get tenants by consortium id.
+   *
+   * @return consortium tenants if executed under consortium central 'tenantId' context
+   * */
   @GetMapping(value = "/{consortiumId}/tenants", produces = APPLICATION_JSON_VALUE)
   ConsortiumTenants getConsortiumTenants(@PathVariable("consortiumId") String consortiumId,
                                          @RequestParam("limit") int limit);

@@ -3,7 +3,6 @@ package org.folio.support.base;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static java.util.Objects.requireNonNull;
-import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
@@ -125,7 +124,7 @@ public class IntegrationTestBase {
     var tenantAttributes = new TenantAttributes().moduleTo("mod-entities-links")
       .addParametersItem(new Parameter("loadReference").value(String.valueOf(loadReference)));
     doPost("/_/tenant", tenantAttributes, httpHeaders);
-    mockGet("/user-tenants", "", SC_NOT_FOUND, okapi.wireMockServer());
+    mockGet("/user-tenants", "{\"userTenants\": [],\"totalRecords\": 0}", SC_OK, okapi.wireMockServer());
   }
 
   @SneakyThrows

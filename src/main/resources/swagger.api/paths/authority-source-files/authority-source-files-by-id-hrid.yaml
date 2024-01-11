@@ -1,0 +1,25 @@
+parameters:
+  - $ref: '../../parameters/record-id-param.yaml'
+post:
+  operationId: newAuthoritySourceFileNextHrid
+  tags:
+    - authority-source-file
+  responses:
+    '201':
+      description: Provide next HRID for the authority source file
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/authority-source-file/authoritySourceFileHridDto.yaml'
+          example:
+            HridResponse:
+              value:
+                id: 13ddfa1a-e711-4608-ba33-565c787a5daa
+                hrid: fst123
+
+    '404':
+      $ref: '../../responses/notFoundResponse.yaml'
+    '422':
+      $ref: '../../responses/unprocessableEntityResponse.yaml'
+    '500':
+      $ref: '../../responses/serverErrorResponse.yaml'

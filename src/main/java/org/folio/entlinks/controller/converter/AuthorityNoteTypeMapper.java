@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface AuthorityNoteTypeMapper {
 
+  @Mapping(target = "new", ignore = true)
   @Mapping(target = "updatedDate", ignore = true)
   @Mapping(target = "updatedByUserId", ignore = true)
   @Mapping(target = "createdDate", ignore = true)
@@ -30,6 +31,7 @@ public interface AuthorityNoteTypeMapper {
   @Mapping(target = "metadata.createdByUserId", source = "createdByUserId")
   AuthorityNoteTypeDto toDto(AuthorityNoteType authorityNoteType);
 
+  @Mapping(target = "new", ignore = true)
   @Mapping(target = "updatedDate", ignore = true)
   @Mapping(target = "updatedByUserId", ignore = true)
   @Mapping(target = "createdDate", ignore = true)

@@ -17,29 +17,14 @@
     * [Producing Kafka messages](#producing-kafka-messages)
   * [APIs](#apis)
     * [API instance-authority-links](#api-instance-authority-links)
-      * [Examples](#examples)
-        * [Retrieve all links by the given instance id:](#retrieve-all-links-by-the-given-instance-id-)
-        * [Modify links by the given instance id:](#modify-links-by-the-given-instance-id-)
-        * [Count number of links for each authority id:](#count-number-of-links-for-each-authority-id-)
     * [API instance-authority-linking-rules](#api-instance-authority-linking-rules)
       * [Instance to Authority linking rule parameters](#instance-to-authority-linking-rule-parameters)
-      * [Examples](#examples-1)
-        * [Retrieve instance to authority linking rules collection:](#retrieve-instance-to-authority-linking-rules-collection-)
-        * [Change auto-linking flag in instance to authority linking rule:](#change-auto-linking-flag-in-instance-to-authority-linking-rule-)
     * [API instance-authority-links-statistics](#api-instance-authority-links-statistics)
-      * [Examples](#examples-2)
-        * [Retrieve instance to authority links statistics collection:](#retrieve-instance-to-authority-links-statistics-collection-)
-          * [Instance to Authority links statistics parameters](#instance-to-authority-links-statistics-parameters)
-        * [Retrieve linked bib updates statistics collection:](#retrieve-linked-bib-updates-statistics-collection-)
-          * [Linked bib updates statistics parameters](#linked-bib-updates-statistics-parameters)
     * [API instance-authority-links-suggestions](#api-instance-authority-links-suggestions)
-      * [Examples](#examples-3)
-        * [Retrieve links suggestions for marc records:](#retrieve-links-suggestions-for-marc-records-)
-    * [Configuration setting for Authority Archive records expiration](#configuration-setting-for-authority-archive-records-expiration)
-      * [Permissions](#permissions)
-      * [Example request](#example-request)
-    * [CQL support for GET /authority-storage/authorities](#cql-support-for-get-authority-storageauthorities)
-      * [Example queries to retrieve authorities with filtering](#example-queries-to-retrieve-authorities-with-filtering)
+    * [API authority-source-files](#api-authority-source-files)
+    * [API authority-storage](#api-authority-storage)
+      * [CQL support](#cql-support)
+      * [Retention policy for archived authorities](#retention-policy-for-archived-authorities)
 <!-- TOC -->
 
 ## Compiling
@@ -131,16 +116,16 @@ documentation [Spring Boot Externalized Configuration](https://docs.spring.io/sp
 
 ### Folio modules communication
 
-| Module name               | Interface                     | Notes                                                                       |
-|---------------------------|-------------------------------|-----------------------------------------------------------                  |
-| mod-login                 | login                         | For system user creation and authentication                                 |
-| mod-permissions           | permissions                   | For system user creation                                                    |
-| mod-users                 | users                         | For system user creation                                                    |
-| mod-source-record-manager | mapping-rules-provider        | For fetching MARC bibliographic-to-Instance mapping rules                   |
-| mod-source-record-storage | source-storage-source-records | For fetching Authority source records in MARC format                        |
-| mod-inventory-storage     | authority-source-files        | For fetching Authority source file reference data                           |
-| mod-inventory-storage     | instance-storage              | For fetching Instance data for statistic                                    |
-| mod-settings              | settings                      | For fetching the tenant-specific retention period for archived authorities  |
+| Module name               | Interface                     | Notes                                                                      |
+|---------------------------|-------------------------------|----------------------------------------------------------------------------|
+| mod-login                 | login                         | For system user creation and authentication                                |
+| mod-permissions           | permissions                   | For system user creation                                                   |
+| mod-users                 | users                         | For system user creation                                                   |
+| mod-source-record-manager | mapping-rules-provider        | For fetching MARC bibliographic-to-Instance mapping rules                  |
+| mod-source-record-storage | source-storage-source-records | For fetching Authority source records in MARC format                       |
+| mod-inventory-storage     | authority-source-files        | For fetching Authority source file reference data                          |
+| mod-inventory-storage     | instance-storage              | For fetching Instance data for statistic                                   |
+| mod-settings              | settings                      | For fetching the tenant-specific retention period for archived authorities |
 
 ### Consuming Kafka messages
 
@@ -171,11 +156,9 @@ reflected on them.
 | PUT    | `/links/instances/{instanceId}` | `entities-links.instances.collection.put`        | Update links collection related to Instance |
 | POST   | `/links/authorities/bulk/count` | `instance-authority-links.authorities.bulk.post` | Retrieve number of links by authority IDs   |
 
-#### Examples
+**Examples**
 
-<a name="retrieve-instance-links"></a>
-
-##### Retrieve all links by the given instance id:
+_Retrieve all links by the given instance id:_
 
 `GET /links/instances/b2658a84-912b-4ed9-83d7-e8201f4d27ec`
 
@@ -196,10 +179,7 @@ Response:
   "totalRecords": 1
 }
 ```
-
-<a name='modify-instance-links'></a>
-
-##### Modify links by the given instance id:
+_Modify links by the given instance id:_
 
 `PUT /links/instances/b2658a84-912b-4ed9-83d7-e8201f4d27ec`
 
@@ -225,7 +205,7 @@ Request body:
 
 <a name='count-number-of-links-for-each-authority-id'></a>
 
-##### Count number of links for each authority id:
+_Count number of links for each authority id:_
 
 `POST /links/authorities/bulk/count`
 
@@ -279,11 +259,9 @@ The API enables possibility to retrieve default linking rules.
     * `existence` - Map <char, boolean>. Validate if subfield have to exist or not
 * `autoLinkingEnabled` - Flag that indicates if the rule can be used for auto-linking
 
-#### Examples
+**Examples**
 
-<a name="retrieve-instance-authority-linking-rules"></a>
-
-##### Retrieve instance to authority linking rules collection:
+_Retrieve instance to authority linking rules collection:_
 
 `GET /linking-rules/instance-authority`
 
@@ -326,7 +304,7 @@ Response:
 ]
 ```
 
-##### Change auto-linking flag in instance to authority linking rule:
+_Change auto-linking flag in instance to authority linking rule:_
 
 `PATCH /linking-rules/instance-authority/1`
 
@@ -347,17 +325,13 @@ The API provides statistics for instance to authority links statistics
 | GET    | `/links/stats/authority` | `instance-authority-links.authority-statistics.collection.get` | Get Instance to Authority links authority-statistics collection |
 | GET    | `/links/stats/instance`  | `instance-authority-links.instance-statistics.collection.get`  | Get linked bib update statistics collection                     |
 
-#### Examples
+**Examples**
 
-<a name="retrieve-instance-authority-links-statistics"></a>
-<a name="retrieve-linked-bib-update-statistics"></a>
-
-##### Retrieve instance to authority links statistics collection:
+_Retrieve instance to authority links statistics collection:_
 
 `GET /links/stats/authority`
 
-###### Instance to Authority links statistics parameters
-
+Parameters:
 * `fromDate` - Start date to seek from
 * `toDate` - End date to seek from
 * `action` - Action to filter by
@@ -418,12 +392,11 @@ Response:
 ]
 ```
 
-##### Retrieve linked bib updates statistics collection:
+_Retrieve linked bib updates statistics collection:_
 
 `GET /links/stats/instance`
 
-###### Linked bib updates statistics parameters
-
+Parameters:
 * `fromDate` - Start date to seek from
 * `toDate` - End date to seek to
 * `status` - Link status to filter by
@@ -464,11 +437,9 @@ The API provides links suggestions for marc records
 |:-------|:--------------------------|:--------------------------------------------|:--------------------------------------------|
 | POST   | `/links-suggestions/marc` | `instance-authority-links.suggestions.post` | Retrieve links suggestions for marc records |
 
-#### Examples
+**Examples**
 
-<a name="retrieve-links-suggestions-for-marc-records"></a>
-
-##### Retrieve links suggestions for marc records:
+_Retrieve links suggestions for marc records:_
 
 `POST /links-suggestions/marc`
 
@@ -615,43 +586,26 @@ Response:
   ]
 }
 ```
-### Configuration setting for Authority Archive records expiration
-In order to provide an ability for a tenant to have specific retention period of authority archives, we need to add the below configuration in mod-settings.
-If no setting is provided by a tenant the retention period value would be taken from `AUTHORITY_ARCHIVES_EXPIRATION_PERIOD` environment variable
 
-#### Permissions
-To make a post call to mod-settings, user should have below permissions.
-```
-  mod-settings.entries.item.post
-  mod-settings.global.write.mod-entities-links
-```
+### API authority-source-files
 
-#### Example request
-```
-POST https://{okapi-location}/settings/entries
-  {
-    "id":"1e01066d-4bee-4cf7-926c-ba2c9c6c0001",
-    "scope": "authority-storage",
-    "key": "authority-archives-expiration",
-    "value":"{\"expirationEnabled\":true, \"retentionInDays\":10}"
-}
-```
+The API provides endpoints for authority source files management
 
-| parameter | Type        | Description                                                                                                           |
-|---------  |-------------|-----------------------------------------------------------------------------------------------------------------------|
-| `id`      | UUID        | id of type UUID should be provided.                                                                                   |
-| `scope`   | String      | Scope should be the module name. Here, it will be "authority-storage"                                                 |
-| `key`     | String      | Feature or Identifier name matching the setting we are enabling for. Here, it will be "authority-archives-expiration" |
-| `value`   | Json Object | Value object for this setting.                                                                                        |
+| METHOD | URL                                 | Required permissions                                      | DESCRIPTION                   |
+|:-------|:------------------------------------|:----------------------------------------------------------|:------------------------------|
+| GET    | `/authority-source-files`           | `inventory-storage.authority-source-files.collection.get` | Retrieve source files         |
+| POST   | `/authority-source-files`           | `inventory-storage.authority-source-files.item.post`      | Create new local source file  |
+| GET    | `/authority-source-files/{id}`      | `inventory-storage.authority-source-files.item.get`       | Get source file               |
+| PATCH  | `/authority-source-files/{id}`      | `inventory-storage.authority-source-files.item.patch`     | Update source file            |
+| DELETE | `/authority-source-files/{id}`      | `inventory-storage.authority-source-files.item.delete`    | Delete source file            |
+| POST   | `/authority-source-files/{id}/hrid` | `inventory-storage.authority-source-files.hrid.post`      | Get next HRID for source file |
 
 
-| Value options       | Type    | Description                                                                                                                                                                           |
-|---------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `expirationEnabled` | boolean | Indicates whether or not to enable expiration of Authority Archives for the tenant.                                                                                                   |
-| `retentionInDays`   | int     | Retention period of Authority Archives provided in days. If not specified, the default value would be taken by the `AUTHORITY_ARCHIVES_DEFAULT_EXPIRATION_DAYS` environment variable. |
+### API authority-storage
+The API provides endpoints for authorities management
 
-
-### CQL support for GET /authority-storage/authorities
+#### CQL support
+Endpoint `GET /authority-storage/authorities` support CQL queries.
 
 > _Basic fields for filtering authorities:_
 > * _headingType_
@@ -660,13 +614,50 @@ POST https://{okapi-location}/settings/entries
 > * _createdDate_
 > * _updatedDate_
 
-#### Example queries to retrieve authorities with filtering
-
+**CQL queries examples**
 
 | Example                                           | Description                                                              |
 |:--------------------------------------------------|:-------------------------------------------------------------------------|
 | `headingType = personalName`                      | Matches authorities with `Personal Name` heading type                    |
 | `authoritySourceFile.id = 12345`                  | Matches authorities with `12345` source file id                          |
+| `authoritySourceFile.name = LC Genre/Form Terms`  | Matches authorities with source file name `LC Genre/Form Terms`          |
 | `createdDate > 2021-10-25T12:00:00.0"`            | Matches authorities that were created after `2021-10-25 12:00:00`        |
 | `updatedDate <= 2021-10-28T12:00:00.0`            | Matches authorities that were updated before or at `2021-10-28 12:00:00` |
-| `authoritySourceFile.name = LC Genre/Form Terms`  | Matches authorities with source file name `LC Genre/Form Terms`          |
+
+#### Retention policy for archived authorities
+In order to provide an ability for a tenant to have specific retention period of authority archives, we need to add the below configuration in mod-settings.
+If no setting is provided by a tenant the retention period value would be taken from `AUTHORITY_ARCHIVES_EXPIRATION_PERIOD` environment variable.
+
+**Permissions**
+To make a post call to mod-settings, user should have below permissions.
+```
+  mod-settings.entries.item.post
+  mod-settings.global.write.mod-entities-links
+```
+
+**Example request**
+```
+POST https://{okapi-location}/settings/entries
+{
+    "id":"1e01066d-4bee-4cf7-926c-ba2c9c6c0001",
+    "scope": "authority-storage",
+    "key": "authority-archives-expiration",
+    "value": {
+      "expirationEnabled":true,
+      "retentionInDays":10
+    }
+}
+```
+
+| Field   | Type        | Description                                                                                                           |
+|---------|-------------|-----------------------------------------------------------------------------------------------------------------------|
+| `id`    | UUID        | id of type UUID should be provided.                                                                                   |
+| `scope` | String      | Scope should be the module name. Here, it will be "authority-storage"                                                 |
+| `key`   | String      | Feature or Identifier name matching the setting we are enabling for. Here, it will be "authority-archives-expiration" |
+| `value` | Json Object | Value object for this setting.                                                                                        |
+
+
+| Value field         | Type    | Description                                                                                                                                                                           |
+|---------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `expirationEnabled` | boolean | Indicates whether or not to enable expiration of Authority Archives for the tenant.                                                                                                   |
+| `retentionInDays`   | int     | Retention period of Authority Archives provided in days. If not specified, the default value would be taken by the `AUTHORITY_ARCHIVES_DEFAULT_EXPIRATION_DAYS` environment variable. |

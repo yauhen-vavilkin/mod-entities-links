@@ -314,6 +314,9 @@ paths:
   /authority-source-files/{id}:
     $ref: './paths/authority-source-files/authority-source-files-by-id.yaml'
 
+  /authority-source-files/{id}/hrid:
+    $ref: './paths/authority-source-files/authority-source-files-by-id-hrid.yaml'
+
 components:
   schemas:
     instanceLinkDtoCollection:

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.entlinks.domain.dto.AuthorityDto;
+import org.folio.entlinks.integration.dto.event.AuthorityDeleteEventSubType;
 import org.folio.entlinks.integration.dto.event.AuthorityDomainEvent;
 import org.folio.entlinks.integration.dto.event.DomainEventType;
 import org.folio.spring.testing.type.UnitTest;
@@ -38,6 +39,16 @@ class AuthorityChangeFilterStrategyTest {
   }
 
   @Test
+  void shouldFilterHardDeleteEvent() {
+    var event = new AuthorityDomainEvent(null, null, null, DELETE, AuthorityDeleteEventSubType.HARD_DELETE, null);
+    mockConsumerRecord(event);
+
+    var actual = filterStrategy.filter(consumerRecord);
+
+    assertTrue(actual);
+  }
+
+  @Test
   void shouldNotFilterUpdateEvent_whenNewAndOldAreNotEqual() {
     var newRecord = new AuthorityDto().naturalId("1");
     var oldRecord = new AuthorityDto().naturalId("2");
@@ -59,6 +70,28 @@ class AuthorityChangeFilterStrategyTest {
     var actual = filterStrategy.filter(consumerRecord);
 
     assertTrue(actual);
+  }
+
+  @Test
+  void shouldNotFilterUpdateEvent_whenNewIsNull() {
+    var oldRecord = new AuthorityDto().naturalId("1");
+    var event = new AuthorityDomainEvent(null, oldRecord, null, UPDATE, null, null);
+    mockConsumerRecord(event);
+
+    var actual = filterStrategy.filter(consumerRecord);
+
+    assertFalse(actual);
+  }
+
+  @Test
+  void shouldNotFilterUpdateEvent_whenOldIsNull() {
+    var newRecord = new AuthorityDto().naturalId("1");
+    var event = new AuthorityDomainEvent(null, null, newRecord, UPDATE, null, null);
+    mockConsumerRecord(event);
+
+    var actual = filterStrategy.filter(consumerRecord);
+
+    assertFalse(actual);
   }
 
   @ValueSource(strings = {"REINDEX", "CREATE"})

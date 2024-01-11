@@ -3,9 +3,44 @@ get:
   tags:
     - authority-storage
   parameters:
+    - name: deleted
+      in: query
+      required: false
+      description: Indicates if only deleted authority records should be retrieved
+      schema:
+        type: boolean
+        default: false
+    - name: idOnly
+      in: query
+      required: false
+      description: Indicates if only IDs of authority records should be retrieved
+      schema:
+        type: boolean
+        default: false
     - $ref: '../../parameters/offset-param.yaml'
     - $ref: '../../parameters/limit-param.yaml'
-    - $ref: '../../parameters/cql-query.yaml'
+    - in: query
+      name: query
+      required: false
+      description: 'A query expressed as a CQL string
+        (see [dev.folio.org/reference/glossary#cql](https://dev.folio.org/reference/glossary#cql))
+        using valid searchable fields.
+        Authorities can be queried using the following fields: headingType, authoritySourceFile.id,
+        authoritySourceFile.name, createdDate, updatedDate.
+        Example: headingType=personalName & authoritySourceFile.name=LC Genre/Form Terms & createdDate>2021-10-25T12:00:00.0'
+      schema:
+        type: string
+        default: cql.allRecords=1
+    - name: Accept
+      in: header
+      required: false
+      description: Specifies accepting media-types for the response
+      schema:
+        type: array
+        items:
+          type: string
+          description: identifies media-type
+        default: "application/json"
   responses:
     '200':
       description: Returns a list of authorities
@@ -14,6 +49,10 @@ get:
           example: examples/authorities.sample
           schema:
             $ref: '../../schemas/authority-storage/authorityDtoCollection.yaml'
+        text/plain;charset=utf-8:
+          schema:
+            type: string
+          example: examples/authorities_ids.sample
     '400':
       $ref: '../../responses/badRequestResponse.yaml'
     '500':

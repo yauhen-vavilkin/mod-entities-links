@@ -17,13 +17,13 @@ public class SettingsService {
   public static final String AUTHORITIES_EXPIRE_SETTING_SCOPE = "authority-storage";
 
   private static final String AUTHORITIES_EXPIRE_SETTING_FETCH_QUERY =
-      "scope=authority-storage%20AND%20key=authority-archives-expiration";
+      "(scope=authority-storage AND key=authority-archives-expiration)";
 
   private static final int DEFAULT_REQUEST_LIMIT = 10000;
 
   private final SettingsClient settingsClient;
 
-  public Optional<SettingsClient.SettingEntry> getAuthorityExpireSetting() {
+  public Optional<SettingsClient.SettingEntry> getAuthorityExpireSetting() throws FolioIntegrationException {
     var settingsEntries = fetchSettingsEntries();
 
     if (settingsEntries == null || CollectionUtils.isEmpty(settingsEntries.items())) {

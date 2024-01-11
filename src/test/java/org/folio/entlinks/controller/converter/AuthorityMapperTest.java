@@ -17,13 +17,13 @@ import org.folio.entlinks.domain.dto.AuthorityDtoIdentifier;
 import org.folio.entlinks.domain.dto.AuthorityDtoNote;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityArchive;
+import org.folio.entlinks.domain.entity.AuthorityBase;
 import org.folio.entlinks.domain.entity.AuthorityIdentifier;
 import org.folio.entlinks.domain.entity.AuthorityNote;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.spring.testing.type.UnitTest;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 
 @UnitTest
@@ -183,7 +183,7 @@ class AuthorityMapperTest {
 
   @Test
   void testToDtoListWithValidData() {
-    var authority = createAuthority();
+    AuthorityBase authority = createAuthority();
     var authorityList = new ArrayList<>(List.of(authority));
 
     List<AuthorityDto> dtoList = authorityMapper.toDtoList(authorityList);
@@ -232,10 +232,10 @@ class AuthorityMapperTest {
 
   @Test
    void testToAuthorityCollectionWithValidPage() {
-    Authority authority = createAuthority();
+    AuthorityBase authority = createAuthority();
 
     var authorityList = List.of(authority);
-    Page<Authority> authorityPage = new PageImpl<>(authorityList);
+    var authorityPage = new PageImpl<>(authorityList);
 
     AuthorityDtoCollection dtoCollection = authorityMapper.toAuthorityCollection(authorityPage);
 
