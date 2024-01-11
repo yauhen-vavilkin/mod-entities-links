@@ -26,6 +26,7 @@ properties:
     enum:
       - folio
       - local
+      - consortium
   selectable:
     type: boolean
   hridManagement:

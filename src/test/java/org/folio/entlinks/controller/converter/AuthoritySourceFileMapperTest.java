@@ -19,6 +19,8 @@ import org.folio.entlinks.domain.entity.AuthoritySourceFileSource;
 import org.folio.spring.testing.type.UnitTest;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 
@@ -60,6 +62,14 @@ class AuthoritySourceFileMapperTest {
     assertThat(sourceFile.getBaseUrl()).isEqualTo(dto.getBaseUrl());
     assertThat(sourceFile.getSource().name()).isEqualTo(dto.getSource().name());
     assertThat(dto.getCodes()).hasSize(sourceFile.getAuthoritySourceFileCodes().size());
+  }
+
+  @EnumSource(AuthoritySourceFileSource.class)
+  @ParameterizedTest
+  void testToDtoSource(AuthoritySourceFileSource source) {
+    var dtoSource = mapper.toDtoSource(source);
+
+    assertThat(source.name()).isEqualTo(dtoSource.name());
   }
 
   @Test
