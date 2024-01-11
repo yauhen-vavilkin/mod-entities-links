@@ -15,8 +15,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.folio.entlinks.controller.converter.AuthoritySourceFileMapper;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
@@ -29,7 +29,7 @@ import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileSource;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.entlinks.service.authority.AuthoritySourceFileService;
-import org.folio.entlinks.service.consortium.ConsortiumTenantsService;
+import org.folio.entlinks.service.consortium.UserTenantsService;
 import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthoritySourceFilePropagationService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
@@ -56,7 +56,7 @@ class AuthoritySourceFileServiceDelegateTest {
   @Mock
   private AuthoritySourceFileService service;
   @Mock
-  private ConsortiumTenantsService tenantsService;
+  private UserTenantsService tenantsService;
   @Mock
   private ConsortiumAuthoritySourceFilePropagationService propagationService;
   @Mock
@@ -128,7 +128,7 @@ class AuthoritySourceFileServiceDelegateTest {
     expected.setHridStartNumber(dto.getHridManagement().getStartNumber());
 
     when(context.getTenantId()).thenReturn(CENTRAL_TENANT_ID);
-    when(tenantsService.getConsortiumTenants(CENTRAL_TENANT_ID)).thenReturn(List.of("test", TENANT_ID));
+    when(tenantsService.getCentralTenant(CENTRAL_TENANT_ID)).thenReturn(Optional.of(CENTRAL_TENANT_ID));
     when(mapper.toEntity(dto)).thenReturn(expected);
     when(service.create(expected)).thenReturn(expected);
     when(mapper.toDto(expected)).thenReturn(new AuthoritySourceFileDto());
@@ -189,7 +189,7 @@ class AuthoritySourceFileServiceDelegateTest {
     var dto = new AuthoritySourceFilePostDto();
 
     when(context.getTenantId()).thenReturn(TENANT_ID);
-    when(tenantsService.getConsortiumTenants(TENANT_ID)).thenReturn(List.of("test", TENANT_ID));
+    when(tenantsService.getCentralTenant(TENANT_ID)).thenReturn(Optional.of(CENTRAL_TENANT_ID));
 
     var exc = assertThrows(RequestBodyValidationException.class, () -> delegate.createAuthoritySourceFile(dto));
 
@@ -206,7 +206,7 @@ class AuthoritySourceFileServiceDelegateTest {
     var id = UUID.randomUUID();
     var code = "CODE10";
     when(context.getTenantId()).thenReturn(TENANT_ID);
-    when(tenantsService.getConsortiumTenants(TENANT_ID)).thenReturn(Collections.emptyList());
+    when(tenantsService.getCentralTenant(TENANT_ID)).thenReturn(Optional.empty());
     when(service.nextHrid(id)).thenReturn(code);
 
     var hridDto = delegate.getAuthoritySourceFileNextHrid(id);
@@ -220,7 +220,7 @@ class AuthoritySourceFileServiceDelegateTest {
   @Test
   void shouldNotNextHridForConsortiumMemberTenant() {
     when(context.getTenantId()).thenReturn(TENANT_ID);
-    when(tenantsService.getConsortiumTenants(TENANT_ID)).thenReturn(List.of("test", TENANT_ID));
+    when(tenantsService.getCentralTenant(TENANT_ID)).thenReturn(Optional.of(CENTRAL_TENANT_ID));
 
     var id = UUID.randomUUID();
     var exc = assertThrows(RequestBodyValidationException.class, () -> delegate.getAuthoritySourceFileNextHrid(id));

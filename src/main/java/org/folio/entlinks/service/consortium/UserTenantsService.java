@@ -18,6 +18,11 @@ public class UserTenantsService {
 
   private final UserTenantsClient userTenantsClient;
 
+  /**
+   * Get consortium id.
+   *
+   * @return consortium id if passed 'tenantId' is a part of a consortium
+   * */
   public Optional<String> getConsortiumId(String tenantId) {
     if (StringUtils.isBlank(tenantId)) {
       return Optional.empty();
