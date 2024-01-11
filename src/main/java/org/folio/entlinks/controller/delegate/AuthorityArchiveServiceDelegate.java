@@ -9,7 +9,11 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.entlinks.client.SettingsClient;
 import org.folio.entlinks.config.properties.AuthorityArchiveProperties;
 import org.folio.entlinks.controller.converter.AuthorityMapper;
+import org.folio.entlinks.domain.dto.AuthorityDto;
+import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
 import org.folio.entlinks.domain.entity.AuthorityArchive;
+import org.folio.entlinks.domain.entity.AuthorityBase;
+import org.folio.entlinks.domain.entity.projection.AuthorityIdDto;
 import org.folio.entlinks.domain.repository.AuthorityArchiveRepository;
 import org.folio.entlinks.integration.SettingsService;
 import org.folio.entlinks.service.authority.AuthorityArchiveService;
@@ -28,6 +32,19 @@ public class AuthorityArchiveServiceDelegate {
   private final AuthorityArchiveProperties authorityArchiveProperties;
   private final AuthorityDomainEventPublisher eventPublisher;
   private final AuthorityMapper authorityMapper;
+
+  public AuthorityDtoCollection retrieveAuthorityArchives(Integer offset, Integer limit, String cqlQuery,
+                                                          Boolean idOnly) {
+    if (Boolean.TRUE.equals(idOnly)) {
+      var entities = authorityArchiveService.findAllIds(offset, limit, cqlQuery)
+          .map(AuthorityIdDto::id).map(id -> new AuthorityDto().id(id)).stream().toList();
+      return new AuthorityDtoCollection(entities, entities.size());
+    }
+
+    var entitiesPage = authorityArchiveService.findAll(offset, limit, cqlQuery)
+        .map(AuthorityBase.class::cast);
+    return authorityMapper.toAuthorityCollection(entitiesPage);
+  }
 
   @Transactional(readOnly = true)
   public void expire() {

@@ -21,9 +21,11 @@ import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Level;
 import org.folio.entlinks.config.constants.ErrorCode;
+import org.folio.entlinks.exception.AuthoritiesRequestNotSupportedMediaTypeException;
 import org.folio.entlinks.exception.AuthoritySourceFileHridException;
 import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
@@ -34,7 +36,10 @@ import org.folio.tenant.domain.dto.Errors;
 import org.folio.tenant.domain.dto.Parameter;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -86,6 +91,16 @@ public class ApiErrorHandler {
     return buildResponseEntity(errorResponse, UNPROCESSABLE_ENTITY);
   }
 
+  @ExceptionHandler(AuthoritiesRequestNotSupportedMediaTypeException.class)
+  public ResponseEntity<String> handleAuthoritiesMediaTypeValidationException(
+      AuthoritiesRequestNotSupportedMediaTypeException e) {
+    logException(DEBUG, e);
+    var errorResponse = buildPlainTextValidationError(e, e.getInvalidParameters());
+    var headers = new HttpHeaders();
+    headers.setContentType(MediaType.valueOf(MediaType.TEXT_PLAIN_VALUE));
+    return new ResponseEntity<>(errorResponse, headers, BAD_REQUEST);
+  }
+
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<Errors> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
     logException(DEBUG, e);
@@ -127,8 +142,11 @@ public class ApiErrorHandler {
       });
   }
 
-  @ExceptionHandler(DataIntegrityViolationException.class)
-  public ResponseEntity<Errors> conflict(DataIntegrityViolationException e) {
+  @ExceptionHandler({
+    DataIntegrityViolationException.class,
+    InvalidDataAccessApiUsageException.class
+  })
+  public ResponseEntity<Errors> conflict(Exception e) {
     var cause = e.getCause();
     if (cause instanceof ConstraintViolationException cve) {
       var constraintName = cve.getConstraintName();
@@ -172,4 +190,12 @@ public class ApiErrorHandler {
     return new Errors().errors(List.of(error)).totalRecords(1);
   }
 
+  private String buildPlainTextValidationError(Exception e, List<Parameter> parameters) {
+    return "message: " + e.getMessage() + System.lineSeparator()
+          + "type: " + e.getClass().getSimpleName() + System.lineSeparator()
+          + "code: " + VALIDATION_ERROR.getValue() + System.lineSeparator()
+          + "parameters: [" + parameters.stream()
+              .map(param -> "(key: " + param.getKey() + ", value: " + param.getValue() + ")")
+              .collect(Collectors.joining(",")) + "]";
+  }
 }

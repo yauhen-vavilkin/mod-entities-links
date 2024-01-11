@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.UUID;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.entity.AuthorityArchive;
 import org.folio.entlinks.domain.entity.AuthorityNoteType;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
@@ -120,6 +121,20 @@ public class DatabaseHelper {
         entity.getHeading(), entity.getHeadingType(), entity.getSubjectHeadingCode(), entity.getCreatedDate(),
         entity.getCreatedByUserId(), entity.getUpdatedDate(), entity.getUpdatedByUserId(),
         entity.isDeleted(), sourceFileId);
+  }
+
+  public void saveAuthorityArchive(String tenant, AuthorityArchive entity) {
+    var sql = "INSERT INTO " + getDbPath(tenant, AUTHORITY_ARCHIVE_TABLE)
+        +  " (id, _version, natural_id, source, heading, heading_type, subject_heading_code, created_date, "
+        + "created_by_user_id, updated_date, updated_by_user_id, deleted, source_file_id) "
+        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    var sourceFileId = Optional.ofNullable(entity.getAuthoritySourceFile())
+        .map(AuthoritySourceFile::getId)
+        .orElse(null);
+    jdbcTemplate.update(sql, entity.getId(), entity.getVersion(), entity.getNaturalId(), entity.getSource(),
+        entity.getHeading(), entity.getHeadingType(), entity.getSubjectHeadingCode(), entity.getCreatedDate(),
+        entity.getCreatedByUserId(), entity.getUpdatedDate(), entity.getUpdatedByUserId(),
+        true, sourceFileId);
   }
 
   public AuthorityNoteType getAuthorityNoteTypeById(UUID id, String tenant) {

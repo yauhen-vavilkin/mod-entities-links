@@ -12,6 +12,7 @@ import static org.folio.support.KafkaTestUtils.createAndStartTestConsumer;
 import static org.folio.support.TestDataUtils.AuthorityTestData.CREATED_DATE;
 import static org.folio.support.TestDataUtils.AuthorityTestData.UPDATED_DATE;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authority;
+import static org.folio.support.TestDataUtils.AuthorityTestData.authorityArchive;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authorityDto;
 import static org.folio.support.TestDataUtils.AuthorityTestData.authoritySourceFile;
 import static org.folio.support.base.TestConstants.TENANT_ID;
@@ -36,18 +37,22 @@ import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.entlinks.domain.dto.AuthorityDto;
 import org.folio.entlinks.domain.dto.AuthorityDtoCollection;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.entity.AuthorityArchive;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
+import org.folio.entlinks.exception.AuthoritiesRequestNotSupportedMediaTypeException;
 import org.folio.entlinks.exception.AuthorityNotFoundException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.exception.OptimisticLockingException;
@@ -58,6 +63,7 @@ import org.folio.spring.testing.type.IntegrationTest;
 import org.folio.support.DatabaseHelper;
 import org.folio.support.base.IntegrationTestBase;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,8 +74,11 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.http.MediaType;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.test.web.servlet.ResultMatcher;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @IntegrationTest
@@ -126,6 +135,93 @@ class AuthorityControllerIT extends IntegrationTestBase {
       .andExpect(jsonPath("authorities[0].metadata.updatedByUserId", is(USER_ID)));
   }
 
+  @Test
+  @DisplayName("Get Collection: find all Authority entities IDs")
+  void getCollectionOfIdsOnly_positive_authoritiesFound() throws Exception {
+    var createdEntities = createAuthorities();
+
+    var content = tryGet(authorityEndpoint() + "?idOnly={io}", true)
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("totalRecords", is(createdEntities.size())))
+        .andReturn().getResponse().getContentAsString();
+    var collection = objectMapper.readValue(content, AuthorityDtoCollection.class);
+    var expectedCollection = new AuthorityDtoCollection(
+        createdEntities.stream().map(authority -> new AuthorityDto().id(authority.getId())).toList(),
+        createdEntities.size()
+    );
+
+    assertEquals(expectedCollection.getTotalRecords(), collection.getTotalRecords());
+    assertEquals(new HashSet<>(expectedCollection.getAuthorities()), new HashSet<>(collection.getAuthorities()));
+  }
+
+  @Test
+  @DisplayName("Get Collection: find all Authority Archives")
+  void getCollection_positive_authorityArchivesFound() throws Exception {
+    var createdEntities = createAuthorityArchives();
+
+    tryGet(authorityEndpoint() + "?deleted={d}", true)
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("totalRecords", is(createdEntities.size())))
+        .andExpect(jsonPath("authorities[0].metadata", notNullValue()))
+        .andExpect(jsonPath("authorities[0].metadata.createdDate", notNullValue()))
+        .andExpect(jsonPath("authorities[0].metadata.createdByUserId", is(USER_ID)))
+        .andExpect(jsonPath("authorities[0].metadata.updatedDate", notNullValue()))
+        .andExpect(jsonPath("authorities[0].metadata.updatedByUserId", is(USER_ID)));
+  }
+
+  @Test
+  @DisplayName("Get Collection: find all Authority Archives IDs with content-type text/plain and application/json")
+  void getCollectionOfIdsOnly_positive_authorityArchivesFound() throws Exception {
+    var createdEntities = createAuthorityArchives();
+    var expectedCollection = new AuthorityDtoCollection(
+        createdEntities.stream().map(archive -> new AuthorityDto().id(archive.getId())).collect(Collectors.toList()),
+        createdEntities.size()
+    );
+
+    var content = tryGet(authorityEndpoint() + "?deleted={d}&idOnly={io}", true, true)
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("totalRecords", is(createdEntities.size())))
+        .andReturn().getResponse().getContentAsString();
+    var collection = objectMapper.readValue(content, AuthorityDtoCollection.class);
+
+    assertEquals(new HashSet<>(expectedCollection.getAuthorities()), new HashSet<>(collection.getAuthorities()));
+    assertEquals(expectedCollection.getTotalRecords(), collection.getTotalRecords());
+
+    var headers = defaultHeaders();
+    headers.setAccept(List.of(MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON));
+    var expectedContent = createdEntities.stream()
+        .map(AuthorityArchive::getId)
+        .map(UUID::toString)
+        .collect(Collectors.joining("\n"));
+
+    tryGet(authorityEndpoint() + "?deleted={d}&idOnly={io}", headers, true, true)
+        .andExpect(status().isOk())
+        .andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN_VALUE))
+        .andExpect(MockMvcResultMatchers.content().string(expectedContent));
+  }
+
+  @Test
+  @DisplayName("Get Collection: retrieve all Authorities and Archives in plain text")
+  void getCollection_negative_authoritiesAndArchivesNotRetrievableInPlainText() throws Exception {
+    createAuthorityArchives();
+    var headers = defaultHeaders();
+    headers.setAccept(List.of(MediaType.TEXT_PLAIN));
+
+    tryGet(authorityEndpoint() + "?deleted={d}", headers, true)
+        .andExpect(status().isBadRequest())
+        .andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN_VALUE))
+        .andExpect(MockMvcResultMatchers.content()
+            .string(Matchers.containsString(AuthorityController.RETRIEVE_COLLECTION_INVALID_ACCEPT_MESSAGE)))
+        .andExpect(exceptionMatch(AuthoritiesRequestNotSupportedMediaTypeException.class));
+
+    tryGet(authorityEndpoint() + "?deleted={d}", headers, false)
+        .andExpect(status().isBadRequest())
+        .andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN_VALUE))
+        .andExpect(MockMvcResultMatchers.content()
+            .string(Matchers.containsString(AuthorityController.RETRIEVE_COLLECTION_INVALID_ACCEPT_MESSAGE)))
+        .andExpect(exceptionMatch(AuthoritiesRequestNotSupportedMediaTypeException.class));
+  }
+
   @ParameterizedTest
   @CsvSource({
     "0, 3, descending, source3",
@@ -165,8 +261,8 @@ class AuthorityControllerIT extends IntegrationTestBase {
     "updatedDate>=2021-10-24T12:00:00.0 and updatedDate<=2021-10-28T12:00:00.0, corporateName, 1",
     "authoritySourceFile.name=name1 and createdDate>2021-10-28T12:00:00.0, corporateName, 1",
   })
-  @DisplayName("Get Collection: return list of authorities for the given query")
-  void getCollection_positive_filterAuthoritiesByGivenQuery(String query, String heading, int numberOfRecords)
+  @DisplayName("Get Collection: return list of authorities and archives for the given query")
+  void getCollection_positive_filterAuthoritiesAndArchivesByQuery(String query, String heading, int numberOfRecords)
       throws Exception {
     createSourceFile(0);
     createSourceFile(1);
@@ -181,10 +277,41 @@ class AuthorityControllerIT extends IntegrationTestBase {
     databaseHelper.saveAuthority(TENANT_ID, authority2);
     databaseHelper.saveAuthority(TENANT_ID, authority3);
 
+    var archive1 = authorityArchive(0, 0);
+    archive1.setCreatedDate(authority1.getCreatedDate());
+    archive1.setUpdatedDate(authority1.getUpdatedDate());
+    var archive2 = authorityArchive(1, 0);
+    archive2.setCreatedDate(authority2.getCreatedDate());
+    var archive3 = authorityArchive(2, 1);
+    archive3.setUpdatedDate(authority3.getUpdatedDate());
+    databaseHelper.saveAuthorityArchive(TENANT_ID, archive1);
+    databaseHelper.saveAuthorityArchive(TENANT_ID, archive2);
+    databaseHelper.saveAuthorityArchive(TENANT_ID, archive3);
+
+    // query and filter authorities
     var cqlQuery = "(cql.allRecords=1 and " + query + ")sortby createdDate";
     doGet(authorityEndpoint() + "?query={cql}", cqlQuery)
         .andExpect(jsonPath("authorities[0]." + heading, notNullValue()))
         .andExpect(jsonPath("totalRecords").value(numberOfRecords));
+
+    // query and filter authority archives
+    doGet(authorityEndpoint() + "?query={cql}&deleted=true", cqlQuery)
+        .andExpect(jsonPath("authorities[0]." + heading, notNullValue()))
+        .andExpect(jsonPath("totalRecords").value(numberOfRecords));
+  }
+
+  @Test
+  @DisplayName("Get Collection: retrieve authorities by providing invalid query field name")
+  void getCollection_negative_shouldNotFilterByQueryForIncorrectFilterField() throws Exception {
+    createSourceFile(0);
+    createAuthority(0, 0);
+
+    var cqlQuery = "(cql.allRecords=1 and headingTypeTest=personalName)";
+    tryGet(authorityEndpoint() + "?query={cql}", cqlQuery)
+        .andExpect(status().isBadRequest())
+        .andExpect(errorMessageMatch(is(
+            "Could not resolve attribute 'headingTypeTest' of 'org.folio.entlinks.domain.entity.Authority'")))
+        .andExpect(exceptionMatch(InvalidDataAccessApiUsageException.class));
   }
 
   // Tests for Get By ID
@@ -573,6 +700,18 @@ class AuthorityControllerIT extends IntegrationTestBase {
     var entity1 = createAuthority(0, 0);
     var entity2 = createAuthority(1, 0);
     var entity3 = createAuthority(2, 0);
+
+    return List.of(entity1, entity2, entity3);
+  }
+
+  private List<AuthorityArchive> createAuthorityArchives() {
+    createSourceFile(0);
+    var entity1 = authorityArchive(0, 0);
+    var entity2 = authorityArchive(1, 0);
+    var entity3 = authorityArchive(2, 0);
+    databaseHelper.saveAuthorityArchive(TENANT_ID, entity1);
+    databaseHelper.saveAuthorityArchive(TENANT_ID, entity2);
+    databaseHelper.saveAuthorityArchive(TENANT_ID, entity3);
 
     return List.of(entity1, entity2, entity3);
   }

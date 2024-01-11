@@ -3,6 +3,8 @@ package org.folio.entlinks.domain.repository;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 import org.folio.entlinks.domain.entity.Authority;
+import org.folio.entlinks.domain.entity.AuthorityBase;
+import org.folio.entlinks.domain.entity.projection.AuthorityIdDto;
 import org.folio.spring.cql.Cql2JpaCriteria;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +30,25 @@ public class AuthorityCqlRepositoryImpl implements AuthorityCqlRepository {
 
     List<Authority> resultList = em
         .createQuery(criteria)
+        .setFirstResult((int) pageable.getOffset())
+        .setMaxResults(pageable.getPageSize())
+        .getResultList();
+    return PageableExecutionUtils.getPage(resultList, pageable, () -> count(countBy));
+  }
+
+  public Page<AuthorityIdDto> findIdsByCqlAndDeletedFalse(String cqlQuery, Pageable pageable) {
+    var collectBy = collectByQueryAndDeletedFalse(cqlQuery);
+    var countBy = countByQueryAndDeletedFalse(cqlQuery);
+
+    var cb = em.getCriteriaBuilder();
+    var query = cb.createQuery(AuthorityIdDto.class);
+    var root = query.from(Authority.class);
+
+    query.select(cb.construct(AuthorityIdDto.class, root.get(AuthorityBase.ID_COLUMN)));
+    query.where(collectBy.toPredicate(root, query, cb));
+
+    List<AuthorityIdDto> resultList = em
+        .createQuery(query)
         .setFirstResult((int) pageable.getOffset())
         .setMaxResults(pageable.getPageSize())
         .getResultList();

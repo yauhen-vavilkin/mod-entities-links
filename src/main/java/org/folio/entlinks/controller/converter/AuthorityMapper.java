@@ -53,10 +53,10 @@ public interface AuthorityMapper {
 
   AuthorityDtoNote toAuthorityDtoNote(AuthorityNote note);
 
-  List<AuthorityDto> toDtoList(Iterable<Authority> authorityStorageIterable);
+  List<AuthorityDto> toDtoList(Iterable<AuthorityBase> authorityStorageIterable);
 
   default AuthorityDtoCollection toAuthorityCollection(
-      Page<Authority> authorityStorageIterable) {
+      Page<AuthorityBase> authorityStorageIterable) {
     var authorityDtos = toDtoList(authorityStorageIterable.getContent());
     return new AuthorityDtoCollection(authorityDtos, (int) authorityStorageIterable.getTotalElements());
   }
