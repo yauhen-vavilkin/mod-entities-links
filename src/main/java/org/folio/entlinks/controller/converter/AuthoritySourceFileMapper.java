@@ -48,7 +48,7 @@ public interface AuthoritySourceFileMapper {
 
   @Mapping(target = "authoritySourceFileCodes",
            expression = "java(toEntityCodes(authoritySourceFileDto.getCodes()))")
-  @Mapping(target = "source", expression = "java(toSource(authoritySourceFileDto.getSource()))")
+  @Mapping(target = "hridStartNumber", source = "hridManagement.startNumber")
   @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
   AuthoritySourceFile partialUpdate(AuthoritySourceFilePatchDto authoritySourceFileDto,
                                     @MappingTarget AuthoritySourceFile authoritySourceFile);
@@ -57,14 +57,6 @@ public interface AuthoritySourceFileMapper {
 
   default AuthoritySourceFileDto.SourceEnum toDtoSource(AuthoritySourceFileSource source) {
     return AuthoritySourceFileDto.SourceEnum.valueOf(source.name());
-  }
-
-  default AuthoritySourceFileSource toSource(AuthoritySourceFilePatchDto.SourceEnum dtoSource) {
-    if (dtoSource == null) {
-      return null;
-    }
-
-    return AuthoritySourceFileSource.valueOf(dtoSource.name());
   }
 
   default AuthoritySourceFileDtoCollection toAuthoritySourceFileCollection(

@@ -1,7 +1,9 @@
 package org.folio.entlinks.service.authority;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.entlinks.domain.entity.AuthoritySourceFileSource.CONSORTIUM;
 import static org.folio.entlinks.domain.entity.AuthoritySourceFileSource.LOCAL;
+import static org.folio.support.TestDataUtils.AuthorityTestData.authoritySourceFile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -17,10 +19,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.assertj.core.api.Assertions;
 import org.folio.entlinks.controller.converter.AuthoritySourceFileMapper;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileSource;
+import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
@@ -29,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -41,6 +46,8 @@ class AuthoritySourceFileServiceTest {
 
   @Mock
   private AuthoritySourceFileRepository repository;
+  @Mock
+  private AuthorityRepository authorityRepository;
 
   @Mock
   private AuthoritySourceFileMapper mapper;
@@ -179,32 +186,43 @@ class AuthoritySourceFileServiceTest {
   }
 
   @Test
-  void shouldUpdateAuthoritySourceFile() {
-    var entity = new AuthoritySourceFile();
-    UUID id = UUID.randomUUID();
-    entity.setId(id);
-    entity.setName("updated name");
-    entity.setSource(LOCAL);
-    var codeNew = new AuthoritySourceFileCode();
-    codeNew.setCode("codeNew");
-    entity.addCode(codeNew);
-    var codeExisting = new AuthoritySourceFileCode();
-    codeExisting.setCode("codeExisting");
-    var expected = new AuthoritySourceFile();
-    expected.setId(id);
-    expected.addCode(codeExisting);
+  void shouldUpdateAuthoritySourceFileModifiableFields() {
+    var existing = authoritySourceFile(0);
+    var id = existing.getId();
+    var modified = authoritySourceFile(1);
+    modified.setId(id);
+    modified.setSource(CONSORTIUM);
 
-    when(repository.findById(id)).thenReturn(Optional.of(expected));
+    var expected = new AuthoritySourceFile(modified);
+    expected.setSource(existing.getSource());
+    expected.setSequenceName(existing.getSequenceName());
+    var existingDtoCodes = existing.getAuthoritySourceFileCodes().stream()
+        .map(AuthoritySourceFileCode::getCode).toList();
+    var modifiedDtoCodes = modified.getAuthoritySourceFileCodes().stream()
+        .map(AuthoritySourceFileCode::getCode).toList();
+
+    when(repository.findById(id)).thenReturn(Optional.of(existing));
     when(repository.save(expected)).thenReturn(expected);
-    when(mapper.toDtoCodes(entity.getAuthoritySourceFileCodes())).thenReturn(List.of(codeNew.getCode()));
-    when(mapper.toDtoCodes(expected.getAuthoritySourceFileCodes())).thenReturn(List.of(codeExisting.getCode()));
+    when(mapper.toDtoCodes(existing.getAuthoritySourceFileCodes())).thenReturn(existingDtoCodes);
+    when(mapper.toDtoCodes(modified.getAuthoritySourceFileCodes())).thenReturn(modifiedDtoCodes);
+    var fileSaveCaptor = ArgumentCaptor.forClass(AuthoritySourceFile.class);
 
-    var updated = service.update(id, entity);
+    var actual = service.update(id, modified);
 
-    assertThat(updated).isEqualTo(expected);
-    assertThat(updated.getAuthoritySourceFileCodes()).isEqualTo(Set.of(codeNew));
+    assertThat(actual).isEqualTo(expected);
     verify(repository).findById(id);
-    verify(repository).save(expected);
+    verify(repository).save(fileSaveCaptor.capture());
+
+    var captured = fileSaveCaptor.getValue();
+    Assertions.assertThat(captured.getName()).isEqualTo(expected.getName());
+    Assertions.assertThat(captured.getType()).isEqualTo(expected.getType());
+    Assertions.assertThat(captured.getBaseUrl()).isEqualTo(expected.getBaseUrl());
+    Assertions.assertThat(captured.getAuthoritySourceFileCodes()).isEqualTo(expected.getAuthoritySourceFileCodes());
+    Assertions.assertThat(captured.isSelectable()).isEqualTo(expected.isSelectable());
+    Assertions.assertThat(captured.getHridStartNumber()).isEqualTo(expected.getHridStartNumber());
+
+    Assertions.assertThat(captured.getSource()).isEqualTo(existing.getSource());
+    Assertions.assertThat(captured.getSequenceName()).isEqualTo(existing.getSequenceName());
   }
 
   @Test
@@ -264,5 +282,17 @@ class AuthoritySourceFileServiceTest {
     assertThat(thrown.getMessage()).isEqualTo("Cannot delete Authority source file with source 'folio'");
     verify(repository).findById(id);
     verify(repository, never()).deleteById(any(UUID.class));
+  }
+
+  @Test
+  void shouldCheckAuthoritiesExistForSourceFile() {
+    var id = UUID.randomUUID();
+    var expected = true;
+    when(authorityRepository.existsAuthorityBySourceFileId(id)).thenReturn(expected);
+
+    var actual = service.authoritiesExistForSourceFile(id);
+
+    assertThat(actual).isEqualTo(expected);
+    verify(authorityRepository).existsAuthorityBySourceFileId(id);
   }
 }

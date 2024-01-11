@@ -14,6 +14,7 @@ import org.folio.entlinks.controller.converter.AuthoritySourceFileMapper;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileSource;
+import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
@@ -33,6 +34,7 @@ public class AuthoritySourceFileService {
 
   private static final String AUTHORITY_SEQUENCE_NAME_TEMPLATE = "hrid_authority_local_file_%s_seq";
   private final AuthoritySourceFileRepository repository;
+  private final AuthorityRepository authorityRepository;
   private final AuthoritySourceFileMapper mapper;
   private final JdbcTemplate jdbcTemplate;
   private final FolioModuleMetadata moduleMetadata;
@@ -115,6 +117,10 @@ public class AuthoritySourceFileService {
     jdbcTemplate.execute(command);
   }
 
+  public boolean authoritiesExistForSourceFile(UUID sourceFileId) {
+    return authorityRepository.existsAuthorityBySourceFileId(sourceFileId);
+  }
+
   private void validateOnCreate(AuthoritySourceFile entity) {
     if (AuthoritySourceFileSource.FOLIO.equals(entity.getSource())) {
       throw new RequestBodyValidationException("Authority Source File with source folio cannot be created",
@@ -152,8 +158,9 @@ public class AuthoritySourceFileService {
   private void copyModifiableFields(AuthoritySourceFile existingEntity, AuthoritySourceFile modifiedEntity) {
     existingEntity.setName(modifiedEntity.getName());
     existingEntity.setBaseUrl(modifiedEntity.getBaseUrl());
-    existingEntity.setSource(modifiedEntity.getSource());
+    existingEntity.setSelectable(modifiedEntity.isSelectable());
     existingEntity.setType(modifiedEntity.getType());
+    existingEntity.setHridStartNumber(modifiedEntity.getHridStartNumber());
     var existingCodes = mapper.toDtoCodes(existingEntity.getAuthoritySourceFileCodes());
     var modifiedCodes = mapper.toDtoCodes(modifiedEntity.getAuthoritySourceFileCodes());
     for (var code : modifiedEntity.getAuthoritySourceFileCodes()) {
