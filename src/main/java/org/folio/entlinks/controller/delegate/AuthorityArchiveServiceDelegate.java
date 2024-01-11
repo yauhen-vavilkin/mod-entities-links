@@ -1,7 +1,6 @@
 package org.folio.entlinks.controller.delegate;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +14,7 @@ import org.folio.entlinks.domain.entity.AuthorityArchive;
 import org.folio.entlinks.domain.entity.AuthorityBase;
 import org.folio.entlinks.domain.entity.projection.AuthorityIdDto;
 import org.folio.entlinks.domain.repository.AuthorityArchiveRepository;
+import org.folio.entlinks.exception.FolioIntegrationException;
 import org.folio.entlinks.integration.SettingsService;
 import org.folio.entlinks.service.authority.AuthorityArchiveService;
 import org.folio.entlinks.service.authority.AuthorityDomainEventPublisher;
@@ -54,7 +54,7 @@ public class AuthorityArchiveServiceDelegate {
       return;
     }
 
-    var tillDate = LocalDateTime.now().minus(retention.get(), ChronoUnit.DAYS);
+    var tillDate = LocalDateTime.now().minusDays(retention.get());
     try (Stream<AuthorityArchive> archives = authorityArchiveRepository.streamByUpdatedTillDate(tillDate)) {
       archives.forEach(this::process);
     }
@@ -67,7 +67,13 @@ public class AuthorityArchiveServiceDelegate {
   }
 
   private Optional<Integer> fetchAuthoritiesRetentionDuration() {
-    Optional<SettingsClient.SettingEntry> expireSetting = settingsService.getAuthorityExpireSetting();
+    Optional<SettingsClient.SettingEntry> expireSetting;
+    try {
+      expireSetting = settingsService.getAuthorityExpireSetting();
+    } catch (FolioIntegrationException e) {
+      log.warn("Exception during settings fetching: ", e);
+      expireSetting = Optional.empty();
+    }
 
     if (expireSetting.isPresent() && expireSetting.get().value() != null
         && Boolean.FALSE.equals(expireSetting.get().value().expirationEnabled())) {
@@ -79,7 +85,7 @@ public class AuthorityArchiveServiceDelegate {
         .map(SettingsClient.SettingEntry::value)
         .map(SettingsClient.AuthoritiesExpirationSettingValue::retentionInDays)
         .or(() -> {
-          log.warn("No Retention setting was defined for Authorities Expiration, using the default one: {}",
+          log.warn("No Retention setting was defined for Authorities Expiration, using the default one: {} days",
               authorityArchiveProperties.getRetentionPeriodInDays());
           return Optional.of(authorityArchiveProperties.getRetentionPeriodInDays());
         });
