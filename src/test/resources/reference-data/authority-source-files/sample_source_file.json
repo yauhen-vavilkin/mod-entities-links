@@ -5,6 +5,6 @@
     "aat"
   ],
   "type": "Subjects",
-  "baseUrl": "vocab.getty.edu/aat/",
+  "baseUrl": "https://vocab.getty.edu/aat/",
   "source": "folio"
 }

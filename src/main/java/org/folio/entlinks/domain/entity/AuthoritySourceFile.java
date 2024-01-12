@@ -52,6 +52,9 @@ public class AuthoritySourceFile extends MetadataEntity implements Persistable<U
   @Column(name = "type", length = 100)
   private String type;
 
+  @Column(name = "base_url_protocol", length = 10)
+  private String baseUrlProtocol;
+
   @Column(name = "base_url", unique = true)
   private String baseUrl;
 
@@ -134,5 +137,15 @@ public class AuthoritySourceFile extends MetadataEntity implements Persistable<U
 
   public boolean isConsortiumShadowCopy() {
     return AuthoritySourceFileSource.CONSORTIUM.equals(this.getSource());
+  }
+
+  public String getFullBaseUrl() {
+    if (baseUrl == null) {
+      return null;
+    }
+    if (baseUrlProtocol == null) {
+      return baseUrl;
+    }
+    return baseUrlProtocol + "://" + baseUrl;
   }
 }

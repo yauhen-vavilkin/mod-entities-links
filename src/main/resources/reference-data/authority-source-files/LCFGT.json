@@ -5,6 +5,6 @@
     "dg"
   ],
   "type": "Subjects",
-  "baseUrl": "id.loc.gov/authorities/demographicTerms/",
+  "baseUrl": "http://id.loc.gov/authorities/demographicTerms/",
   "source": "folio"
 }

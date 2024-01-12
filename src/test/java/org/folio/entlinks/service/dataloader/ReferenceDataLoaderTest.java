@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import java.util.UUID;
+import org.folio.entlinks.controller.converter.AuthoritySourceFileMapper;
 import org.folio.entlinks.domain.entity.AuthorityNoteType;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.repository.AuthorityNoteTypeRepository;
@@ -29,6 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ReferenceDataLoaderTest {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private final AuthoritySourceFileMapper sourceFileMapper = mock(AuthoritySourceFileMapper.class);
 
   private final AuthorityNoteTypeService noteTypeService = mock(AuthorityNoteTypeService.class);
 
@@ -37,7 +39,7 @@ class ReferenceDataLoaderTest {
   private final AuthoritySourceFileRepository sourceFileRepository = mock(AuthoritySourceFileRepository.class);
 
   private final ReferenceDataLoader referenceDataLoader = new ReferenceDataLoader(noteTypeService,
-      noteTypeRepository, sourceFileRepository, OBJECT_MAPPER);
+      noteTypeRepository, sourceFileRepository, sourceFileMapper, OBJECT_MAPPER);
 
   @Test
   void shouldLoadReferenceData() {

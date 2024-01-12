@@ -5,6 +5,6 @@
     "gf"
   ],
   "type": "Subjects",
-  "baseUrl": "id.loc.gov/authorities/genreForms/",
+  "baseUrl": "http://id.loc.gov/authorities/genreForms/",
   "source": "folio"
 }

@@ -6,6 +6,6 @@
     "tgm"
   ],
   "type": "Subjects",
-  "baseUrl": "id.loc.gov/vocabulary/graphicMaterials/",
+  "baseUrl": "http://id.loc.gov/vocabulary/graphicMaterials/",
   "source": "folio"
 }

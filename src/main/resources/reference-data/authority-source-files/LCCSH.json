@@ -5,6 +5,6 @@
     "sj"
   ],
   "type": "Subjects",
-  "baseUrl": "id.loc.gov/authorities/childrensSubjects/",
+  "baseUrl": "http://id.loc.gov/authorities/childrensSubjects/",
   "source": "folio"
 }
