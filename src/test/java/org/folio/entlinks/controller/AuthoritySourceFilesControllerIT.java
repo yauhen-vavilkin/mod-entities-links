@@ -1,6 +1,7 @@
 package org.folio.entlinks.controller;
 
 import static java.util.UUID.randomUUID;
+import static org.folio.entlinks.domain.entity.AuthoritySourceFileSource.FOLIO;
 import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.folio.support.base.TestConstants.USER_ID;
 import static org.folio.support.base.TestConstants.authoritySourceFilesEndpoint;
@@ -25,13 +26,14 @@ import java.util.Set;
 import java.util.UUID;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto.SourceEnum;
-import org.folio.entlinks.domain.dto.AuthoritySourceFileDtoCollection;
+import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDtoHridManagement;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileSource;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
+import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.spring.testing.extension.DatabaseCleanup;
 import org.folio.spring.testing.type.IntegrationTest;
@@ -61,7 +63,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   private static final AuthoritySourceFileSource[] SOURCE_FILE_SOURCES = new AuthoritySourceFileSource[] {
     AuthoritySourceFileSource.LOCAL,
     AuthoritySourceFileSource.LOCAL,
-    AuthoritySourceFileSource.FOLIO
+    FOLIO
   };
   private static final String[] SOURCE_FILE_TYPES = new String[] {"type1", "type2", "type3"};
   private static final String[] SOURCE_FILE_URLS = new String[] {"baseUrl1", "baseUrl2", "baseUrl3"};
@@ -299,24 +301,19 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   void updateAuthoritySourceFilePartially_positive_entityGetUpdated() throws Exception {
     var dto = new AuthoritySourceFilePostDto("name", "code").type("type").baseUrl("url");
 
-    doPost(authoritySourceFilesEndpoint(), dto);
-    var existingAsString = doGet(authoritySourceFilesEndpoint()).andReturn().getResponse().getContentAsString();
-    var collection = objectMapper.readValue(existingAsString, AuthoritySourceFileDtoCollection.class);
-    var partiallyModified = collection.getAuthoritySourceFiles().get(0);
-    // modify only source and codes fields, the rest should stay unchanged
-    partiallyModified.setSource(SourceEnum.LOCAL);
+    var created = doPostAndReturn(authoritySourceFilesEndpoint(), dto, AuthoritySourceFileDto.class);
+    var partiallyModified = new AuthoritySourceFilePatchDto();
+    partiallyModified.setVersion(1);
     // remove code1 and insert code2 and code3
     partiallyModified.setCodes(List.of("code2", "code3"));
-    partiallyModified.setName(null);
-    partiallyModified.setType(null);
-    partiallyModified.setBaseUrl(null);
 
-    doPatch(authoritySourceFilesEndpoint(partiallyModified.getId()), partiallyModified)
+    doPatch(authoritySourceFilesEndpoint(created.getId()), partiallyModified)
       .andExpect(status().isNoContent());
 
-    var content = doGet(authoritySourceFilesEndpoint(partiallyModified.getId()))
-      .andExpect(jsonPath("source", is(partiallyModified.getSource().getValue())))
+    var content = doGet(authoritySourceFilesEndpoint(created.getId()))
+      .andExpect(jsonPath("source", is(SourceEnum.LOCAL.getValue())))
       .andExpect(jsonPath("codes", hasSize(2)))
+      .andExpect(jsonPath("_version", is(1)))
       .andExpect(jsonPath("metadata.createdDate", notNullValue()))
       .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
       .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
@@ -325,6 +322,26 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var resultDto = objectMapper.readValue(content, AuthoritySourceFileDto.class);
 
     assertThat(new HashSet<>(resultDto.getCodes()), equalTo(new HashSet<>(partiallyModified.getCodes())));
+  }
+
+  @Test
+  @DisplayName("PATCH: update of Authority Source File with old version")
+  void updateWithOldVersion_negative_shouldReturnOptimisticLockingError() throws Exception {
+    var dto = new AuthoritySourceFilePostDto("name", "codee").type("type").baseUrl("url");
+    var created = doPostAndReturn(authoritySourceFilesEndpoint(), dto, AuthoritySourceFileDto.class);
+
+    var patchDto = new AuthoritySourceFilePatchDto();
+    patchDto.setVersion(0);
+    doPatch(authoritySourceFilesEndpoint(created.getId()), patchDto)
+        .andExpect(status().isNoContent());
+
+    var expectedError = String.format("Cannot update record %s because it has been changed (optimistic locking): "
+            + "Stored _version is %d, _version of request is %d", created.getId().toString(),
+        1, 0);
+    tryPatch(authoritySourceFilesEndpoint(created.getId()), patchDto)
+        .andExpect(status().isConflict())
+        .andExpect(errorMessageMatch(is(expectedError)))
+        .andExpect(exceptionMatch(OptimisticLockingException.class));
   }
 
   // Tests for DELETE
@@ -434,7 +451,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var entity = new AuthoritySourceFile();
     entity.setId(SOURCE_FILE_IDS[sourceFileIdNum]);
     entity.setName(SOURCE_FILE_NAMES[sourceFileIdNum]);
-    entity.setSource(AuthoritySourceFileSource.FOLIO);
+    entity.setSource(FOLIO);
     entity.setType(SOURCE_FILE_TYPES[sourceFileIdNum]);
     entity.setBaseUrl(SOURCE_FILE_URLS[sourceFileIdNum] + "/");
 

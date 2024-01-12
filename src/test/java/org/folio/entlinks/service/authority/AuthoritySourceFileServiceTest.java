@@ -29,6 +29,7 @@ import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthoritySourceFileHridException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
+import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
@@ -361,5 +362,24 @@ class AuthoritySourceFileServiceTest {
 
     assertThat(actual).isEqualTo(expected);
     verify(authorityRepository).existsAuthorityByAuthoritySourceFileId(id);
+  }
+
+  @Test
+  void shouldThrowOptimisticLockingExceptionWhenProvidedOldAuthoritySourceFileVersion() {
+    var id = UUID.randomUUID();
+    var existing = new AuthoritySourceFile();
+    existing.setVersion(1);
+    existing.setId(id);
+    var modified = new AuthoritySourceFile();
+    modified.setId(id);
+
+    when(repository.findById(id)).thenReturn(Optional.of(existing));
+
+    var thrown = assertThrows(OptimisticLockingException.class, () -> service.update(id, modified));
+
+    assertThat(thrown.getMessage())
+        .isEqualTo("Cannot update record " + id + " because it has been changed (optimistic locking): "
+            + "Stored _version is 1, _version of request is 0");
+    verifyNoMoreInteractions(repository);
   }
 }

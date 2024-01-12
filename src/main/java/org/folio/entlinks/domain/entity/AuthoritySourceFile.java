@@ -13,6 +13,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -79,6 +80,10 @@ public class AuthoritySourceFile extends MetadataEntity implements Persistable<U
 
   @Transient
   private boolean isNew = true;
+
+  @Version
+  @Column(name = "_version", nullable = false)
+  private int version;
 
   public AuthoritySourceFile(AuthoritySourceFile other) {
     super(other);

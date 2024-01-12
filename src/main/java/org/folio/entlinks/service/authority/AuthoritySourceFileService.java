@@ -18,6 +18,7 @@ import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthoritySourceFileHridException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
+import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
@@ -26,7 +27,10 @@ import org.folio.tenant.domain.dto.Parameter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -80,6 +84,11 @@ public class AuthoritySourceFileService {
     return repository.save(entity);
   }
 
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  @Retryable(
+      retryFor = OptimisticLockingException.class,
+      maxAttempts = 2,
+      backoff = @Backoff(delay = 500))
   public AuthoritySourceFile update(UUID id, AuthoritySourceFile modified) {
     log.debug("update:: Attempting to update AuthoritySourceFile [id: {}]", id);
 
@@ -89,6 +98,10 @@ public class AuthoritySourceFileService {
     }
 
     var existingEntity = repository.findById(id).orElseThrow(() -> new AuthoritySourceFileNotFoundException(id));
+    if (modified.getVersion() < existingEntity.getVersion()) {
+      throw OptimisticLockingException.optimisticLockingOnUpdate(
+          id, existingEntity.getVersion(), modified.getVersion());
+    }
 
     copyModifiableFields(existingEntity, modified);
 
@@ -175,6 +188,7 @@ public class AuthoritySourceFileService {
     existingEntity.setSelectable(modifiedEntity.isSelectable());
     existingEntity.setType(modifiedEntity.getType());
     existingEntity.setHridStartNumber(modifiedEntity.getHridStartNumber());
+    existingEntity.setVersion(existingEntity.getVersion() + 1);
     var existingCodes = mapper.toDtoCodes(existingEntity.getAuthoritySourceFileCodes());
     var modifiedCodes = mapper.toDtoCodes(modifiedEntity.getAuthoritySourceFileCodes());
     for (var code : modifiedEntity.getAuthoritySourceFileCodes()) {

@@ -35,6 +35,9 @@ properties:
     properties:
       startNumber:
         type: integer
+  _version:
+    type: integer
+    description: Record version for optimistic locking
   metadata:
     $ref: '../common/metadata.yaml'
 required:

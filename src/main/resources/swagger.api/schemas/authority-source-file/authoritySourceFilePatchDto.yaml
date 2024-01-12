@@ -25,3 +25,8 @@ properties:
       startNumber:
         type: integer
         description: Start number for HRID generation
+  _version:
+    type: integer
+    description: Record version for optimistic locking
+required:
+  - _version

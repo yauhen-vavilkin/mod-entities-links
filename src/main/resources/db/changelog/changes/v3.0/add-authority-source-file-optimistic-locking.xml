@@ -1,0 +1,23 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
+
+  <changeSet id="MODELINKS-160@@add-authority-source-file-version" author="Viacheslav_Kolesnyk">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="authority_source_file" columnName="_version"/>
+      </not>
+    </preConditions>
+
+    <comment>Add _version column into authority_source_file</comment>
+
+    <addColumn tableName="authority_source_file" schemaName="">
+      <column name="_version" type="integer" defaultValue="0">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+</databaseChangeLog>

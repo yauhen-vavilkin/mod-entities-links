@@ -47,7 +47,7 @@ public interface AuthoritySourceFileMapper {
   AuthoritySourceFileDto toDto(AuthoritySourceFile authoritySourceFile);
 
   @Mapping(target = "authoritySourceFileCodes",
-           expression = "java(toEntityCodes(authoritySourceFileDto.getCodes()))")
+           expression = "java(toEntityCodes(authoritySourceFileDto, authoritySourceFile))")
   @Mapping(target = "hridStartNumber", source = "hridManagement.startNumber")
   @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
   AuthoritySourceFile partialUpdate(AuthoritySourceFilePatchDto authoritySourceFileDto,
@@ -70,6 +70,16 @@ public interface AuthoritySourceFileMapper {
     return codes.stream()
       .map(this::toEntityCode)
       .collect(Collectors.toSet());
+  }
+
+  default Set<AuthoritySourceFileCode> toEntityCodes(AuthoritySourceFilePatchDto authoritySourceFileDto,
+                                                     AuthoritySourceFile authoritySourceFile) {
+    var dtoCodes = authoritySourceFileDto.getCodes();
+    if (dtoCodes == null) {
+      return authoritySourceFile.getAuthoritySourceFileCodes();
+    }
+
+    return toEntityCodes(dtoCodes);
   }
 
   default AuthoritySourceFileCode toEntityCode(String code) {

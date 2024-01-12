@@ -99,6 +99,26 @@ class AuthoritySourceFileMapperTest {
   }
 
   @Test
+  void testPartialUpdate_noCodesUpdate() {
+    var code = new AuthoritySourceFileCode();
+    code.setCode("a");
+    var codes = Set.of(code);
+    var sourceFile = createAuthoritySourceFile();
+    sourceFile.setAuthoritySourceFileCodes(codes);
+
+    var patchDto = new AuthoritySourceFilePatchDto();
+    patchDto.setName(UPDATED_NAME);
+    patchDto.setType(UPDATED_TYPE);
+
+    var updatedFile = mapper.partialUpdate(patchDto, sourceFile);
+
+    assertThat(updatedFile).isNotNull();
+    assertThat(updatedFile.getName()).isEqualTo(patchDto.getName());
+    assertThat(updatedFile.getType()).isEqualTo(patchDto.getType());
+    assertThat(updatedFile.getAuthoritySourceFileCodes()).isEqualTo(codes);
+  }
+
+  @Test
   void testToDtoList() {
     var sourceFile = createAuthoritySourceFile();
     var sourceFiles = List.of(sourceFile);
