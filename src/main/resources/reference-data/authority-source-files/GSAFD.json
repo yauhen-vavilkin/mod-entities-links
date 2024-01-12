@@ -5,6 +5,6 @@
     "gsafd"
   ],
   "type": "Subjects",
-  "baseUrl": "vocabularyserver.com/gsafd/",
+  "baseUrl": "https://vocabularyserver.com/gsafd/",
   "source": "folio"
 }

@@ -5,6 +5,6 @@
     "D"
   ],
   "type": "Subjects",
-  "baseUrl": "id.nlm.nih.gov/mesh/",
+  "baseUrl": "https://id.nlm.nih.gov/mesh/",
   "source": "folio"
 }

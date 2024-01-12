@@ -9,6 +9,6 @@
     "ns"
   ],
   "type": "Names",
-  "baseUrl": "id.loc.gov/authorities/names/",
+  "baseUrl": "http://id.loc.gov/authorities/names/",
   "source": "folio"
 }

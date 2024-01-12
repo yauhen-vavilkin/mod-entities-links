@@ -17,6 +17,7 @@
 * Adjust /authority-storage/authorities endpoint to allow retrieving authorities archives and only IDs of records([MODELINKS-142](https://issues.folio.org/browse/MODELINKS-142))
 * Propagate authority source files to member tenants([MODELINKS-175](https://issues.folio.org/browse/MODELINKS-175))
 * Implement next hrid endpoint for authority source file([MODELINKS-122](https://issues.folio.org/browse/MODELINKS-122))
+* Add protocol to base url for authority source files([MODELINKS-191](https://issues.folio.org/browse/MODELINKS-191))
 
 ### Bug fixes
 * Fix secure setup of system users by default ([MODELINKS-135](https://issues.folio.org/browse/MODELINKS-135))

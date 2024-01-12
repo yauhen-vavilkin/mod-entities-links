@@ -1,12 +1,12 @@
 package org.folio.entlinks.service.dataloader;
 
-import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import java.io.IOException;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.entlinks.controller.converter.AuthoritySourceFileMapper;
+import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.entity.AuthorityNoteType;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.repository.AuthorityNoteTypeRepository;
@@ -31,6 +31,7 @@ public class ReferenceDataLoader {
   private final AuthorityNoteTypeService noteTypeService;
   private final AuthorityNoteTypeRepository noteTypeRepository;
   private final AuthoritySourceFileRepository sourceFileRepository;
+  private final AuthoritySourceFileMapper sourceFileMapper;
   private final ObjectMapper mapper;
 
   public void loadRefData() {
@@ -59,9 +60,8 @@ public class ReferenceDataLoader {
   }
 
   private void loadAuthoritySourceFiles() {
-    registerAuthoritySourceFileDeserializer();
     for (var res : getResources(AUTHORITY_SOURCE_FILES_DIR)) {
-      AuthoritySourceFile sourceFile = deserializeRecord(AuthoritySourceFile.class, res);
+      var sourceFile = sourceFileMapper.toEntity(deserializeRecord(AuthoritySourceFileDto.class, res));
 
       var existing = getExistingSourceFile(sourceFile);
 
@@ -80,14 +80,6 @@ public class ReferenceDataLoader {
     }
 
     sourceFileRepository.save(entity);
-  }
-
-  private void registerAuthoritySourceFileDeserializer() {
-    var module = new SimpleModule(
-      "AuthoritySourceFileDeserializer",
-      new Version(1, 0, 0, null, null, null));
-    module.addDeserializer(AuthoritySourceFile.class, new SourceFileDeserializer());
-    mapper.registerModule(module);
   }
 
   private <T> T deserializeRecord(Class<T> resourceType, Resource res) {

@@ -314,7 +314,7 @@ public class TestDataUtils {
       AuthoritySourceFileSource.FOLIO
     };
     private static final String[] SOURCE_FILE_TYPES = new String[] {"type1", "type2", "type3"};
-    private static final String[] SOURCE_FILE_URLS = new String[] {"baseUrl1", "baseUrl2", "baseUrl3"};
+    private static final String[] SOURCE_FILE_URLS = new String[] {"http://baseUrl1", "http://baseUrl2", "http://baseUrl3"};
 
     public static Authority authority(int authorityIdNum, int sourceFileIdNum) {
       var entity = new Authority();
