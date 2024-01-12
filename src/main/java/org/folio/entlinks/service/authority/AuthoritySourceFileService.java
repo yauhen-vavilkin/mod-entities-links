@@ -132,7 +132,7 @@ public class AuthoritySourceFileService {
   }
 
   public boolean authoritiesExistForSourceFile(UUID sourceFileId) {
-    return authorityRepository.existsAuthorityBySourceFileId(sourceFileId);
+    return authorityRepository.existsAuthorityByAuthoritySourceFileId(sourceFileId);
   }
 
   private void validateOnCreate(AuthoritySourceFile entity) {

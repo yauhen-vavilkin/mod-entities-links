@@ -355,11 +355,11 @@ class AuthoritySourceFileServiceTest {
   void shouldCheckAuthoritiesExistForSourceFile() {
     var id = UUID.randomUUID();
     var expected = true;
-    when(authorityRepository.existsAuthorityBySourceFileId(id)).thenReturn(expected);
+    when(authorityRepository.existsAuthorityByAuthoritySourceFileId(id)).thenReturn(expected);
 
     var actual = service.authoritiesExistForSourceFile(id);
 
     assertThat(actual).isEqualTo(expected);
-    verify(authorityRepository).existsAuthorityBySourceFileId(id);
+    verify(authorityRepository).existsAuthorityByAuthoritySourceFileId(id);
   }
 }
