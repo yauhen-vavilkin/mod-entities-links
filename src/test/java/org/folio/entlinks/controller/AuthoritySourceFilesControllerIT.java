@@ -27,6 +27,7 @@ import java.util.UUID;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto.SourceEnum;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
+import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDtoHridManagement;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDtoHridManagement;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
@@ -299,13 +300,15 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("PATCH: partially update Authority Source File")
   void updateAuthoritySourceFilePartially_positive_entityGetUpdated() throws Exception {
-    var dto = new AuthoritySourceFilePostDto("name", "code").type("type").baseUrl("url");
-
-    var created = doPostAndReturn(authoritySourceFilesEndpoint(), dto, AuthoritySourceFileDto.class);
+    var createDto = new AuthoritySourceFilePostDto("name", "code").type("type").baseUrl("url");
+    var hridStartNumber = 125;
     var partiallyModified = new AuthoritySourceFilePatchDto();
     partiallyModified.setVersion(1);
     // remove code1 and insert code2 and code3
     partiallyModified.setCodes(List.of("code2", "code3"));
+    partiallyModified.setHridManagement(new AuthoritySourceFilePatchDtoHridManagement().startNumber(hridStartNumber));
+
+    var created = doPostAndReturn(authoritySourceFilesEndpoint(), createDto, AuthoritySourceFileDto.class);
 
     doPatch(authoritySourceFilesEndpoint(created.getId()), partiallyModified)
       .andExpect(status().isNoContent());
@@ -314,6 +317,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
       .andExpect(jsonPath("source", is(SourceEnum.LOCAL.getValue())))
       .andExpect(jsonPath("codes", hasSize(2)))
       .andExpect(jsonPath("_version", is(1)))
+      .andExpect(jsonPath("hridManagement.startNumber", is(hridStartNumber)))
       .andExpect(jsonPath("metadata.createdDate", notNullValue()))
       .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
       .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))

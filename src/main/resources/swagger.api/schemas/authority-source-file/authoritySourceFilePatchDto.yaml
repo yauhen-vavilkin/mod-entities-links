@@ -24,6 +24,7 @@ properties:
     properties:
       startNumber:
         type: integer
+        minimum: 0
         description: Start number for HRID generation
   _version:
     type: integer

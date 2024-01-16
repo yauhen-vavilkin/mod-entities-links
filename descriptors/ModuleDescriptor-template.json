@@ -317,6 +317,9 @@
           "pathPattern": "/authority-source-files/{id}",
           "permissionsRequired": [
             "inventory-storage.authority-source-files.item.patch"
+          ],
+          "modulePermissions": [
+            "user-tenants.collection.get"
           ]
         },
         {
@@ -326,6 +329,9 @@
           "pathPattern": "/authority-source-files/{id}",
           "permissionsRequired": [
             "inventory-storage.authority-source-files.item.delete"
+          ],
+          "modulePermissions": [
+            "user-tenants.collection.get"
           ]
         },
         {

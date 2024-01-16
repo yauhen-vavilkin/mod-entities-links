@@ -103,8 +103,9 @@ public class AuthoritySourceFileService {
           id, existingEntity.getVersion(), modified.getVersion());
     }
 
-    copyModifiableFields(existingEntity, modified);
+    updateSequenceStartNumber(existingEntity, modified);
 
+    copyModifiableFields(existingEntity, modified);
     return repository.save(existingEntity);
   }
 
@@ -204,6 +205,18 @@ public class AuthoritySourceFileService {
         iterator.remove();
       }
     }
+  }
+
+  private void updateSequenceStartNumber(AuthoritySourceFile existing, AuthoritySourceFile modified) {
+    if (existing.getHridStartNumber().equals(modified.getHridStartNumber())) {
+      return;
+    }
+
+    var sequenceName = existing.getSequenceName();
+    var startNumber = modified.getHridStartNumber();
+    var command = String.format("ALTER SEQUENCE %s RESTART WITH %d OWNED BY %s.authority_source_file.sequence_name;",
+        sequenceName, startNumber, moduleMetadata.getDBSchemaName(folioExecutionContext.getTenantId()));
+    jdbcTemplate.execute(command);
   }
 
 }
