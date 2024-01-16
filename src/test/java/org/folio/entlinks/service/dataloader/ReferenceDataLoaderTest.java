@@ -1,8 +1,8 @@
 package org.folio.entlinks.service.dataloader;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -21,6 +21,7 @@ import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -30,7 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ReferenceDataLoaderTest {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-  private final AuthoritySourceFileMapper sourceFileMapper = mock(AuthoritySourceFileMapper.class);
+  private final AuthoritySourceFileMapper sourceFileMapper = Mappers.getMapper(AuthoritySourceFileMapper.class);
 
   private final AuthorityNoteTypeService noteTypeService = mock(AuthorityNoteTypeService.class);
 

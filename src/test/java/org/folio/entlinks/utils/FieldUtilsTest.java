@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 @UnitTest
 class FieldUtilsTest {
 
-  private static final String BASE_URL = "id.loc.gov/authorities/names/";
+  private static final String BASE_URL = "http://id.loc.gov/authorities/names/";
   private static final String NATURAL_ID = "n12345";
 
   @Test
@@ -32,7 +32,7 @@ class FieldUtilsTest {
 
   @Test
   void shouldGetSubfield0ValueWithSourceFile() {
-    var sourceFile = getSourceFile("e");
+    var sourceFile = getSourceFile();
 
     var actual = getSubfield0Value(NATURAL_ID, sourceFile);
     var expected = sourceFile.getBaseUrl() + '/' + NATURAL_ID;
@@ -45,13 +45,19 @@ class FieldUtilsTest {
     assertEquals(NATURAL_ID, actual);
   }
 
-  private AuthoritySourceFile getSourceFile(String code) {
+  @Test
+  void shouldGetSubfield0ValueIfBaseUrlIsNull() {
+    var actual = getSubfield0Value(NATURAL_ID, new AuthoritySourceFile());
+    assertEquals(NATURAL_ID, actual);
+  }
+
+  private AuthoritySourceFile getSourceFile() {
     var sourceFile = new AuthoritySourceFile();
     sourceFile.setId(UUID.randomUUID());
-    sourceFile.setBaseUrl(BASE_URL + code);
+    sourceFile.setBaseUrl(BASE_URL + "e");
     sourceFile.setName("testFile");
     var sourceFileCode = new AuthoritySourceFileCode();
-    sourceFileCode.setCode(code);
+    sourceFileCode.setCode("e");
     sourceFile.addCode(sourceFileCode);
     return sourceFile;
   }

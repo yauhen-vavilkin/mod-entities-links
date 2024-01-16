@@ -10,6 +10,7 @@ import static org.folio.support.base.TestConstants.TEST_ID;
 
 import java.util.List;
 import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDtoCollection;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
@@ -30,7 +31,7 @@ class AuthoritySourceFileMapperTest {
   public static final String UPDATED_NAME = "Updated Name";
   public static final String UPDATED_TYPE = "Updated Type";
   public static final String UPDATED_CODE = "Updated Code";
-  public static final String UPDATED_BASE_URL = "Updated Base Url";
+  public static final String UPDATED_BASE_URL = "http://updated.base.url/";
   private final AuthoritySourceFileMapper mapper = new AuthoritySourceFileMapperImpl();
 
   @Test
@@ -40,13 +41,13 @@ class AuthoritySourceFileMapperTest {
     var entity = mapper.toEntity(dto);
 
     assertThat(entity).isNotNull();
-    assertThat(dto.getId()).isEqualTo(entity.getId());
-    assertThat(dto.getName()).isEqualTo(entity.getName());
-    assertThat(dto.getType()).isEqualTo(entity.getType());
-    assertThat(dto.getBaseUrl()).isEqualTo(entity.getBaseUrl());
-    assertThat(entity.getSource().name()).isEqualTo("LOCAL");
+    assertThat(entity.getId()).isEqualTo(dto.getId());
+    assertThat(entity.getName()).isEqualTo(dto.getName());
+    assertThat(entity.getType()).isEqualTo(dto.getType());
+    assertThat(entity.getFullBaseUrl()).isEqualTo(StringUtils.appendIfMissing(dto.getBaseUrl(), "/"));
+    assertThat(entity.getSource()).isEqualTo(AuthoritySourceFileSource.LOCAL);
     assertThat(entity.getAuthoritySourceFileCodes()).hasSize(1);
-    assertThat(dto.getCode()).isEqualTo(entity.getAuthoritySourceFileCodes().iterator().next().getCode());
+    assertThat(entity.getAuthoritySourceFileCodes().iterator().next().getCode()).isEqualTo(dto.getCode());
   }
 
   @Test
@@ -87,10 +88,10 @@ class AuthoritySourceFileMapperTest {
     AuthoritySourceFile updatedFile = mapper.partialUpdate(patchDto, sourceFile);
 
     assertThat(updatedFile).isNotNull();
-    assertThat(patchDto.getId()).isEqualTo(updatedFile.getId());
-    assertThat(patchDto.getName()).isEqualTo(updatedFile.getName());
-    assertThat(patchDto.getType()).isEqualTo(updatedFile.getType());
-    assertThat(patchDto.getBaseUrl()).isEqualTo(updatedFile.getBaseUrl());
+    assertThat(updatedFile.getId()).isEqualTo(patchDto.getId());
+    assertThat(updatedFile.getName()).isEqualTo(patchDto.getName());
+    assertThat(updatedFile.getType()).isEqualTo(patchDto.getType());
+    assertThat(updatedFile.getFullBaseUrl()).isEqualTo(patchDto.getBaseUrl());
   }
 
   @Test

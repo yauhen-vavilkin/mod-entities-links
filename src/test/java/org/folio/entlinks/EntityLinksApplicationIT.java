@@ -13,7 +13,6 @@ import org.folio.support.DatabaseHelper;
 import org.folio.support.base.IntegrationTestBase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 @Log4j2
@@ -22,12 +21,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
   DatabaseHelper.AUTHORITY_SOURCE_FILE_CODE_TABLE,
   DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE
 })
-class EntityLinksApplicationTest extends IntegrationTestBase {
+class EntityLinksApplicationIT extends IntegrationTestBase {
 
   @Autowired
   private EntityLinksApplication entityLinksApplication;
-  @Value("${folio.okapi-url}")
-  private String okapiUrl;
 
   @Test
   void contextLoads() {
