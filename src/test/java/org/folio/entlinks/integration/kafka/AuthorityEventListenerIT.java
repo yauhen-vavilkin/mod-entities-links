@@ -64,7 +64,7 @@ class AuthorityEventListenerIT extends IntegrationTestBase {
 
   private static final UUID AUTHORITY_ID = UUID.fromString("a501dcc2-23ce-4a4a-adb4-ff683b6f325e");
   private static final UUID SOURCE_FILE_ID = UUID.fromString("af045f2f-e851-4613-984c-4bc13430454a");
-  private static final String BASE_URL = "id.loc.gov/authorities/names/";
+  private static final String BASE_URL = "http://id.loc.gov/authorities/names/";
 
   private KafkaMessageListenerContainer<String, LinksChangeEvent> container;
   private BlockingQueue<ConsumerRecord<String, LinksChangeEvent>> consumerRecords;

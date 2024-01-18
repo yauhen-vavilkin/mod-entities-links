@@ -5,6 +5,6 @@
     "fst"
   ],
   "type": "Subjects",
-  "baseUrl": "id.worldcat.org/fast/",
+  "baseUrl": "http://id.worldcat.org/fast/",
   "source": "folio"
 }

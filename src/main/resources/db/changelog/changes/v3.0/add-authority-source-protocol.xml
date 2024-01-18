@@ -1,0 +1,53 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd">
+
+  <changeSet id="MODELINKS-188@@add-base-url-protocol-column-to-authority-source-file-table" author="psmagin">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <tableExists tableName="authority_source_file"/>
+        <not>
+          <columnExists tableName="authority_source_file" columnName="base_url_protocol"/>
+        </not>
+      </and>
+    </preConditions>
+
+    <comment>Add base_url_protocol column to authority_source_file table</comment>
+
+    <addColumn tableName="authority_source_file">
+      <column name="base_url_protocol" type="VARCHAR(5)"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="MODELINKS-188@@input-base-url-protocol-values-to-folio-source-files" author="pavlo_smahin">
+    <preConditions>
+      <tableExists tableName="authority_source_file"/>
+    </preConditions>
+
+    <comment>Input base_url_protocol values to system authority_source_file records</comment>
+
+    <sql>
+      UPDATE authority_source_file
+      SET base_url_protocol='http'
+      WHERE id IN ('191874a0-707a-4634-928e-374ee9103225',
+                  '2c0e41b5-8ffb-4856-aa64-76648a6f6b18',
+                  '4b531a84-d4fe-44e5-b75f-542ec71b2f62',
+                  '67d1ec4b-a19a-4324-9f19-473b49e370ac',
+                  '70ff583b-b8c9-483e-ac21-cb4a9217898b',
+                  '837e2c7b-037b-4113-9dfd-b1b8aeeb1fb8',
+                  'af045f2f-e851-4613-984c-4bc13430454a',
+                  'cb58492d-018e-442d-9ce3-35aabfc524aa',
+                  'ccebe5d8-5bfe-46f5-bfa2-79f257c249c9');
+    </sql>
+    <sql>
+      UPDATE authority_source_file
+      SET base_url_protocol='https'
+      WHERE id IN ('6ddf21a6-bc2f-4cb0-ad96-473e1f82da23',
+                  'b224845c-5026-4594-8b55-61d39ecf0541');
+    </sql>
+  </changeSet>
+
+
+</databaseChangeLog>

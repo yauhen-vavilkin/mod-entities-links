@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
   DatabaseHelper.AUTHORITY_SOURCE_FILE_TABLE})
 class LinksSuggestionsIT extends IntegrationTestBase {
 
-  private static final String BASE_URL = "id.loc.gov/authorities/names/";
+  private static final String BASE_URL = "http://id.loc.gov/authorities/names/";
   private static final String LINKABLE_AUTHORITY_ID = "417f3355-081c-4aae-9209-ccb305f25f7e";
   private static final String LINKABLE_AUTHORITY_WITH_T_SUBFIELD_ID = "cb398c08-736e-4d6b-aa94-5fa1bfcf9b10";
   private static final String NATURAL_ID = "oneAuthority";

@@ -3,6 +3,7 @@ package org.folio.support;
 import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.UUID;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.entlinks.domain.entity.Authority;
 import org.folio.entlinks.domain.entity.AuthorityArchive;
 import org.folio.entlinks.domain.entity.AuthorityNoteType;
@@ -60,13 +61,25 @@ public class DatabaseHelper {
 
   public void saveAuthoritySourceFile(String tenant, AuthoritySourceFile entity) {
     var sourceType = getDbPath(tenant, AUTHORITY_SOURCE_FILE_SOURCE_TYPE);
-    var sqlValues = "(?,?,?::" + sourceType + ",?,?,?,?,?,?,?)";
+    var sqlValues = "(?,?,?::" + sourceType + ",?,?,?,?,?,?,?,?)";
     var sql = "INSERT INTO " + getDbPath(tenant, AUTHORITY_SOURCE_FILE_TABLE)
-      + " (id, name, source, type, base_url, hrid_start_number, created_date, updated_date,"
+      + " (id, name, source, type, base_url_protocol, base_url, hrid_start_number, created_date, updated_date,"
       + "created_by_user_id, updated_by_user_id) VALUES " + sqlValues;
     jdbcTemplate.update(sql, entity.getId(), entity.getName(),
-        entity.getSource().name(), entity.getType(), entity.getBaseUrl(), entity.getHridStartNumber(),
+        entity.getSource().name(), entity.getType(), substringBefore(entity.getBaseUrl(), "://"),
+        StringUtils.substringAfter(entity.getBaseUrl(), "://"), entity.getHridStartNumber(),
         entity.getCreatedDate(), entity.getUpdatedDate(), entity.getCreatedByUserId(), entity.getUpdatedByUserId());
+  }
+
+  public static String substringBefore(String string, String subString) {
+    if (StringUtils.isAnyBlank(string, subString)) {
+      return string;
+    }
+    var indexOfSubString = string.indexOf(subString);
+    if (indexOfSubString == -1) {
+      return null;
+    }
+    return string.substring(0, indexOfSubString);
   }
 
   public String queryAuthoritySourceFileSequenceName(String tenant, UUID id) {

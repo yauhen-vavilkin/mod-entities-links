@@ -5,6 +5,6 @@
     "mp"
   ],
   "type": "Subjects",
-  "baseUrl": "id.loc.gov/authorities/performanceMediums/",
+  "baseUrl": "http://id.loc.gov/authorities/performanceMediums/",
   "source": "folio"
 }

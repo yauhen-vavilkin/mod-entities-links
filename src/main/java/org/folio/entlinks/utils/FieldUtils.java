@@ -34,8 +34,8 @@ public class FieldUtils {
    */
   public static String getSubfield0Value(String naturalId, AuthoritySourceFile sourceFile) {
     var subfield0Value = "";
-    if (nonNull(naturalId) && nonNull(sourceFile)) {
-      subfield0Value = StringUtils.appendIfMissing(sourceFile.getBaseUrl(), "/");
+    if (nonNull(naturalId) && nonNull(sourceFile) && nonNull(sourceFile.getBaseUrl())) {
+      subfield0Value = StringUtils.appendIfMissing(sourceFile.getFullBaseUrl(), "/");
     }
     return subfield0Value + naturalId;
   }

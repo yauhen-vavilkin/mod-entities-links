@@ -1,8 +1,8 @@
 package org.folio.entlinks.service.dataloader;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import java.util.UUID;
+import org.folio.entlinks.controller.converter.AuthoritySourceFileMapper;
 import org.folio.entlinks.domain.entity.AuthorityNoteType;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.repository.AuthorityNoteTypeRepository;
@@ -20,6 +21,7 @@ import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -29,6 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ReferenceDataLoaderTest {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private final AuthoritySourceFileMapper sourceFileMapper = Mappers.getMapper(AuthoritySourceFileMapper.class);
 
   private final AuthorityNoteTypeService noteTypeService = mock(AuthorityNoteTypeService.class);
 
@@ -37,7 +40,7 @@ class ReferenceDataLoaderTest {
   private final AuthoritySourceFileRepository sourceFileRepository = mock(AuthoritySourceFileRepository.class);
 
   private final ReferenceDataLoader referenceDataLoader = new ReferenceDataLoader(noteTypeService,
-      noteTypeRepository, sourceFileRepository, OBJECT_MAPPER);
+      noteTypeRepository, sourceFileRepository, sourceFileMapper, OBJECT_MAPPER);
 
   @Test
   void shouldLoadReferenceData() {

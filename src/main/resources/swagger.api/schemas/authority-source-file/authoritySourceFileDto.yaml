@@ -19,6 +19,7 @@ properties:
     description: Type of authority records stored in source file
   baseUrl:
     type: string
+    format: url
     description: Base URL of the source file origin
   source:
     type: string

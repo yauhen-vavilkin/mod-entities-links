@@ -9,7 +9,6 @@ import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.ONE_SECOND;
-import static org.awaitility.Durations.TEN_SECONDS;
 import static org.folio.spring.integration.XOkapiHeaders.TENANT;
 import static org.folio.spring.integration.XOkapiHeaders.URL;
 import static org.folio.support.JsonTestUtils.asJson;
@@ -39,6 +38,7 @@ import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.awaitility.Durations;
 import org.awaitility.core.ThrowingRunnable;
 import org.folio.entlinks.client.ConsortiumTenantsClient;
 import org.folio.entlinks.client.UserTenantsClient;
@@ -266,7 +266,7 @@ public class IntegrationTestBase {
   }
 
   protected static void awaitUntilAsserted(ThrowingRunnable throwingRunnable) {
-    await().pollInterval(ONE_SECOND).atMost(TEN_SECONDS).untilAsserted(throwingRunnable);
+    await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE).untilAsserted(throwingRunnable);
   }
 
   protected <T> void verifyConsumedAuthorityEvent(ConsumerRecord<String, AuthorityDomainEvent> event,

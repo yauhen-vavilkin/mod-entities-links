@@ -64,7 +64,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     AuthoritySourceFileSource.FOLIO
   };
   private static final String[] SOURCE_FILE_TYPES = new String[] {"type1", "type2", "type3"};
-  private static final String[] SOURCE_FILE_URLS = new String[] {"baseUrl1", "baseUrl2", "baseUrl3"};
+  private static final String[] SOURCE_FILE_URLS = new String[] {"http://base.url1", "https://baseUrl2", "http://base/url3"};
 
   @BeforeAll
   static void prepare() {
@@ -161,7 +161,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
       .id(id).name("name")
       // set max length (25) for the prefix/code
       .code("abcdefghijklmnopqrstuvwxy")
-      .type("type").baseUrl("url")
+      .type("type").baseUrl("http://vocab.getty.edu/aat")
       .hridManagement(new AuthoritySourceFilePostDtoHridManagement().startNumber(10));
     var expectedSequenceName = "hrid_authority_local_file_abcdefghijklmnopqrstuvwxy_seq";
 
@@ -170,6 +170,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
       .andExpect(jsonPath("name", is(dto.getName())))
       .andExpect(jsonPath("source", is("local")))
       .andExpect(jsonPath("codes", is(List.of(dto.getCode()))))
+      .andExpect(jsonPath("baseUrl", is("http://vocab.getty.edu/aat/")))
       .andExpect(jsonPath("selectable", is(true)))
       .andExpect(jsonPath("metadata.createdDate", notNullValue()))
       .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
@@ -189,7 +190,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     createAuthoritySourceFile(entity);
 
     var dto = new AuthoritySourceFilePostDto("name111", "code").id(entity.getId())
-      .baseUrl("url").type("type");
+      .baseUrl("http://url").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
       .andExpect(status().isUnprocessableEntity())
@@ -206,7 +207,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
     var createdEntities = createAuthoritySourceTypes();
 
     var dto = new AuthoritySourceFilePostDto(createdEntities.get(0).getName(), "code")
-      .baseUrl("url").type("type");
+      .baseUrl("http://url").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
       .andExpect(status().isUnprocessableEntity())
@@ -239,7 +240,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   void createAuthoritySourceFile_negative_existedCode() throws Exception {
     var createdEntities = createAuthoritySourceTypes();
 
-    var dto = new AuthoritySourceFilePostDto("new name", "co").baseUrl("new url").type("type");
+    var dto = new AuthoritySourceFilePostDto("new name", "co").baseUrl("http://new/url").type("type");
 
     tryPost(authoritySourceFilesEndpoint(), dto)
       .andExpect(status().isUnprocessableEntity())
@@ -253,7 +254,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("POST: create new Authority Source File with invalid code value")
   void createAuthoritySourceFile_negative_invalidCodeValue() throws Exception {
-    var dto = new AuthoritySourceFilePostDto().name("new name").baseUrl("new url").type("type");
+    var dto = new AuthoritySourceFilePostDto().name("new name").baseUrl("http://new/url").type("type");
 
     for (var code : List.of("123", "0x123", "abc ", "$")) {
       dto.setCode(code);
@@ -297,7 +298,7 @@ class AuthoritySourceFilesControllerIT extends IntegrationTestBase {
   @Test
   @DisplayName("PATCH: partially update Authority Source File")
   void updateAuthoritySourceFilePartially_positive_entityGetUpdated() throws Exception {
-    var dto = new AuthoritySourceFilePostDto("name", "code").type("type").baseUrl("url");
+    var dto = new AuthoritySourceFilePostDto("name", "code").type("type").baseUrl("http://url");
 
     doPost(authoritySourceFilesEndpoint(), dto);
     var existingAsString = doGet(authoritySourceFilesEndpoint()).andReturn().getResponse().getContentAsString();
