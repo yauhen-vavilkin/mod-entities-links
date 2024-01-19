@@ -1,9 +1,11 @@
 package org.folio.entlinks.controller.delegate;
 
+import static org.folio.entlinks.domain.entity.AuthoritySourceFileSource.FOLIO;
 import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.CREATE;
 import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.DELETE;
 import static org.folio.entlinks.service.consortium.propagation.ConsortiumPropagationService.PropagationType.UPDATE;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -67,6 +69,8 @@ public class AuthoritySourceFileServiceDelegate {
     log.debug("patch:: Attempting to patch AuthoritySourceFile [id: {}, patchDto: {}]", id, partiallyModifiedDto);
     var existingEntity = service.getById(id);
     validateModifyPossibility(DomainEventType.UPDATE, existingEntity);
+    validatePatchRequest(partiallyModifiedDto, existingEntity);
+
     var partialEntityUpdate = new AuthoritySourceFile(existingEntity);
     partialEntityUpdate = mapper.partialUpdate(partiallyModifiedDto, partialEntityUpdate);
     normalizeBaseUrl(partialEntityUpdate);
@@ -116,6 +120,29 @@ public class AuthoritySourceFileServiceDelegate {
     if (entity.isConsortiumShadowCopy()) {
       throw new RequestBodyValidationException(eventType.name() + " is not applicable to consortium shadow copy",
         List.of(new Parameter("id").value(String.valueOf(entity.getId()))));
+    }
+  }
+
+  private void validatePatchRequest(AuthoritySourceFilePatchDto patchDto, AuthoritySourceFile existing) {
+    var errorParameters = new LinkedList<Parameter>();
+    var hasAuthorityReferences = service.authoritiesExistForSourceFile(existing.getId());
+
+    if (!(existing.getSource().equals(FOLIO) || hasAuthorityReferences)) {
+      return;
+    }
+
+    if (patchDto.getCodes() != null) {
+      errorParameters.add(new Parameter("codes")
+          .value(String.join(",", patchDto.getCodes())));
+    }
+    if (patchDto.getHridManagement() != null) {
+      errorParameters.add(new Parameter("hridManagement.startNumber")
+          .value(patchDto.getHridManagement().getStartNumber().toString()));
+    }
+
+    if (!errorParameters.isEmpty()) {
+      throw new RequestBodyValidationException(
+          "Unable to patch. Authority source file source is FOLIO or it has authority references", errorParameters);
     }
   }
 }

@@ -1,7 +1,10 @@
 package org.folio.entlinks.service.authority;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.entlinks.domain.entity.AuthoritySourceFileSource.CONSORTIUM;
 import static org.folio.entlinks.domain.entity.AuthoritySourceFileSource.LOCAL;
+import static org.folio.support.TestDataUtils.AuthorityTestData.authoritySourceFile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -18,25 +21,32 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.assertj.core.api.Assertions;
 import org.folio.entlinks.controller.converter.AuthoritySourceFileMapper;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileCode;
 import org.folio.entlinks.domain.entity.AuthoritySourceFileSource;
+import org.folio.entlinks.domain.repository.AuthorityRepository;
 import org.folio.entlinks.domain.repository.AuthoritySourceFileRepository;
 import org.folio.entlinks.exception.AuthoritySourceFileHridException;
 import org.folio.entlinks.exception.AuthoritySourceFileNotFoundException;
+import org.folio.entlinks.exception.OptimisticLockingException;
 import org.folio.entlinks.exception.RequestBodyValidationException;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.testing.type.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @UnitTest
 @ExtendWith(MockitoExtension.class)
@@ -44,9 +54,17 @@ class AuthoritySourceFileServiceTest {
 
   @Mock
   private AuthoritySourceFileRepository repository;
+  @Mock
+  private AuthorityRepository authorityRepository;
 
   @Mock
   private AuthoritySourceFileMapper mapper;
+  @Mock
+  private JdbcTemplate jdbcTemplate;
+  @Mock
+  private FolioExecutionContext context;
+  @Mock
+  private FolioModuleMetadata moduleMetadata;
 
   @InjectMocks
   private AuthoritySourceFileService service;
@@ -182,32 +200,71 @@ class AuthoritySourceFileServiceTest {
   }
 
   @Test
-  void shouldUpdateAuthoritySourceFile() {
-    var entity = new AuthoritySourceFile();
-    UUID id = UUID.randomUUID();
-    entity.setId(id);
-    entity.setName("updated name");
-    entity.setSource(LOCAL);
-    var codeNew = new AuthoritySourceFileCode();
-    codeNew.setCode("codeNew");
-    entity.addCode(codeNew);
-    var codeExisting = new AuthoritySourceFileCode();
-    codeExisting.setCode("codeExisting");
-    var expected = new AuthoritySourceFile();
-    expected.setId(id);
-    expected.addCode(codeExisting);
+  void shouldUpdateAuthoritySourceFileModifiableFields() {
+    var existing = authoritySourceFile(0);
+    var id = existing.getId();
+    var modified = authoritySourceFile(1);
+    modified.setId(id);
+    modified.setSource(CONSORTIUM);
 
-    when(repository.findById(id)).thenReturn(Optional.of(expected));
+    var expected = new AuthoritySourceFile(modified);
+    expected.setSource(existing.getSource());
+    expected.setSequenceName(existing.getSequenceName());
+    var existingDtoCodes = existing.getAuthoritySourceFileCodes().stream()
+        .map(AuthoritySourceFileCode::getCode).toList();
+    var modifiedDtoCodes = modified.getAuthoritySourceFileCodes().stream()
+        .map(AuthoritySourceFileCode::getCode).toList();
+
+    when(repository.findById(id)).thenReturn(Optional.of(existing));
+    when(moduleMetadata.getDBSchemaName(any())).thenReturn("test");
     when(repository.save(expected)).thenReturn(expected);
-    when(mapper.toDtoCodes(entity.getAuthoritySourceFileCodes())).thenReturn(List.of(codeNew.getCode()));
-    when(mapper.toDtoCodes(expected.getAuthoritySourceFileCodes())).thenReturn(List.of(codeExisting.getCode()));
+    when(mapper.toDtoCodes(existing.getAuthoritySourceFileCodes())).thenReturn(existingDtoCodes);
+    when(mapper.toDtoCodes(modified.getAuthoritySourceFileCodes())).thenReturn(modifiedDtoCodes);
+    var fileSaveCaptor = ArgumentCaptor.forClass(AuthoritySourceFile.class);
 
-    var updated = service.update(id, entity);
+    var actual = service.update(id, modified);
 
-    assertThat(updated).isEqualTo(expected);
-    assertThat(updated.getAuthoritySourceFileCodes()).isEqualTo(Set.of(codeNew));
+    assertThat(actual).isEqualTo(expected);
+    verify(repository).findById(id);
+    verify(repository).save(fileSaveCaptor.capture());
+    verify(jdbcTemplate).execute(
+        "ALTER SEQUENCE %s RESTART WITH %d OWNED BY test.authority_source_file.sequence_name;"
+            .formatted(existing.getSequenceName(), modified.getHridStartNumber()));
+
+    var captured = fileSaveCaptor.getValue();
+    Assertions.assertThat(captured.getName()).isEqualTo(expected.getName());
+    Assertions.assertThat(captured.getType()).isEqualTo(expected.getType());
+    Assertions.assertThat(captured.getBaseUrl()).isEqualTo(expected.getBaseUrl());
+    Assertions.assertThat(captured.getAuthoritySourceFileCodes()).isEqualTo(expected.getAuthoritySourceFileCodes());
+    Assertions.assertThat(captured.isSelectable()).isEqualTo(expected.isSelectable());
+    Assertions.assertThat(captured.getHridStartNumber()).isEqualTo(expected.getHridStartNumber());
+
+    Assertions.assertThat(captured.getSource()).isEqualTo(existing.getSource());
+    Assertions.assertThat(captured.getSequenceName()).isEqualTo(existing.getSequenceName());
+  }
+
+  @Test
+  void shouldUpdateAuthoritySource_NotUpdatingSequenceStartNumberWhenNotChanged() {
+    var existing = authoritySourceFile(0);
+    var id = existing.getId();
+    var modified = new AuthoritySourceFile(existing);
+    modified.setType("test");
+
+    var expected = new AuthoritySourceFile(modified);
+
+    when(repository.findById(id)).thenReturn(Optional.of(existing));
+    when(repository.save(expected)).thenReturn(expected);
+    when(mapper.toDtoCodes(existing.getAuthoritySourceFileCodes())).thenReturn(emptyList());
+    when(mapper.toDtoCodes(modified.getAuthoritySourceFileCodes())).thenReturn(emptyList());
+
+    var actual = service.update(id, modified);
+
+    assertThat(actual).isEqualTo(expected);
     verify(repository).findById(id);
     verify(repository).save(expected);
+    verifyNoInteractions(context);
+    verifyNoInteractions(moduleMetadata);
+    verifyNoInteractions(jdbcTemplate);
   }
 
   @Test
@@ -331,5 +388,36 @@ class AuthoritySourceFileServiceTest {
 
     // Act & Assert
     assertThrows(AuthoritySourceFileHridException.class, () -> service.nextHrid(id));
+  }
+
+  @Test
+  void shouldCheckAuthoritiesExistForSourceFile() {
+    var id = UUID.randomUUID();
+    var expected = true;
+    when(authorityRepository.existsAuthorityByAuthoritySourceFileId(id)).thenReturn(expected);
+
+    var actual = service.authoritiesExistForSourceFile(id);
+
+    assertThat(actual).isEqualTo(expected);
+    verify(authorityRepository).existsAuthorityByAuthoritySourceFileId(id);
+  }
+
+  @Test
+  void shouldThrowOptimisticLockingExceptionWhenProvidedOldAuthoritySourceFileVersion() {
+    var id = UUID.randomUUID();
+    var existing = new AuthoritySourceFile();
+    existing.setVersion(1);
+    existing.setId(id);
+    var modified = new AuthoritySourceFile();
+    modified.setId(id);
+
+    when(repository.findById(id)).thenReturn(Optional.of(existing));
+
+    var thrown = assertThrows(OptimisticLockingException.class, () -> service.update(id, modified));
+
+    assertThat(thrown.getMessage())
+        .isEqualTo("Cannot update record " + id + " because it has been changed (optimistic locking): "
+            + "Stored _version is 1, _version of request is 0");
+    verifyNoMoreInteractions(repository);
   }
 }

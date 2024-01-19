@@ -315,6 +315,7 @@ public class TestDataUtils {
     };
     private static final String[] SOURCE_FILE_TYPES = new String[] {"type1", "type2", "type3"};
     private static final String[] SOURCE_FILE_URLS = new String[] {"http://baseUrl1", "http://baseUrl2", "http://baseUrl3"};
+    private static final String[] SOURCE_FILE_SEQUENCE_NAMES = new String[] {"name1", "name2", "name3"};
 
     public static Authority authority(int authorityIdNum, int sourceFileIdNum) {
       var entity = new Authority();
@@ -355,6 +356,9 @@ public class TestDataUtils {
       entity.setSource(SOURCE_FILE_SOURCES[sourceFileIdNum]);
       entity.setType(SOURCE_FILE_TYPES[sourceFileIdNum]);
       entity.setBaseUrl(SOURCE_FILE_URLS[sourceFileIdNum]  + "/");
+      entity.setSequenceName(SOURCE_FILE_SEQUENCE_NAMES[sourceFileIdNum]);
+      entity.setSelectable(sourceFileIdNum % 2 == 0);
+      entity.setHridStartNumber(sourceFileIdNum);
 
       var code = authoritySourceFileCode(sourceFileIdNum);
       entity.setCreatedDate(Timestamp.from(Instant.parse(CREATED_DATE)));

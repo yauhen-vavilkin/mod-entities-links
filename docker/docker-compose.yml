@@ -81,7 +81,7 @@ services:
 
   postgres:
     image: postgres:12-alpine
-    container_name: postgres-entities-links
+    container_name: postgres-entities-links # use this as a host for db connection in pgadmin ui
     networks:
       - mod-entities-links-local
     ports:

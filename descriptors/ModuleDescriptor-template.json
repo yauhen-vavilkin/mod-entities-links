@@ -278,7 +278,7 @@
     },
     {
       "id": "authority-source-files",
-      "version": "2.1",
+      "version": "2.2",
       "handlers": [
         {
           "methods": [
@@ -305,6 +305,9 @@
           "pathPattern": "/authority-source-files",
           "permissionsRequired": [
             "inventory-storage.authority-source-files.item.post"
+          ],
+          "modulePermissions": [
+            "user-tenants.collection.get"
           ]
         },
         {
@@ -314,6 +317,9 @@
           "pathPattern": "/authority-source-files/{id}",
           "permissionsRequired": [
             "inventory-storage.authority-source-files.item.patch"
+          ],
+          "modulePermissions": [
+            "user-tenants.collection.get"
           ]
         },
         {
@@ -323,6 +329,9 @@
           "pathPattern": "/authority-source-files/{id}",
           "permissionsRequired": [
             "inventory-storage.authority-source-files.item.delete"
+          ],
+          "modulePermissions": [
+            "user-tenants.collection.get"
           ]
         },
         {
@@ -332,6 +341,9 @@
           "pathPattern": "/authority-source-files/{id}/hrid",
           "permissionsRequired": [
             "inventory-storage.authority-source-files.hrid.post"
+          ],
+          "modulePermissions": [
+            "user-tenants.collection.get"
           ]
         }
       ]

@@ -10,6 +10,7 @@ import static org.folio.support.base.TestConstants.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -23,6 +24,7 @@ import org.folio.entlinks.domain.dto.AuthoritySourceFileDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileDtoCollection;
 import org.folio.entlinks.domain.dto.AuthoritySourceFileHridDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDto;
+import org.folio.entlinks.domain.dto.AuthoritySourceFilePatchDtoHridManagement;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDto;
 import org.folio.entlinks.domain.dto.AuthoritySourceFilePostDtoHridManagement;
 import org.folio.entlinks.domain.entity.AuthoritySourceFile;
@@ -34,6 +36,7 @@ import org.folio.entlinks.service.consortium.propagation.ConsortiumAuthoritySour
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.testing.type.UnitTest;
 import org.folio.support.TestDataUtils;
+import org.folio.tenant.domain.dto.Parameter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -148,27 +151,54 @@ class AuthoritySourceFileServiceDelegateTest {
   void shouldNormalizeBaseUrlForSourceFilePartialUpdate() {
     var existing = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
     existing.setBaseUrl(INPUT_BASE_URL);
+    existing.setSource(AuthoritySourceFileSource.FOLIO);
     var authority = TestDataUtils.AuthorityTestData.authority(0, 0);
     existing.getAuthorities().add(authority);
     var expected = new AuthoritySourceFile(existing);
     expected.setBaseUrl(SANITIZED_BASE_URL);
 
     when(service.getById(existing.getId())).thenReturn(existing);
+    when(service.authoritiesExistForSourceFile(existing.getId())).thenReturn(true);
     when(mapper.partialUpdate(any(AuthoritySourceFilePatchDto.class), any(AuthoritySourceFile.class)))
         .thenAnswer(i -> i.getArguments()[1]);
     when(service.update(any(UUID.class), any(AuthoritySourceFile.class))).thenAnswer(i -> i.getArguments()[1]);
     when(context.getTenantId()).thenReturn(TENANT_ID);
-    var dto = new AuthoritySourceFilePatchDto().id(existing.getId()).baseUrl(INPUT_BASE_URL);
+    var dto = new AuthoritySourceFilePatchDto().baseUrl(INPUT_BASE_URL);
 
     delegate.patchAuthoritySourceFile(existing.getId(), dto);
 
-    verify(service).update(any(UUID.class), sourceFileArgumentCaptor.capture());
+    verify(service).update(eq(existing.getId()), sourceFileArgumentCaptor.capture());
     var patchedSourceFile = sourceFileArgumentCaptor.getValue();
     assertThat(expected).usingDefaultComparator().isEqualTo(patchedSourceFile);
+    verify(service).authoritiesExistForSourceFile(existing.getId());
     verify(mapper).partialUpdate(any(AuthoritySourceFilePatchDto.class), any(AuthoritySourceFile.class));
     verify(service).getById(any(UUID.class));
     verify(propagationService).propagate(expected, UPDATE, TENANT_ID);
     verifyNoMoreInteractions(mapper, service);
+  }
+
+  @Test
+  void shouldNotPatchAuthoritySourceFile_whenSourceFolioOrAuthoritiesReferenced() {
+    var existing = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
+    existing.setSource(AuthoritySourceFileSource.FOLIO);
+    var dto = new AuthoritySourceFilePatchDto()
+        .codes(List.of("a", "b"))
+        .hridManagement(new AuthoritySourceFilePatchDtoHridManagement().startNumber(1));
+    var expected = new RequestBodyValidationException(
+        "Unable to patch. Authority source file source is FOLIO or it has authority references",
+        List.of(new Parameter("codes").value("a,b"), new Parameter("hridManagement.startNumber").value("1")));
+
+    var id = existing.getId();
+    when(service.getById(id)).thenReturn(existing);
+    when(service.authoritiesExistForSourceFile(id)).thenReturn(true);
+
+    var ex = assertThrows(RequestBodyValidationException.class,
+        () -> delegate.patchAuthoritySourceFile(id, dto));
+
+    assertThat(ex.getMessage()).isEqualTo(expected.getMessage());
+    assertThat(ex.getInvalidParameters()).isEqualTo(expected.getInvalidParameters());
+    verifyNoInteractions(mapper, propagationService);
+    verifyNoMoreInteractions(service);
   }
 
   @Test
@@ -237,7 +267,7 @@ class AuthoritySourceFileServiceDelegateTest {
     var existing = TestDataUtils.AuthorityTestData.authoritySourceFile(0);
     existing.setSource(AuthoritySourceFileSource.CONSORTIUM);
     var id = existing.getId();
-    var dto = new AuthoritySourceFilePatchDto().id(id);
+    var dto = new AuthoritySourceFilePatchDto();
 
     when(service.getById(existing.getId())).thenReturn(existing);
 

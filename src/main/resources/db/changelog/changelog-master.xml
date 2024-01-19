@@ -20,4 +20,5 @@
   <include file="/changes/v3.0/changes-authority-source-type.xml" relativeToChangelogFile="true"/>
   <include file="/changes/v3.0/add_authority_archives_indices.xml" relativeToChangelogFile="true"/>
   <include file="/changes/v3.0/add-authority-source-protocol.xml" relativeToChangelogFile="true"/>
+  <include file="/changes/v3.0/add-authority-source-file-optimistic-locking.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

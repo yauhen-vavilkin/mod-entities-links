@@ -1,9 +1,10 @@
 ## v3.0.0 in progress
 ### Breaking changes
 * Delete PUT endpoint from authority-source-files api([MODELINKS-161](https://issues.folio.org/browse/MODELINKS-161))
+* Update authority-source-files PATCH endpoint body, add validations and optimistic locking([MODELINKS-160](https://issues.folio.org/browse/MODELINKS-160))
 
 ### New APIs versions
-* Provides `API_NAME vX.Y`
+* Provides `authority-source-files v2.2`
 * Requires `API_NAME vX.Y`
 
 ### Features

@@ -260,6 +260,12 @@ public class IntegrationTestBase {
   }
 
   @SneakyThrows
+  protected static <T> T doPostAndReturn(String uri, Object body, Class<T> responseClass, Object... args) {
+    var content = doPost(uri, body, defaultHeaders(), args).andReturn().getResponse().getContentAsString();
+    return objectMapper.readValue(content, responseClass);
+  }
+
+  @SneakyThrows
   protected static void sendKafkaMessage(String topic, String key, Object event) {
     var future = kafkaTemplate.send(topic, key, new ObjectMapper().writeValueAsString(event));
     awaitUntilAsserted(() -> Assertions.assertTrue(future.isDone(), "Message was not sent"));

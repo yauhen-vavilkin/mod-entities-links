@@ -64,8 +64,8 @@ public interface AuthoritySourceFileMapper {
   AuthoritySourceFileDto toDto(AuthoritySourceFile authoritySourceFile);
 
   @Mapping(target = "authoritySourceFileCodes",
-           expression = "java(toEntityCodes(authoritySourceFileDto.getCodes()))")
-  @Mapping(target = "source", expression = "java(toSource(authoritySourceFileDto.getSource()))")
+           expression = "java(toEntityCodes(authoritySourceFileDto, authoritySourceFile))")
+  @Mapping(target = "hridStartNumber", source = "hridManagement.startNumber")
   @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
   AuthoritySourceFile partialUpdate(AuthoritySourceFilePatchDto authoritySourceFileDto,
                                     @MappingTarget AuthoritySourceFile authoritySourceFile);
@@ -78,28 +78,16 @@ public interface AuthoritySourceFileMapper {
 
   @AfterMapping
   default void processUrl(AuthoritySourceFilePatchDto source, @MappingTarget AuthoritySourceFile target) {
-    if (StringUtils.isBlank(source.getBaseUrl())) {
-      return;
-    }
-
     setUrlProperties(source.getBaseUrl(), target);
   }
 
   @AfterMapping
   default void processUrl(AuthoritySourceFilePostDto source, @MappingTarget AuthoritySourceFile target) {
-    if (StringUtils.isBlank(source.getBaseUrl())) {
-      return;
-    }
-
     setUrlProperties(source.getBaseUrl(), target);
   }
 
   @AfterMapping
   default void processUrl(AuthoritySourceFileDto source, @MappingTarget AuthoritySourceFile target) {
-    if (StringUtils.isBlank(source.getBaseUrl())) {
-      return;
-    }
-
     setUrlProperties(source.getBaseUrl(), target);
   }
 
@@ -110,14 +98,6 @@ public interface AuthoritySourceFileMapper {
     }
 
     target.setBaseUrl(source.getFullBaseUrl());
-  }
-
-  default AuthoritySourceFileSource toSource(AuthoritySourceFilePatchDto.SourceEnum dtoSource) {
-    if (dtoSource == null) {
-      return null;
-    }
-
-    return AuthoritySourceFileSource.valueOf(dtoSource.name());
   }
 
   default AuthoritySourceFileDtoCollection toAuthoritySourceFileCollection(
@@ -131,6 +111,16 @@ public interface AuthoritySourceFileMapper {
     return codes.stream()
       .map(this::toEntityCode)
       .collect(Collectors.toSet());
+  }
+
+  default Set<AuthoritySourceFileCode> toEntityCodes(AuthoritySourceFilePatchDto authoritySourceFileDto,
+                                                     AuthoritySourceFile authoritySourceFile) {
+    var dtoCodes = authoritySourceFileDto.getCodes();
+    if (dtoCodes == null) {
+      return authoritySourceFile.getAuthoritySourceFileCodes();
+    }
+
+    return toEntityCodes(dtoCodes);
   }
 
   default AuthoritySourceFileCode toEntityCode(String code) {
@@ -155,6 +145,10 @@ public interface AuthoritySourceFileMapper {
   }
 
   private static void setUrlProperties(String baseUrlDto, AuthoritySourceFile target) {
+    if (StringUtils.isBlank(baseUrlDto)) {
+      return;
+    }
+
     var url = getUrl(baseUrlDto);
     target.setBaseUrlProtocol(url.getProtocol());
     target.setBaseUrl(getHostPath(url));
